@@ -1,0 +1,34 @@
+# Dependências
+node_modules/
+
+# Skills/agentes do Claude Code (não fazem parte do projeto)
+.agent/
+
+# config.js tem chaves de API — gerado dinamicamente pelo servidor
+config.js
+
+# Variáveis de ambiente (NUNCA commitar!)
+.env
+
+# Credenciais WhatsApp (privado!)
+auth_info_baileys/
+
+# Backups automáticos
+backups/
+*.backup
+
+# Arquivos temporários e de teste
+teste_mysql.js
+test_*.js
+check_*.js
+stress_test.js
+*.log
+*.tmp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

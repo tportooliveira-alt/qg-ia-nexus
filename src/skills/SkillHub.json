@@ -1,0 +1,117 @@
+{
+  "nome": "Skill Hub Global (Academia de Especialistas)",
+  "descricao": "Catálogo central de Model Context Protocols (MCPs) e repositórios confiáveis globais. O Thiago Claw usa este hub para baixar inteligência extra.",
+  "repositorios_confiaveis": [
+    {
+      "nome": "GitHub MCP",
+      "tipo": "Controle de Versão e Código",
+      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/github",
+      "status": "Aprovado para Estudo",
+      "descricao": "Permite aos agentes ler, commitar e gerenciar PRs no GitHub."
+    },
+    {
+      "nome": "PostgreSQL & Supabase MCP",
+      "tipo": "Banco de Dados e Memória",
+      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres",
+      "status": "Aprovado para Estudo",
+      "descricao": "Permite executar queries complexas, analisar esquemas e otimizar bancos."
+    },
+    {
+      "nome": "Brave Web Search MCP",
+      "tipo": "Pesquisa Global",
+      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search",
+      "status": "Aprovado para Estudo",
+      "descricao": "Navegação em tempo real para encontrar documentações de APIs que acabaram de lançar."
+    },
+    {
+      "nome": "Puppeteer Web Scraper",
+      "tipo": "Automação UX/UI",
+      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer",
+      "status": "Aprovado para Estudo",
+      "descricao": "Permite que os agentes 'vejam' o site como um humano, tirem prints e cliquem em botões."
+    }
+  ],
+  "agentes_especialistas": [
+    {
+      "nome": "Backend Specialist",
+      "descricao": "Especialista em arquitetura backend para Node.js, Python e sistemas modernos serverless/edge. Focado em desenvolvimento de APIs, lógica de servidor, integração de banco de dados e segurança."
+    },
+    {
+      "nome": "Code Archaeologist",
+      "descricao": "Especialista em código legado, refatoração e compreensão de sistemas não documentados. Útil para ler código confuso, engenharia reversa e planejamento de modernização."
+    },
+    {
+      "nome": "Database Architect",
+      "descricao": "Arquiteto de banco de dados especialista em design de esquema, otimização de consultas, migrações e bancos de dados serverless modernos."
+    },
+    {
+      "nome": "Debugger",
+      "descricao": "Especialista em depuração sistemática, análise de causa raiz e investigação de falhas (crashes). Útil para bugs complexos e problemas de produção."
+    },
+    {
+      "nome": "DevOps Engineer",
+      "descricao": "Especialista em implantação (deployment), gerenciamento de servidores, CI/CD e operações de produção. Lida com operações de alto risco e infraestrutura."
+    },
+    {
+      "nome": "Documentation Writer",
+      "descricao": "Especialista em documentação técnica, como READMEs, documentação de API e registros de alterações (changelogs)."
+    },
+    {
+      "nome": "Explorer Agent",
+      "descricao": "Agente de descoberta avançada de base de código, análise arquitetural profunda e pesquisa proativa. Atua como os 'olhos e ouvidos' do framework."
+    },
+    {
+      "nome": "Frontend Specialist",
+      "descricao": "Arquiteto Frontend Sênior especializado em sistemas React/Next.js sustentáveis com foco em performance, UI/UX e design responsivo."
+    },
+    {
+      "nome": "Game Developer",
+      "descricao": "Desenvolvedor de jogos para todas as plataformas (PC, Web, Mobile, VR/AR), cobrindo mecânicas, multiplayer, gráficos 2D/3D e otimização."
+    },
+    {
+      "nome": "Mobile Developer",
+      "descricao": "Especialista em desenvolvimento móvel cross-platform com React Native e Flutter, focando em performance nativa e padrões mobile."
+    },
+    {
+      "nome": "Orchestrator",
+      "descricao": "Coordenação multi-agente e orquestração de tarefas complexas que exigem múltiplas perspectivas e execução coordenada."
+    },
+    {
+      "nome": "Penetration Tester",
+      "descricao": "Especialista em segurança ofensiva, testes de invasão, operações de red team e exploração de vulnerabilidades."
+    },
+    {
+      "nome": "Performance Optimizer",
+      "descricao": "Especialista em otimização de performance, profiling, Core Web Vitals e otimização de pacotes (bundles)."
+    },
+    {
+      "nome": "Product Manager",
+      "descricao": "Especialista em requisitos de produto, histórias de usuário e critérios de aceitação. Focado em definir funcionalidades e priorizar trabalho."
+    },
+    {
+      "nome": "Product Owner",
+      "descricao": "Facilitador estratégico entre necessidades de negócio e execução técnica. Especialista em elicitação de requisitos e gestão de backlog."
+    },
+    {
+      "nome": "Project Planner",
+      "descricao": "Agente de planejamento inteligente que decompõe solicitações em tarefas, planeja estrutura de arquivos e define dependências."
+    },
+    {
+      "nome": "QA Automation Engineer",
+      "descricao": "Especialista em infraestrutura de automação de testes e testes E2E (End-to-End), focado em quebrar o sistema para garantir robustez."
+    },
+    {
+      "nome": "Security Auditor",
+      "descricao": "Especialista de elite em cibersegurança focado em OWASP 2025, segurança de cadeia de suprimentos e arquitetura Zero Trust."
+    },
+    {
+      "nome": "SEO Specialist",
+      "descricao": "Especialista em SEO e GEO (Generative Engine Optimization), otimizando para motores de busca tradicionais e baseados em IA."
+    },
+    {
+      "nome": "Test Engineer",
+      "descricao": "Especialista em testes, TDD (Test Driven Development) e automação de testes unitários e de integração."
+    }
+  ],
+  "diretriz_de_aprendizado": "Antes de assumir um projeto complexo, o Thiago Claw deve mapear quais destas skills são necessárias, instalá-las no servidor via npm e treinar seus novos agentes contratados para usá-las."
+}

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: qg-ia-nexus
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/status
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ENABLE_WHATSAPP
+        value: false
