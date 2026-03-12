@@ -96,6 +96,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY || ""
 );
 
+// 🔑 ROTA: VALIDAR TOKEN (não depende do Supabase)
+app.get("/api/auth/verify", autenticarToken, (req, res) => {
+  res.json({ status: "ok", autenticado: true });
+});
+
 // 🤖 ROTA: ORQUESTRADOR DE AGENTES (Comunicação via App) — PROTEGIDA
 app.post("/api/agentes/executar", autenticarToken, rateLimiter(30), async (req, res) => {
   const { agente, prompt, contexto, ordemPreferencial } = req.body;

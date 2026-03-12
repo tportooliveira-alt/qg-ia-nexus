@@ -406,7 +406,7 @@ let TOKEN = '';
 function entrar() {
   TOKEN = document.getElementById('tokenInput').value.trim();
   if (!TOKEN) { document.getElementById('loginError').textContent = 'Cole o token.'; return; }
-  fetch(`${BASE}/api/approvals/pending`, { headers: { 'X-QG-Token': TOKEN } })
+  fetch(`${BASE}/api/auth/verify`, { headers: { 'X-QG-Token': TOKEN } })
     .then(r => {
       if (r.ok) {
         document.getElementById('loginScreen').style.display = 'none';
@@ -424,7 +424,7 @@ window.onload = () => {
   if (saved) {
     TOKEN = saved;
     document.getElementById('tokenInput').value = saved;
-    fetch(`${BASE}/api/approvals/pending`, { headers: { 'X-QG-Token': TOKEN } })
+    fetch(`${BASE}/api/auth/verify`, { headers: { 'X-QG-Token': TOKEN } })
       .then(r => {
         if (r.ok) {
           document.getElementById('loginScreen').style.display = 'none';
