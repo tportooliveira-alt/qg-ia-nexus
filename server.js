@@ -281,6 +281,32 @@ app.get("/api/agentes", autenticarToken, rateLimiter(60), async (req, res) => {
 });
 
 // ð©º ROTA: MONITOR DE SAÃDE (TELEMETRIA)
+// ── ROTAS ADICIONAIS ──────────────────────────────────
+app.get("/api/agents/list", autenticarToken, async (req, res) => {
+  try {
+    const AgentRegistry = require("./src/services/agentRegistryService");
+    const agentes = await AgentRegistry.listarAgentes();
+    res.json({ agentes });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/research/local", autenticarToken, async (req, res) => {
+  try {
+    const fs = require("fs").promises;
+    const path = require("path");
+    const file = path.join(__dirname, "src/logs/learned_facts.json");
+    const raw = await fs.readFile(file, "utf-8").catch(() => "[]");
+    const facts = JSON.parse(raw);
+    res.json({ memorias: facts.map(f => ({
+      agente: "NexusClaw",
+      categoria: f.categoria,
+      conteudo: f.fato,
+      criado_em: f.data,
+      fonte: f.fonte
+    })) });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get("/api/status", (req, res) => {
   const mem = process.memoryUsage();
   const waAtivo = process.env.ENABLE_WHATSAPP === "true";
