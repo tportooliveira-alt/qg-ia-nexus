@@ -6,10 +6,10 @@ const dotenv = require("dotenv");
 const fs = require("fs").promises;
 const cron = require("node-cron");
 
-// Carregar Variáveis de Ambiente
+// Carregar VariÃ¡veis de Ambiente
 dotenv.config();
 
-// Importar Serviços Modulares
+// Importar ServiÃ§os Modulares
 const AIService = require("./src/services/aiService");
 const NexusService = require("./src/services/nexusService");
 const TerminalService = require("./src/services/terminalService");
@@ -24,10 +24,10 @@ const AuditService = require("./src/services/auditService");
 const ResearchService = require("./src/services/researchService");
 const EvolutionService = require("./src/services/evolutionService");
 
-// 🛡️ Importar Middlewares de Segurança
+// ð¡ï¸ Importar Middlewares de SeguranÃ§a
 const { autenticarToken, validarPath, rateLimiter } = require("./src/services/authMiddleware");
 
-// 📁 Pastas que as rotas /api/fs podem acessar (ADICIONE AS SUAS AQUI)
+// ð Pastas que as rotas /api/fs podem acessar (ADICIONE AS SUAS AQUI)
 const PASTAS_PERMITIDAS = [
   path.resolve(__dirname), // Raiz do projeto
   path.resolve(__dirname, "src"),
@@ -58,7 +58,7 @@ async function safeAudit(payload) {
   }
 }
 
-// 🛡️ SEGURANÇA E MIDDLEWARES
+// ð¡ï¸ SEGURANÃA E MIDDLEWARES
 app.use(cors({
   origin: ["https://ideiatoapp.me", "https://www.ideiatoapp.me", "http://localhost:3000", "http://127.0.0.1:3000", "https://qg-ia-nexus.onrender.com"],
   methods: ["GET", "POST", "OPTIONS"],
@@ -67,7 +67,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "50mb" }));
 
-// 🔒 config.js — gerado dinamicamente, só acessível via localhost
+// ð config.js â gerado dinamicamente, sÃ³ acessÃ­vel via localhost
 app.get('/config.js', (req, res) => {
   const ip = req.ip || req.connection.remoteAddress || '';
   const isLocal = ip === '::1' || ip === '127.0.0.1' || ip.includes('::ffff:127.0.0.1');
@@ -87,21 +87,21 @@ window.BACKEND_URL       = ${JSON.stringify(process.env.BACKEND_URL || '')};
 
 app.use(express.static(__dirname));
 
-// 🧠 CONEXÃO SUPABASE (lê somente do .env — sem fallback hardcoded)
+// ð§  CONEXÃO SUPABASE (lÃª somente do .env â sem fallback hardcoded)
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-  console.error("⚠️ SUPABASE_URL ou SUPABASE_SERVICE_KEY não definidos no .env!");
+  console.error("â ï¸ SUPABASE_URL ou SUPABASE_SERVICE_KEY nÃ£o definidos no .env!");
 }
 const supabase = createClient(
   process.env.SUPABASE_URL || "",
   process.env.SUPABASE_SERVICE_KEY || ""
 );
 
-// 🔑 ROTA: VALIDAR TOKEN (não depende do Supabase)
+// ð ROTA: VALIDAR TOKEN (nÃ£o depende do Supabase)
 app.get("/api/auth/verify", autenticarToken, (req, res) => {
   res.json({ status: "ok", autenticado: true });
 });
 
-// 🤖 ROTA: ORQUESTRADOR DE AGENTES (Comunicação via App) — PROTEGIDA
+// ð¤ ROTA: ORQUESTRADOR DE AGENTES (ComunicaÃ§Ã£o via App) â PROTEGIDA
 app.post("/api/agentes/executar", autenticarToken, rateLimiter(30), async (req, res) => {
   const { agente, prompt, contexto, ordemPreferencial } = req.body;
   try {
@@ -115,11 +115,11 @@ app.post("/api/agentes/executar", autenticarToken, rateLimiter(30), async (req, 
   }
 });
 
-// 🧠 ROTA: NEXUS CLAW CORE (Comando Central Web) — PROTEGIDA
+// ð§  ROTA: NEXUS CLAW CORE (Comando Central Web) â PROTEGIDA
 app.post("/api/nexus/comando", autenticarToken, rateLimiter(20), async (req, res) => {
   const { prompt } = req.body;
   try {
-    const resposta = await NexusService.processarComando(prompt);
+    const resposta = await NexusService.processarComando(prompt, body.historico || []);
     await safeAudit({ agente: "NexusClaw", acao: "nexus_comando", status: "ok", detalhe: { prompt }, origem: "api" });
     res.json({ status: "Sucesso", resposta });
   } catch (err) {
@@ -128,7 +128,7 @@ app.post("/api/nexus/comando", autenticarToken, rateLimiter(20), async (req, res
   }
 });
 
-// 📂 ROTAS: GESTÃO DE ARQUIVOS — PROTEGIDAS (Token + Validação de Path)
+// ð ROTAS: GESTÃO DE ARQUIVOS â PROTEGIDAS (Token + ValidaÃ§Ã£o de Path)
 app.get("/api/fs/ler", autenticarToken, validarPath(PASTAS_PERMITIDAS), async (req, res) => {
   try {
     const content = await fs.readFile(req.pathSeguro, "utf-8");
@@ -146,25 +146,25 @@ app.post("/api/fs/escrever", autenticarToken, validarPath(PASTAS_PERMITIDAS), as
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 🏭 ROTA: FÁBRICA DE SKILLS — PROTEGIDA (com sanitização de nome)
+// ð­ ROTA: FÃBRICA DE SKILLS â PROTEGIDA (com sanitizaÃ§Ã£o de nome)
 app.post("/api/skills/factory", autenticarToken, async (req, res) => {
   try {
     const { nome, papel, icone, descricao } = req.body;
 
-    // Sanitiza o nome: só aceita letras, números, - e _
+    // Sanitiza o nome: sÃ³ aceita letras, nÃºmeros, - e _
     const nomeSanitizado = nome.replace(/[^a-zA-Z0-9_-]/g, '');
     if (!nomeSanitizado || nomeSanitizado.length < 2) {
-      return res.status(400).json({ error: "Nome do agente inválido. Use apenas letras, números, - e _." });
+      return res.status(400).json({ error: "Nome do agente invÃ¡lido. Use apenas letras, nÃºmeros, - e _." });
     }
 
     const caminhoSeguro = path.join(__dirname, "src", "skills", "agentes", `${nomeSanitizado}.json`);
-    const novoAgente = { nome: nomeSanitizado, icone: icone || "🤖", papel, descricao, criado_em: new Date().toISOString() };
+    const novoAgente = { nome: nomeSanitizado, icone: icone || "ð¤", papel, descricao, criado_em: new Date().toISOString() };
     await fs.writeFile(caminhoSeguro, JSON.stringify(novoAgente, null, 2), "utf-8");
     res.json({ status: "Sucesso", message: `Agente ${nomeSanitizado} fabricado!` });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 🛠️ ROTA: TERMINAL ROOT — PROTEGIDA (Token + Rate Limit rigoroso)
+// ð ï¸ ROTA: TERMINAL ROOT â PROTEGIDA (Token + Rate Limit rigoroso)
 app.post("/api/terminal/exec", autenticarToken, rateLimiter(10), async (req, res) => {
   try {
     const result = await TerminalService.executarComAutoHealing(req.body.command);
@@ -173,7 +173,7 @@ app.post("/api/terminal/exec", autenticarToken, rateLimiter(10), async (req, res
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ✅ ROTA: AJUSTE DE VOLUME DE TOKENS
+// â ROTA: AJUSTE DE VOLUME DE TOKENS
 app.post("/api/config/token-volume", autenticarToken, rateLimiter(10), async (req, res) => {
   try {
     const { volume } = req.body;
@@ -188,17 +188,17 @@ app.post("/api/config/token-volume", autenticarToken, rateLimiter(10), async (re
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ✅ FRONTEND HOSTINGER (arquivo direto)
+// â FRONTEND HOSTINGER (arquivo direto)
 app.get("/index_HOSTINGER.html", (req, res) => {
   res.sendFile(path.join(__dirname, "index_HOSTINGER.html"));
 });
 
-// ✅ DASHBOARD DE CONTROLE DO NEXUS
+// â DASHBOARD DE CONTROLE DO NEXUS
 app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
-// 🔬 ROTA: PESQUISA AUTÔNOMA (disparo manual)
+// ð¬ ROTA: PESQUISA AUTÃNOMA (disparo manual)
 app.post("/api/nexus/pesquisa", autenticarToken, rateLimiter(5), async (req, res) => {
   try {
     // Executa em background sem bloquear a resposta
@@ -209,7 +209,7 @@ app.post("/api/nexus/pesquisa", autenticarToken, rateLimiter(5), async (req, res
   }
 });
 
-// 📚 ROTA: LISTAR CONHECIMENTOS APRENDIDOS
+// ð ROTA: LISTAR CONHECIMENTOS APRENDIDOS
 app.get("/api/nexus/conhecimentos", autenticarToken, rateLimiter(30), async (req, res) => {
   try {
     const dados = await EvolutionService.listarConhecimentos();
@@ -219,7 +219,7 @@ app.get("/api/nexus/conhecimentos", autenticarToken, rateLimiter(30), async (req
   }
 });
 
-// ✅ ROTAS: GOVERNANCA DE APROVACOES (OpenClaw)
+// â ROTAS: GOVERNANCA DE APROVACOES (OpenClaw)
 app.post("/api/approvals/request", autenticarToken, rateLimiter(20), async (req, res) => {
   try {
     const { agente, acao, detalhes, origem } = req.body;
@@ -249,7 +249,7 @@ app.post("/api/approvals/decide", autenticarToken, rateLimiter(20), async (req, 
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ✅ ROTAS: MEMORIA PERSISTENTE (Supabase)
+// â ROTAS: MEMORIA PERSISTENTE (Supabase)
 app.post("/api/agent/memory", autenticarToken, rateLimiter(30), async (req, res) => {
   try {
     const { agente, categoria, conteudo, projeto } = req.body;
@@ -272,7 +272,7 @@ app.get("/api/agent/memory", autenticarToken, rateLimiter(30), async (req, res) 
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ✅ ROTAS: REGISTRO DE AGENTES
+// â ROTAS: REGISTRO DE AGENTES
 app.get("/api/agentes", autenticarToken, rateLimiter(60), async (req, res) => {
   try {
     const data = await AgentRegistryService.listarAgentes();
@@ -280,7 +280,7 @@ app.get("/api/agentes", autenticarToken, rateLimiter(60), async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 🩺 ROTA: MONITOR DE SAÚDE (TELEMETRIA)
+// ð©º ROTA: MONITOR DE SAÃDE (TELEMETRIA)
 app.get("/api/status", (req, res) => {
   const mem = process.memoryUsage();
   const waAtivo = process.env.ENABLE_WHATSAPP === "true";
@@ -302,21 +302,21 @@ app.get("/api/status", (req, res) => {
   });
 });
 
-// INICIALIZAÇÃO
+// INICIALIZAÃÃO
 app.listen(port, async () => {
-  console.log(`🚀 QG IA SERVER [CALIBRAÇÃO INTERNA] rodando na porta ${port}`);
-  console.log(`🖥️  Dashboard: http://localhost:${port}/dashboard`);
+  console.log(`ð QG IA SERVER [CALIBRAÃÃO INTERNA] rodando na porta ${port}`);
+  console.log(`ð¥ï¸  Dashboard: http://localhost:${port}/dashboard`);
   
   // Ligar a Ponte de WhatsApp
   if (process.env.ENABLE_WHATSAPP === "true") {
     try {
-      console.log(`🔌 WhatsApp SERVICE: Inicializando conexão...`);
+      console.log(`ð WhatsApp SERVICE: Inicializando conexÃ£o...`);
       await WhatsAppService.conectar();
     } catch (e) {
-      console.log(`❌ WhatsApp SERVICE: Falha ao iniciar ponte.`, e.message);
+      console.log(`â WhatsApp SERVICE: Falha ao iniciar ponte.`, e.message);
     }
   } else {
-    console.log(`ℹ️ WhatsApp SERVICE: Desativado (ENABLE_WHATSAPP != true).`);
+    console.log(`â¹ï¸ WhatsApp SERVICE: Desativado (ENABLE_WHATSAPP != true).`);
   }
   
   // Ligar o Banco MySQL da Hostinger
@@ -325,24 +325,24 @@ app.listen(port, async () => {
     try {
       await MySQLService.inicializarTabelas();
       await FinancialService.inicializarTabelaFinanceira();
-      console.log(`💾 MySQL: Conectado ao banco ${process.env.DB_NAME} e tabela financeira pronta.`);
+      console.log(`ð¾ MySQL: Conectado ao banco ${process.env.DB_NAME} e tabela financeira pronta.`);
     } catch (e) {
-      console.log(`⚠️ MySQL: Falha ao conectar.`, e.message);
+      console.log(`â ï¸ MySQL: Falha ao conectar.`, e.message);
     }
   } else {
-    console.log(`ℹ️ MySQL: Desativado (credenciais ausentes).`);
+    console.log(`â¹ï¸ MySQL: Desativado (credenciais ausentes).`);
   }
 
-  // 🔬 CRON: PESQUISA AUTÔNOMA A CADA 6 HORAS
-  // (evita consumo excessivo de tokens — pesquisa 6 temas por rodada)
+  // ð¬ CRON: PESQUISA AUTÃNOMA A CADA 6 HORAS
+  // (evita consumo excessivo de tokens â pesquisa 6 temas por rodada)
   cron.schedule('0 */6 * * *', async () => {
-    console.log('[CRON] 🔬 Iniciando ciclo de pesquisa autônoma...');
+    console.log('[CRON] ð¬ Iniciando ciclo de pesquisa autÃ´noma...');
     try {
       await ResearchService.cicloDeEstudoIntensivo();
-      console.log('[CRON] ✅ Ciclo de pesquisa concluído.');
+      console.log('[CRON] â Ciclo de pesquisa concluÃ­do.');
     } catch (e) {
-      console.error('[CRON] ❌ Falha no ciclo de pesquisa:', e.message);
+      console.error('[CRON] â Falha no ciclo de pesquisa:', e.message);
     }
   });
-  console.log('[CRON] 🔬 Pesquisa autônoma agendada: a cada 6 horas.');
+  console.log('[CRON] ð¬ Pesquisa autÃ´noma agendada: a cada 6 horas.');
 });
