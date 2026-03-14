@@ -2,7 +2,7 @@ const { createClient } = require("@supabase/supabase-js");
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_KEY;
+  const rawKey = process.env.SUPABASE_SERVICE_KEY || ''; const key = rawKey.replace(/[\r\n\t ]+/g, '').trim();
   if (!url || !key) {
     throw new Error("SUPABASE_URL or SUPABASE_SERVICE_KEY missing");
   }
