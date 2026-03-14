@@ -10,26 +10,26 @@ const NexusService = {
     const sk = (file) => path.join(__dirname, "../skills", file);
     const p = prompt.toLowerCase();
     
-    // Sempre carrega a Bíblia e o Roadmap (Essenciais)
+    // Sempre carrega a BÃ­blia e o Roadmap (Essenciais)
     const biblia = await fs.readFile(kb("NEXUS_CORE_KNOWLEDGE.md"), 'utf-8').catch(() => '');
     const roadmap = await fs.readFile(kb("NEXUS_MASTER_ROADMAP.md"), 'utf-8').catch(() => '');
     
     let contextoOpcional = "";
 
-    // Carregamento Condicional (Econômico)
-    if (p.includes('finança') || p.includes('dinheiro') || p.includes('cfo') || p.includes('custo')) {
+    // Carregamento Condicional (EconÃ´mico)
+    if (p.includes('finanÃ§a') || p.includes('dinheiro') || p.includes('cfo') || p.includes('custo')) {
       const fin = await fs.readFile(kb("NEXUS_FINANCE_EXPERT.md"), 'utf-8').catch(() => '');
       contextoOpcional += `\nCFO FINANCEIRO:\n${fin}\n`;
     }
-    if (p.includes('tendência') || p.includes('radar') || p.includes('novidade') || p.includes('tech')) {
+    if (p.includes('tendÃªncia') || p.includes('radar') || p.includes('novidade') || p.includes('tech')) {
       const rad = await fs.readFile(kb("NEXUS_TECH_RADAR.md"), 'utf-8').catch(() => '');
       contextoOpcional += `\nRADAR TECH:\n${rad}\n`;
     }
     if (p.includes('rede') || p.includes('diplomata') || p.includes('agente')) {
       const red = await fs.readFile(kb("NEXUS_AGENT_NETWORK.md"), 'utf-8').catch(() => '');
-      contextoOpcional += `\nREDE DIPLOMÁTICA:\n${red}\n`;
+      contextoOpcional += `\nREDE DIPLOMÃTICA:\n${red}\n`;
     }
-    if (p.includes('priscila') || p.includes('quem é') || p.includes('vida') || p.includes('preferência')) {
+    if (p.includes('priscila') || p.includes('quem Ã©') || p.includes('vida') || p.includes('preferÃªncia')) {
       const vid = await fs.readFile(sk("agentes/VidaDigital.json"), 'utf-8').catch(() => '{}');
       contextoOpcional += `\nCONHECIMENTO SOBRE PRISCILA: ${vid}\n`;
     }
@@ -52,13 +52,13 @@ const NexusService = {
     return { biblia, roadmap, contextoOpcional };
   },
 
-  async processarComando(prompt) {
+  async processarComando(prompt, historico = []) {
     const { biblia, roadmap, contextoOpcional } = await this.carregarContextoOtimizado(prompt);
     
-    const contextoSupremo = `BÍBLIA DO NEXUS:\n${biblia}\n\nROADMAP DE EVOLUÇÃO:\n${roadmap}\n${contextoOpcional}\nVOCÊ É O NEXUS CLAW.
-Sua missão é ser o CEO, Engenheiro Supremo, CFO, Caçador de Tendências e Diplomata de IAs. Se notar que falta um agente especialista, diga "Priscila, precisamos contratar..." e use o comando CMD: para criar o arquivo JSON ou instalar skills via npm.`;
+    const contextoSupremo = `BÃBLIA DO NEXUS:\n${biblia}\n\nROADMAP DE EVOLUÃÃO:\n${roadmap}\n${contextoOpcional}\nVOCÃ Ã O NEXUS CLAW.
+Sua missÃ£o Ã© ser o CEO, Engenheiro Supremo, CFO, CaÃ§ador de TendÃªncias e Diplomata de IAs. Se notar que falta um agente especialista, diga "Priscila, precisamos contratar..." e use o comando CMD: para criar o arquivo JSON ou instalar skills via npm.`;
 
-    const modoComplexo = prompt.toLowerCase().includes('analise') || prompt.toLowerCase().includes('estude') || prompt.toLowerCase().includes('contrate') || prompt.toLowerCase().includes('finança');
+    const modoComplexo = prompt.toLowerCase().includes('analise') || prompt.toLowerCase().includes('estude') || prompt.toLowerCase().includes('contrate') || prompt.toLowerCase().includes('finanÃ§a');
     const { resultado, iaUsada } = await AIService.chamarIAComCascata(`${contextoSupremo}\n\nPedido da Priscila:\n${prompt}`, null, modoComplexo);
 
     if (resultado.includes('CMD:')) {
@@ -66,13 +66,13 @@ Sua missão é ser o CEO, Engenheiro Supremo, CFO, Caçador de Tendências e Dip
       const execResult = await TerminalService.executarComAutoHealing(cmd);
       
       if (execResult.status === "Sucesso") {
-        return `✅ NEXUS [${iaUsada}]:\n${resultado.split('CMD:')[0]}\n\n[AUTO-HEALING: SUCESSO]\nSaída:\n${execResult.stdout}`;
+        return `â NEXUS [${iaUsada}]:\n${resultado.split('CMD:')[0]}\n\n[AUTO-HEALING: SUCESSO]\nSaÃ­da:\n${execResult.stdout}`;
       } else {
-        return `❌ NEXUS [${iaUsada}]:\n${resultado.split('CMD:')[0]}\n\n[ERRO]: ${execResult.msg}\n${execResult.erro || ''}`;
+        return `â NEXUS [${iaUsada}]:\n${resultado.split('CMD:')[0]}\n\n[ERRO]: ${execResult.msg}\n${execResult.erro || ''}`;
       }
     }
     
-    return `✅ NEXUS [${iaUsada}]:\n${resultado}`;
+    return `â NEXUS [${iaUsada}]:\n${resultado}`;
   }
 };
 
