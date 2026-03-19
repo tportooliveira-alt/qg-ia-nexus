@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚔️ NEXUS CLAW — QG IA</title>
+  <title>âï¸ NEXUS CLAW â QG IA</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
     body{background:#050510;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column}
 
-    /* ── LOGIN ── */
+    /* ââ LOGIN ââ */
     #loginScreen{position:fixed;inset:0;background:#050510;display:flex;align-items:center;justify-content:center;z-index:200}
     .lcard{background:#0d0d1f;border:1px solid #2d2b5a;border-radius:16px;padding:40px;width:340px;text-align:center}
     .lcard h2{font-size:1.5rem;color:#a78bfa;margin:12px 0 6px}
@@ -17,7 +17,7 @@
     .lcard input:focus{border-color:#7c3aed}
     #loginError{color:#f87171;font-size:.8rem;margin-top:8px}
 
-    /* ── HEADER ── */
+    /* ââ HEADER ââ */
     .header{background:linear-gradient(135deg,#0f0f2e,#1a0533);border-bottom:1px solid #7c3aed44;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
     .header-left{display:flex;align-items:center;gap:10px}
     .header h1{font-size:1.1rem;font-weight:700;color:#a78bfa}
@@ -25,17 +25,17 @@
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     .badge{font-size:.72rem;background:#1e1b4b;border:1px solid #4338ca44;padding:3px 9px;border-radius:20px;color:#818cf8}
 
-    /* ── TABS ── */
+    /* ââ TABS ââ */
     .tabs{display:flex;gap:2px;background:#0a0a1e;border-bottom:1px solid #1e1b4b;flex-shrink:0}
     .tab{padding:10px 18px;border:none;background:none;color:#6b7280;font-size:.82rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
     .tab:hover{color:#a78bfa;background:#0d0d1f}
     .tab.active{color:#a78bfa;border-bottom-color:#7c3aed;background:#0d0d1f}
 
-    /* ── PAGES ── */
+    /* ââ PAGES ââ */
     .page{display:none;flex:1;overflow-y:auto;padding:20px}
     .page.active{display:flex;flex-direction:column}
 
-    /* ── CHAT PAGE ── */
+    /* ââ CHAT PAGE ââ */
     #pagChat{padding:0;display:none;flex-direction:column}
     #pagChat.active{display:flex}
     .chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
@@ -63,20 +63,20 @@
     .send-btn:disabled{background:#3b2b6e;cursor:not-allowed}
     .chat-hint{font-size:.7rem;color:#374151;padding:0 20px 8px;background:#0a0a1e}
 
-    /* ── GRID / CARDS ── */
+    /* ââ GRID / CARDS ââ */
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .grid-full{grid-column:1/-1}
     @media(max-width:768px){.grid{grid-template-columns:1fr}.grid-full{grid-column:1}.msg{max-width:95%}}
     .card{background:#0d0d1f;border:1px solid #1e1b4b;border-radius:12px;padding:18px}
     .card-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#6366f1;margin-bottom:14px}
 
-    /* ── STATS ── */
+    /* ââ STATS ââ */
     .stats-row{display:flex;gap:10px;flex-wrap:wrap}
     .stat-box{flex:1;min-width:110px;background:#0a0a1e;border:1px solid #1e1b4b;border-radius:8px;padding:10px 14px}
     .stat-label{font-size:.68rem;color:#6b7280;margin-bottom:3px}
     .stat-value{font-size:1.2rem;font-weight:700;color:#a78bfa}
 
-    /* ── BUTTONS ── */
+    /* ââ BUTTONS ââ */
     .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .2s}
     .btn-primary{background:#7c3aed;color:#fff}.btn-primary:hover{background:#6d28d9}
     .btn-primary:disabled{background:#3b2b6e;color:#6b7280;cursor:not-allowed}
@@ -89,13 +89,13 @@
     .btn-power{background:#4a1d1d;color:#f87171;border:1px solid #7f1d1d}
     .btn-active{outline:2px solid #a78bfa;outline-offset:2px}
 
-    /* ── FORMS ── */
+    /* ââ FORMS ââ */
     .inp{width:100%;background:#070714;border:1px solid #2d2b5a;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:.82rem;outline:none}
     .inp:focus{border-color:#7c3aed}
     .inp::placeholder{color:#374151}
     textarea.inp{resize:vertical;font-family:inherit;line-height:1.5}
 
-    /* ── LIST ITEMS ── */
+    /* ââ LIST ITEMS ââ */
     .list-item{background:#070714;border:1px solid #1e1b4b;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:8px}
     .li-content{flex:1}
     .li-title{font-size:.82rem;font-weight:600;color:#e2e8f0}
@@ -107,16 +107,16 @@
     .pill-yellow{background:#1c1007;color:#fbbf24;border:1px solid #b45309}
     .pill-red{background:#1f0707;color:#f87171;border:1px solid #7f1d1d}
 
-    /* ── RESPONSE BOX ── */
+    /* ââ RESPONSE BOX ââ */
     .rbox{background:#070714;border:1px solid #1e1b4b;border-radius:8px;padding:12px;font-size:.8rem;line-height:1.6;color:#a5f3fc;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
     .empty-txt{color:#374151;font-style:italic}
 
-    /* ── MEM / LOG ITEMS ── */
+    /* ââ MEM / LOG ITEMS ââ */
     .mem-item{font-size:.76rem;padding:8px 10px;border-radius:6px;margin-bottom:5px;background:#070714;border:1px solid #1e1b4b}
     .log-line{font-size:.73rem;padding:5px 8px;border-radius:5px;margin-bottom:3px;background:#070714;border-left:3px solid}
     .log-ok{border-color:#22c55e}.log-err{border-color:#ef4444}.log-info{border-color:#6366f1}
 
-    /* ── FERRAMENTAS CARDS ── */
+    /* ââ FERRAMENTAS CARDS ââ */
     .tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
     .tool-card{background:#0d0d1f;border:1px solid #1e1b4b;border-radius:14px;padding:20px;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;flex-direction:column;gap:10px}
     .tool-card:hover{border-color:#7c3aed;background:#130726;transform:translateY(-2px);box-shadow:0 8px 24px #7c3aed22}
@@ -129,24 +129,47 @@
     .tool-tag.red{background:#1f0707;color:#f87171;border-color:#7f1d1d}
     .section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#4b5563;margin-bottom:12px;margin-top:4px}
 
-    /* ── SCROLL ── */
+    /* ââ SCROLL ââ */
     ::-webkit-scrollbar{width:4px}
     ::-webkit-scrollbar-track{background:#0a0a1e}
     ::-webkit-scrollbar-thumb{background:#2d2b5a;border-radius:4px}
 
-    /* ── SPINNER ── */
+    /* ââ SPINNER ââ */
     .sp{display:inline-block;width:14px;height:14px;border:2px solid #4338ca;border-top-color:#a78bfa;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
     @keyframes spin{to{transform:rotate(360deg)}}
-  </style>
+   .msg-bubble p{margin-bottom:6px} .msg-bubble ul,.msg-bubble ol{margin:6px 0 6px 18px} .msg-bubble li{margin-bottom:2px} .msg-bubble code{background:#0d0b2b;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.8rem} .msg-bubble pre{background:#0d0b2b;padding:10px;border-radius:8px;overflow-x:auto;margin:8px 0} .msg-bubble h1,.msg-bubble h2,.msg-bubble h3{color:#a78bfa;margin:8px 0 4px;font-size:1rem} .msg-bubble blockquote{border-left:3px solid #7c3aed;padding-left:10px;color:#94a3b8;margin:6px 0}
+  /* === MOBILE RESPONSIVENESS === */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0 !important; padding: 8px !important; }
+    .card { padding: 12px !important; margin-bottom: 12px !important; }
+    .chat-box { height: 55vh !important; }
+    .input-row { flex-direction: column !important; gap: 8px !important; }
+    .tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+    .tab { white-space: nowrap; font-size: 12px !important; padding: 6px 10px !important; }
+    .top-bar { padding: 8px 12px !important; }
+    .top-bar h1 { font-size: 16px !important; }
+    .grid-2 { grid-template-columns: 1fr !important; }
+    .tools-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .btn { font-size: 13px !important; padding: 8px 12px !important; }
+    .rbox { font-size: 12px !important; }
+  }
+  @media (max-width: 480px) {
+    .tools-grid { grid-template-columns: 1fr !important; }
+    .top-bar h1 { font-size: 14px !important; }
+    .chat-box { height: 50vh !important; }
+  }
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="lcard">
-    <div style="font-size:2.5rem">⚔️</div>
+    <div style="font-size:2.5rem">âï¸</div>
     <h2>NEXUS CLAW</h2>
-    <p>QG IA — Painel de Controle</p>
+    <p>QG IA â Painel de Controle</p>
     <input type="password" id="tokenInput" placeholder="Cole seu QG_AUTH_TOKEN" />
     <button class="btn btn-primary" style="width:100%;padding:12px" onclick="entrar()">Entrar no QG</button>
     <div id="loginError"></div>
@@ -160,55 +183,55 @@
   <div class="header">
     <div class="header-left">
       <div class="dot" id="statusDot"></div>
-      <h1>⚔️ NEXUS CLAW</h1>
+      <h1>âï¸ NEXUS CLAW</h1>
       <span style="font-size:.75rem;color:#6b7280" id="serverStatus">verificando...</span>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
-      <span class="badge" id="uptimeBadge">uptime: –</span>
-      <span class="badge" id="memBadge">mem: –</span>
-      <button class="btn btn-ghost btn-sm" onclick="atualizarTudo()">↻</button>
+      <span class="badge" id="uptimeBadge">uptime: â</span>
+      <span class="badge" id="memBadge">mem: â</span>
+      <button class="btn btn-ghost btn-sm" onclick="atualizarTudo()">â»</button>
     </div>
   </div>
 
   <!-- TABS -->
   <div class="tabs">
-    <button class="tab active" onclick="trocarTab('ferramentas')" id="tab-ferramentas">🏠 Ferramentas</button>
-    <button class="tab" onclick="trocarTab('chat')" id="tab-chat">💬 Chat</button>
-    <button class="tab" onclick="trocarTab('status')" id="tab-status">📊 Status</button>
-    <button class="tab" onclick="trocarTab('approvals')" id="tab-approvals">✅ Aprovações <span id="pendCount" style="background:#b45309;color:#fbbf24;border-radius:10px;padding:1px 6px;font-size:.68rem;margin-left:4px">0</span></button>
-    <button class="tab" onclick="trocarTab('memoria')" id="tab-memoria">🧬 Memórias</button>
-    <button class="tab" onclick="trocarTab('pesquisa')" id="tab-pesquisa">🔬 Pesquisas</button>
-    <button class="tab" onclick="trocarTab('terminal')" id="tab-terminal">🖥️ Terminal</button>
-    <button class="tab" onclick="trocarTab('ideias')" id="tab-ideias">💡 IdeaOrganizer</button>
+    <button class="tab active" onclick="trocarTab('ferramentas')" id="tab-ferramentas">ð  Ferramentas</button>
+    <button class="tab" onclick="trocarTab('chat')" id="tab-chat">ð¬ Chat</button>
+    <button class="tab" onclick="trocarTab('status')" id="tab-status">ð Status</button>
+    <button class="tab" onclick="trocarTab('approvals')" id="tab-approvals">â AprovaÃ§Ãµes <span id="pendCount" style="background:#b45309;color:#fbbf24;border-radius:10px;padding:1px 6px;font-size:.68rem;margin-left:4px">0</span></button>
+    <button class="tab" onclick="trocarTab('memoria')" id="tab-memoria">ð§¬ MemÃ³rias</button>
+    <button class="tab" onclick="trocarTab('pesquisa')" id="tab-pesquisa">ð¬ Pesquisas</button>
+    <button class="tab" onclick="trocarTab('terminal')" id="tab-terminal">ð¥ï¸ Terminal</button>
+    <button class="tab" onclick="trocarTab('ideias')" id="tab-ideias">ð¡ IdeaOrganizer</button>
   </div>
 
-  <!-- ═══════════════ TAB: FERRAMENTAS ═══════════════ -->
+  <!-- âââââââââââââââ TAB: FERRAMENTAS âââââââââââââââ -->
   <div id="pagFerramentas" class="page active" style="gap:20px">
 
     <div>
-      <div class="section-title">🤖 Inteligência Artificial — Ferramentas do QG IA</div>
+      <div class="section-title">ð¤ InteligÃªncia Artificial â Ferramentas do QG IA</div>
       <div class="tool-grid">
         <div class="tool-card" onclick="trocarTab('chat')">
-          <div class="tool-icon">⚔️</div>
-          <div class="tool-name">Nexus Claw — Chat</div>
+          <div class="tool-icon">âï¸</div>
+          <div class="tool-name">Nexus Claw â Chat</div>
           <div class="tool-desc">Converse diretamente com o agente central. Ele usa 6 IAs em cascata (Gemini, Claude, DeepSeek, Groq, Cerebras, OpenAI).</div>
           <span class="tool-tag green">Online</span>
         </div>
         <a class="tool-card" href="https://ideiatoapp.me" target="_blank">
-          <div class="tool-icon">💡</div>
-          <div class="tool-name">IdeaOrganizer — Fábrica de IAs</div>
-          <div class="tool-desc">Transforme ideias em PRDs, arquiteturas e código. 13 agentes especializados trabalham em paralelo para desenvolver seus projetos.</div>
+          <div class="tool-icon">ð¡</div>
+          <div class="tool-name">IdeaOrganizer â FÃ¡brica de IAs</div>
+          <div class="tool-desc">Transforme ideias em PRDs, arquiteturas e cÃ³digo. 13 agentes especializados trabalham em paralelo para desenvolver seus projetos.</div>
           <span class="tool-tag yellow">ideiatoapp.me</span>
         </a>
         <div class="tool-card" onclick="trocarTab('pesquisa')">
-          <div class="tool-icon">🔬</div>
-          <div class="tool-name">Pesquisa Autônoma</div>
-          <div class="tool-desc">Nexus estuda IA, SaaS, tendências e negócios automaticamente a cada 6 horas. Resultados salvos no Supabase.</div>
+          <div class="tool-icon">ð¬</div>
+          <div class="tool-name">Pesquisa AutÃ´noma</div>
+          <div class="tool-desc">Nexus estuda IA, SaaS, tendÃªncias e negÃ³cios automaticamente a cada 6 horas. Resultados salvos no Supabase.</div>
           <span class="tool-tag">A cada 6h</span>
         </div>
         <div class="tool-card" onclick="trocarTab('memoria')">
-          <div class="tool-icon">🧬</div>
-          <div class="tool-name">Memórias dos Agentes</div>
+          <div class="tool-icon">ð§¬</div>
+          <div class="tool-name">MemÃ³rias dos Agentes</div>
           <div class="tool-desc">O que o Nexus aprendeu e lembrou. Cada ciclo de pesquisa salva conhecimento acumulado no Supabase.</div>
           <span class="tool-tag">Supabase</span>
         </div>
@@ -216,58 +239,58 @@
     </div>
 
     <div>
-      <div class="section-title">🏗️ Projetos em Desenvolvimento</div>
+      <div class="section-title">ðï¸ Projetos em Desenvolvimento</div>
       <div class="tool-grid">
         <div class="tool-card" onclick="abrirProjeto('agromacro')">
-          <div class="tool-icon">🌾</div>
+          <div class="tool-icon">ð¾</div>
           <div class="tool-name">AgroMacro</div>
-          <div class="tool-desc">PWA para gestão de fazenda. 27 módulos: rebanho, lotes, pastos, financeiro, rastreabilidade, IA consultor, KPIs e muito mais.</div>
-          <span class="tool-tag green">27 módulos</span>
+          <div class="tool-desc">PWA para gestÃ£o de fazenda. 27 mÃ³dulos: rebanho, lotes, pastos, financeiro, rastreabilidade, IA consultor, KPIs e muito mais.</div>
+          <span class="tool-tag green">27 mÃ³dulos</span>
         </div>
         <div class="tool-card" onclick="abrirProjeto('frigogest')">
-          <div class="tool-icon">🥩</div>
+          <div class="tool-icon">ð¥©</div>
           <div class="tool-name">FrigoGest</div>
-          <div class="tool-desc">Sistema completo para frigoríficos. React + Supabase, 16 agentes IA em 5 tiers para automação total do processo.</div>
+          <div class="tool-desc">Sistema completo para frigorÃ­ficos. React + Supabase, 16 agentes IA em 5 tiers para automaÃ§Ã£o total do processo.</div>
           <span class="tool-tag yellow">React + Supabase</span>
         </div>
         <div class="tool-card" onclick="abrirProjeto('fazendacerebro')">
-          <div class="tool-icon">🧠</div>
-          <div class="tool-name">Fazenda Cérebro</div>
-          <div class="tool-desc">App React Native com múltiplos agentes IA. Voz, texto e foto → orquestrador → agentes paralelos → Firebase.</div>
+          <div class="tool-icon">ð§ </div>
+          <div class="tool-name">Fazenda CÃ©rebro</div>
+          <div class="tool-desc">App React Native com mÃºltiplos agentes IA. Voz, texto e foto â orquestrador â agentes paralelos â Firebase.</div>
           <span class="tool-tag">React Native</span>
         </div>
         <div class="tool-card" onclick="trocarTab('chat')" style="border-color:#312e81">
-          <div class="tool-icon">➕</div>
+          <div class="tool-icon">â</div>
           <div class="tool-name">Novo Projeto</div>
-          <div class="tool-desc">Peça ao Nexus para criar um novo projeto. Use o Chat ou o IdeaOrganizer para começar do zero com IA.</div>
-          <span class="tool-tag">Via Chat ou Fábrica</span>
+          <div class="tool-desc">PeÃ§a ao Nexus para criar um novo projeto. Use o Chat ou o IdeaOrganizer para comeÃ§ar do zero com IA.</div>
+          <span class="tool-tag">Via Chat ou FÃ¡brica</span>
         </div>
       </div>
     </div>
 
     <div>
-      <div class="section-title">⚙️ Infraestrutura & Controle</div>
+      <div class="section-title">âï¸ Infraestrutura & Controle</div>
       <div class="tool-grid">
         <div class="tool-card" onclick="trocarTab('approvals')">
-          <div class="tool-icon">✅</div>
-          <div class="tool-name">Aprovações Pendentes</div>
-          <div class="tool-desc">Ações dos agentes que precisam da sua aprovação antes de executar. Governança total sobre o que o sistema faz.</div>
+          <div class="tool-icon">â</div>
+          <div class="tool-name">AprovaÃ§Ãµes Pendentes</div>
+          <div class="tool-desc">AÃ§Ãµes dos agentes que precisam da sua aprovaÃ§Ã£o antes de executar. GovernanÃ§a total sobre o que o sistema faz.</div>
           <span class="tool-tag red" id="cardPendCount">0 pendentes</span>
         </div>
         <div class="tool-card" onclick="trocarTab('terminal')">
-          <div class="tool-icon">🖥️</div>
+          <div class="tool-icon">ð¥ï¸</div>
           <div class="tool-name">Terminal Root</div>
-          <div class="tool-desc">Execute comandos direto no servidor. Auto-Healing ativo — se o comando falhar, a IA corrige e tenta novamente.</div>
+          <div class="tool-desc">Execute comandos direto no servidor. Auto-Healing ativo â se o comando falhar, a IA corrige e tenta novamente.</div>
           <span class="tool-tag green">Auto-Healing</span>
         </div>
         <div class="tool-card" onclick="trocarTab('status')">
-          <div class="tool-icon">📊</div>
-          <div class="tool-name">Status & Configuração</div>
-          <div class="tool-desc">Monitore todos os serviços, ajuste o volume de tokens (Eco/Normal/Power) e dispare pesquisas manuais.</div>
+          <div class="tool-icon">ð</div>
+          <div class="tool-name">Status & ConfiguraÃ§Ã£o</div>
+          <div class="tool-desc">Monitore todos os serviÃ§os, ajuste o volume de tokens (Eco/Normal/Power) e dispare pesquisas manuais.</div>
           <span class="tool-tag" id="cardStatus">verificando...</span>
         </div>
         <div class="tool-card" onclick="abrirWhatsApp()">
-          <div class="tool-icon">📱</div>
+          <div class="tool-icon">ð±</div>
           <div class="tool-name">WhatsApp Bot</div>
           <div class="tool-desc">Nexus conectado ao seu WhatsApp. Envie "pendencias", "aprovar ID" ou "negar ID" direto pelo celular.</div>
           <span class="tool-tag green" id="cardWA">verificando...</span>
@@ -277,73 +300,73 @@
 
   </div>
 
-  <!-- ═══════════════ TAB: CHAT ═══════════════ -->
+  <!-- âââââââââââââââ TAB: CHAT âââââââââââââââ -->
   <div id="pagChat" class="page" style="padding:0">
     <div class="chat-messages" id="chatMessages">
       <!-- Mensagem de boas-vindas -->
       <div class="msg nexus">
-        <div class="msg-avatar">⚔️</div>
+        <div class="msg-avatar">âï¸</div>
         <div>
-          <div class="msg-bubble">Olá, Priscila! Sou o **Nexus Claw**, seu CEO e Engenheiro Supremo. Estou online e pronto para qualquer comando. O que vamos construir hoje?</div>
+          <div class="msg-bubble">OlÃ¡, Priscila! Sou o **Nexus Claw**, seu CEO e Engenheiro Supremo. Estou online e pronto para qualquer comando. O que vamos construir hoje?</div>
           <div class="msg-time">Nexus Claw</div>
         </div>
       </div>
     </div>
-    <div class="chat-hint">Ctrl+Enter para enviar • Nexus usa 6 IAs em cascata</div>
+    <div class="chat-hint">Ctrl+Enter para enviar â¢ Nexus usa 6 IAs em cascata</div>
     <div class="chat-input-area">
       <textarea class="chat-input" id="chatInput" rows="1" placeholder="Fale com o Nexus... Ex: Analise o projeto QG-IA e me diga o que falta" oninput="autoResize(this)"></textarea>
-      <button class="send-btn" id="sendBtn" onclick="enviarChat()" title="Enviar (Ctrl+Enter)">➤</button>
+      <button class="send-btn" id="sendBtn" onclick="enviarChat()" title="Enviar (Ctrl+Enter)">â¤</button>
     </div>
   </div>
 
-  <!-- ═══════════════ TAB: STATUS ═══════════════ -->
+  <!-- âââââââââââââââ TAB: STATUS âââââââââââââââ -->
   <div id="pagStatus" class="page" style="gap:16px">
     <div class="grid">
 
       <div class="card grid-full">
-        <div class="card-title">📊 Status dos Serviços</div>
+        <div class="card-title">ð Status dos ServiÃ§os</div>
         <div class="stats-row">
-          <div class="stat-box"><div class="stat-label">Servidor</div><div class="stat-value" id="stServidor">–</div></div>
-          <div class="stat-box"><div class="stat-label">WhatsApp</div><div class="stat-value" id="stWA">–</div></div>
-          <div class="stat-box"><div class="stat-label">Auto-Healing</div><div class="stat-value" id="stHeal">–</div></div>
-          <div class="stat-box"><div class="stat-label">Multi-IA</div><div class="stat-value" id="stIA">–</div></div>
-          <div class="stat-box"><div class="stat-label">Cron Pesquisa</div><div class="stat-value" id="stCron">–</div></div>
+          <div class="stat-box"><div class="stat-label">Servidor</div><div class="stat-value" id="stServidor">â</div></div>
+          <div class="stat-box"><div class="stat-label">WhatsApp</div><div class="stat-value" id="stWA">â</div></div>
+          <div class="stat-box"><div class="stat-label">Auto-Healing</div><div class="stat-value" id="stHeal">â</div></div>
+          <div class="stat-box"><div class="stat-label">Multi-IA</div><div class="stat-value" id="stIA">â</div></div>
+          <div class="stat-box"><div class="stat-label">Cron Pesquisa</div><div class="stat-value" id="stCron">â</div></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">⚡ Volume de Tokens</div>
-        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Controla o custo das chamadas às IAs</p>
+        <div class="card-title">â¡ Volume de Tokens</div>
+        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Controla o custo das chamadas Ã s IAs</p>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-eco" id="btnEco" onclick="setVolume('eco')">🌿 Eco</button>
-          <button class="btn btn-normal" id="btnNormal" onclick="setVolume('normal')">⚡ Normal</button>
-          <button class="btn btn-power" id="btnPower" onclick="setVolume('power')">🔥 Power</button>
+          <button class="btn btn-eco" id="btnEco" onclick="setVolume('eco')">ð¿ Eco</button>
+          <button class="btn btn-normal" id="btnNormal" onclick="setVolume('normal')">â¡ Normal</button>
+          <button class="btn btn-power" id="btnPower" onclick="setVolume('power')">ð¥ Power</button>
         </div>
         <div id="volStatus" style="font-size:.75rem;color:#6b7280;margin-top:8px"></div>
       </div>
 
       <div class="card">
-        <div class="card-title">🔬 Pesquisa Autônoma</div>
-        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Nexus estuda tendências de IA, mercado e negócios automaticamente a cada 6 horas</p>
-        <button class="btn btn-ghost" onclick="ativarPesquisa()" id="btnPesquisa">🔬 Pesquisar Agora</button>
+        <div class="card-title">ð¬ Pesquisa AutÃ´noma</div>
+        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Nexus estuda tendÃªncias de IA, mercado e negÃ³cios automaticamente a cada 6 horas</p>
+        <button class="btn btn-ghost" onclick="ativarPesquisa()" id="btnPesquisa">ð¬ Pesquisar Agora</button>
         <div id="researchStatus" style="font-size:.75rem;color:#6b7280;margin-top:8px"></div>
       </div>
 
     </div>
   </div>
 
-  <!-- ═══════════════ TAB: APROVAÇÕES ═══════════════ -->
+  <!-- âââââââââââââââ TAB: APROVAÃÃES âââââââââââââââ -->
   <div id="pagApprovals" class="page" style="gap:12px">
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:.85rem;color:#6b7280">Ações aguardando sua decisão</span>
-      <button class="btn btn-ghost btn-sm" onclick="carregarApprovals()">↻ Recarregar</button>
+      <span style="font-size:.85rem;color:#6b7280">AÃ§Ãµes aguardando sua decisÃ£o</span>
+      <button class="btn btn-ghost btn-sm" onclick="carregarApprovals()">â» Recarregar</button>
     </div>
     <div id="approvalList">
       <div class="empty-txt" style="font-size:.82rem">Carregando...</div>
     </div>
   </div>
 
-  <!-- ═══════════════ TAB: MEMÓRIAS ═══════════════ -->
+  <!-- âââââââââââââââ TAB: MEMÃRIAS âââââââââââââââ -->
   <div id="pagMemoria" class="page" style="gap:12px">
     <div style="display:flex;gap:8px">
       <input type="text" class="inp" id="memFilter" placeholder="Filtrar por agente (ex: NexusClaw)" style="flex:1" />
@@ -354,38 +377,38 @@
     </div>
   </div>
 
-  <!-- ═══════════════ TAB: PESQUISAS ═══════════════ -->
+  <!-- âââââââââââââââ TAB: PESQUISAS âââââââââââââââ -->
   <div id="pagPesquisa" class="page" style="gap:12px">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:.85rem;color:#6b7280">Conhecimentos adquiridos pelo Nexus</span>
-      <button class="btn btn-ghost btn-sm" onclick="carregarResearch()">↻ Recarregar</button>
+      <button class="btn btn-ghost btn-sm" onclick="carregarResearch()">â» Recarregar</button>
     </div>
     <div id="researchLog" style="display:flex;flex-direction:column;gap:8px">
       <div class="empty-txt" style="font-size:.82rem">Nenhum aprendizado ainda. Use "Pesquisar Agora" no Status.</div>
     </div>
   </div>
 
-  <!-- ═══════════════ TAB: TERMINAL ═══════════════ -->
+  <!-- âââââââââââââââ TAB: TERMINAL âââââââââââââââ -->
   <div id="pagTerminal" class="page" style="gap:12px">
     <div class="card">
-      <div class="card-title">🖥️ Terminal Root — Auto-Healing ativo</div>
-      <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Se o comando falhar, a IA corrige e tenta automaticamente. Comandos destrutivos são bloqueados.</p>
+      <div class="card-title">ð¥ï¸ Terminal Root â Auto-Healing ativo</div>
+      <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Se o comando falhar, a IA corrige e tenta automaticamente. Comandos destrutivos sÃ£o bloqueados.</p>
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <input type="text" class="inp" id="termInput" placeholder="Ex: ls -la src/services" style="flex:1" />
-        <button class="btn btn-primary btn-sm" onclick="executarTerminal()">▶ Executar</button>
+        <button class="btn btn-primary btn-sm" onclick="executarTerminal()">â¶ Executar</button>
       </div>
-      <div style="font-size:.72rem;color:#6b7280;margin-bottom:8px">Saída:</div>
-      <div class="rbox" id="termResponse" style="min-height:200px;max-height:400px"><span class="empty-txt">Saída aparece aqui...</span></div>
+      <div style="font-size:.72rem;color:#6b7280;margin-bottom:8px">SaÃ­da:</div>
+      <div class="rbox" id="termResponse" style="min-height:200px;max-height:400px"><span class="empty-txt">SaÃ­da aparece aqui...</span></div>
     </div>
     <div class="card">
-      <div class="card-title">📋 Log de Auditoria Recente</div>
+      <div class="card-title">ð Log de Auditoria Recente</div>
       <div id="auditLog" style="max-height:300px;overflow-y:auto">
         <div class="empty-txt" style="font-size:.78rem">Carregando...</div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════ TAB: IDEAORGANIZER ═══════════════ -->
+  <!-- âââââââââââââââ TAB: IDEAORGANIZER âââââââââââââââ -->
   <div id="pagIdeias" class="page" style="padding:0;flex:1">
     <iframe
       id="iframeIdeias"
@@ -402,7 +425,7 @@
 const BASE = window.location.origin;
 let TOKEN = '';
 
-// ── LOGIN ──────────────────────────────────────────────
+// ââ LOGIN ââââââââââââââââââââââââââââââââââââââââââââââ
 function entrar() {
   TOKEN = document.getElementById('tokenInput').value.trim();
   if (!TOKEN) { document.getElementById('loginError').textContent = 'Cole o token.'; return; }
@@ -414,9 +437,9 @@ function entrar() {
         localStorage.setItem('qg_token', TOKEN);
         atualizarTudo();
       } else {
-        document.getElementById('loginError').textContent = '❌ Token inválido.';
+        document.getElementById('loginError').textContent = 'â Token invÃ¡lido.';
       }
-    }).catch(() => { document.getElementById('loginError').textContent = '❌ Servidor offline.'; });
+    }).catch(() => { document.getElementById('loginError').textContent = 'â Servidor offline.'; });
 }
 
 window.onload = () => {
@@ -447,7 +470,7 @@ async function api(path, method='GET', body=null) {
   return r.json();
 }
 
-// ── TABS ──────────────────────────────────────────────
+// ââ TABS ââââââââââââââââââââââââââââââââââââââââââââââ
 function trocarTab(nome) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -458,7 +481,7 @@ function trocarTab(nome) {
   if (nome === 'pesquisa') carregarResearch();
   if (nome === 'terminal') carregarAudit();
   if (nome === 'status') carregarStatus();
-  // Carrega o iframe do IdeaOrganizer só quando entrar na aba (lazy load)
+  // Carrega o iframe do IdeaOrganizer sÃ³ quando entrar na aba (lazy load)
   if (nome === 'ideias') {
     const fr = document.getElementById('iframeIdeias');
     if (!fr.src || fr.src === window.location.href) {
@@ -467,12 +490,12 @@ function trocarTab(nome) {
   }
 }
 
-// ── FERRAMENTAS CARDS ────────────────────────────────
+// ââ FERRAMENTAS CARDS ââââââââââââââââââââââââââââââââ
 function abrirProjeto(proj) {
   const msgs = {
-    agromacro: 'Me fale sobre o projeto AgroMacro: status atual, próximas funcionalidades e o que falta implementar.',
-    frigogest: 'Me fale sobre o projeto FrigoGest: status atual, os 16 agentes IA implementados e próximas melhorias.',
-    fazendacerebro: 'Me fale sobre o projeto Fazenda Cérebro: status atual, pipeline de agentes e o que falta para MVP.',
+    agromacro: 'Me fale sobre o projeto AgroMacro: status atual, prÃ³ximas funcionalidades e o que falta implementar.',
+    frigogest: 'Me fale sobre o projeto FrigoGest: status atual, os 16 agentes IA implementados e prÃ³ximas melhorias.',
+    fazendacerebro: 'Me fale sobre o projeto Fazenda CÃ©rebro: status atual, pipeline de agentes e o que falta para MVP.',
   };
   trocarTab('chat');
   setTimeout(() => {
@@ -484,7 +507,7 @@ function abrirProjeto(proj) {
 function abrirWhatsApp() {
   trocarTab('chat');
   setTimeout(() => {
-    document.getElementById('chatInput').value = 'Qual é o status do WhatsApp Bot? O número conectado está correto?';
+    document.getElementById('chatInput').value = 'Qual Ã© o status do WhatsApp Bot? O nÃºmero conectado estÃ¡ correto?';
     enviarChat();
   }, 300);
 }
@@ -493,12 +516,12 @@ function atualizarCardsFerramentas(d) {
   const pend = document.getElementById('cardPendCount');
   const wa = document.getElementById('cardWA');
   const st = document.getElementById('cardStatus');
-  // pend já atualizado pelo carregarApprovals
-  if (wa) wa.textContent = d.servicos?.whatsapp === 'Ativado' ? '✅ Conectado' : '⏸️ Desligado';
-  if (st) st.textContent = d.status === 'Operacional' ? '✅ Online' : '❌ Offline';
+  // pend jÃ¡ atualizado pelo carregarApprovals
+  if (wa) wa.textContent = d.servicos?.whatsapp === 'Ativado' ? 'â Conectado' : 'â¸ï¸ Desligado';
+  if (st) st.textContent = d.status === 'Operacional' ? 'â Online' : 'â Offline';
 }
 
-// ── CHAT ──────────────────────────────────────────────
+// ââ CHAT ââââââââââââââââââââââââââââââââââââââââââââââ
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
@@ -509,13 +532,13 @@ function addMsg(role, texto, iaUsada) {
   const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const div = document.createElement('div');
   div.className = 'msg ' + (role === 'user' ? 'user' : 'nexus');
-  const avatar = role === 'user' ? '👤' : '⚔️';
-  const label = role === 'user' ? 'Você' : ('Nexus' + (iaUsada ? ` [${iaUsada}]` : ''));
+  const avatar = role === 'user' ? 'ð¤' : 'âï¸';
+  const label = role === 'user' ? 'VocÃª' : ('Nexus' + (iaUsada ? ` [${iaUsada}]` : ''));
   div.innerHTML = `
     <div class="msg-avatar">${avatar}</div>
     <div>
       <div class="msg-bubble">${escHtml(texto)}</div>
-      <div class="msg-time">${hora} · ${label}</div>
+      <div class="msg-time">${hora} Â· ${label}</div>
     </div>`;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
@@ -527,15 +550,20 @@ function addTyping() {
   const div = document.createElement('div');
   div.className = 'msg nexus';
   div.id = 'typing';
-  div.innerHTML = `<div class="msg-avatar">⚔️</div><div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
+  div.innerHTML = `<div class="msg-avatar">âï¸</div><div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
   return div;
 }
 
 function escHtml(t) {
+  if (typeof marked !== 'undefined') {
+    try { return marked.parse(t, { breaks: true, gfm: true }); } catch(e) {}
+  }
   return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
 }
+
+let chatHistory = [];
 
 async function enviarChat() {
   const input = document.getElementById('chatInput');
@@ -548,39 +576,41 @@ async function enviarChat() {
   addMsg('user', texto);
   const typing = addTyping();
   try {
-    const d = await api('/api/nexus/comando', 'POST', { prompt: texto });
+    const d = await api('/api/nexus/comando', 'POST', { prompt: texto, historico: chatHistory.slice(-8) });
     typing.remove();
     const resposta = d.resposta || d.error || JSON.stringify(d);
-    // extrai o nome da IA se vier no formato "✅ NEXUS [Gemini]:..."
+    // extrai o nome da IA se vier no formato "â NEXUS [Gemini]:..."
     const iaMatch = resposta.match(/NEXUS \[([^\]]+)\]/);
     const iaUsada = iaMatch ? iaMatch[1] : null;
     addMsg('nexus', resposta, iaUsada);
+    chatHistory.push({role:'user',content:texto},{role:'assistant',content:resposta});
+    if(chatHistory.length>20) chatHistory=chatHistory.slice(-20);
   } catch(e) {
     typing.remove();
-    addMsg('nexus', '❌ Erro ao conectar: ' + e.message);
+    addMsg('nexus', 'â Erro ao conectar: ' + e.message);
   }
   btn.disabled = false;
   input.focus();
 }
 
-// ── STATUS ────────────────────────────────────────────
+// ââ STATUS ââââââââââââââââââââââââââââââââââââââââââââ
 async function carregarStatus() {
   try {
     const d = await fetch(`${BASE}/api/status`).then(r=>r.json());
     document.getElementById('serverStatus').textContent = d.status;
-    document.getElementById('stServidor').textContent = '✅ Online';
-    document.getElementById('stWA').textContent = d.servicos?.whatsapp === 'Ativado' ? '✅' : '⏸️';
-    document.getElementById('stHeal').textContent = d.servicos?.autoHealing === 'Ativado' ? '✅' : '❌';
-    document.getElementById('stIA').textContent = d.servicos?.multiIA === 'Ativado' ? '✅' : '❌';
+    document.getElementById('stServidor').textContent = 'â Online';
+    document.getElementById('stWA').textContent = d.servicos?.whatsapp === 'Ativado' ? 'â' : 'â¸ï¸';
+    document.getElementById('stHeal').textContent = d.servicos?.autoHealing === 'Ativado' ? 'â' : 'â';
+    document.getElementById('stIA').textContent = d.servicos?.multiIA === 'Ativado' ? 'â' : 'â';
     document.getElementById('stCron').textContent = d.servicos?.cron_pesquisa || 'A cada 6h';
-    const up = d.uptime ? Math.floor(d.uptime/3600)+'h '+Math.floor((d.uptime%3600)/60)+'m' : '–';
+    const up = d.uptime ? Math.floor(d.uptime/3600)+'h '+Math.floor((d.uptime%3600)/60)+'m' : 'â';
     document.getElementById('uptimeBadge').textContent = 'uptime: ' + up;
-    document.getElementById('memBadge').textContent = 'mem: ' + (d.memoria?.heapUsed || '–');
+    document.getElementById('memBadge').textContent = 'mem: ' + (d.memoria?.heapUsed || 'â');
     document.getElementById('statusDot').style.background = '#22c55e';
     highlightVolBtn(d.token_volume || 'normal');
     atualizarCardsFerramentas(d);
   } catch {
-    document.getElementById('stServidor').textContent = '❌ Offline';
+    document.getElementById('stServidor').textContent = 'â Offline';
     document.getElementById('statusDot').style.background = '#ef4444';
   }
 }
@@ -597,9 +627,9 @@ async function setVolume(v) {
   el.innerHTML = '<span class="sp"></span>Alterando...';
   try {
     const d = await api('/api/config/token-volume', 'POST', { volume: v });
-    el.textContent = '✅ Volume: ' + (d.token_volume || v).toUpperCase();
+    el.textContent = 'â Volume: ' + (d.token_volume || v).toUpperCase();
     highlightVolBtn(v);
-  } catch(e) { el.textContent = '❌ ' + e.message; }
+  } catch(e) { el.textContent = 'â ' + e.message; }
 }
 
 async function ativarPesquisa() {
@@ -609,12 +639,12 @@ async function ativarPesquisa() {
   el.innerHTML = '<span class="sp"></span>Pesquisa em andamento (1-2 min)...';
   try {
     await api('/api/nexus/pesquisa', 'POST', {});
-    el.textContent = '✅ Pesquisa iniciada! Resultados salvos no Supabase.';
-  } catch(e) { el.textContent = '❌ ' + e.message; }
+    el.textContent = 'â Pesquisa iniciada! Resultados salvos no Supabase.';
+  } catch(e) { el.textContent = 'â ' + e.message; }
   btn.disabled = false;
 }
 
-// ── APPROVALS ────────────────────────────────────────
+// ââ APPROVALS ââââââââââââââââââââââââââââââââââââââââ
 async function carregarApprovals() {
   try {
     const d = await api('/api/approvals/pending?limit=30');
@@ -623,7 +653,7 @@ async function carregarApprovals() {
     const cp = document.getElementById('cardPendCount');
     if (cp) cp.textContent = list.length + ' pendentes';
     const el = document.getElementById('approvalList');
-    if (!list.length) { el.innerHTML = '<div style="color:#374151;font-size:.82rem;font-style:italic">Nenhuma pendência. ✅</div>'; return; }
+    if (!list.length) { el.innerHTML = '<div style="color:#374151;font-size:.82rem;font-style:italic">Nenhuma pendÃªncia. â</div>'; return; }
     el.innerHTML = list.map(a => {
       let det = {};
       try { det = JSON.parse(a.detalhes || '{}'); } catch {}
@@ -635,12 +665,12 @@ async function carregarApprovals() {
           <div class="li-sub">${new Date(a.criado_em||Date.now()).toLocaleString('pt-BR')}</div>
         </div>
         <div class="li-actions">
-          <button class="btn btn-success btn-sm" onclick="decidir('${a.id}','APROVADO')">✅ Aprovar</button>
-          <button class="btn btn-danger btn-sm" onclick="decidir('${a.id}','NEGADO')">❌ Negar</button>
+          <button class="btn btn-success btn-sm" onclick="decidir('${a.id}','APROVADO')">â Aprovar</button>
+          <button class="btn btn-danger btn-sm" onclick="decidir('${a.id}','NEGADO')">â Negar</button>
         </div>
       </div>`;
     }).join('');
-  } catch(e) { document.getElementById('approvalList').textContent = '❌ ' + e.message; }
+  } catch(e) { document.getElementById('approvalList').textContent = 'â ' + e.message; }
 }
 
 async function decidir(id, status) {
@@ -650,7 +680,7 @@ async function decidir(id, status) {
   } catch(e) { alert('Erro: ' + e.message); }
 }
 
-// ── MEMORY ───────────────────────────────────────────
+// ââ MEMORY âââââââââââââââââââââââââââââââââââââââââââ
 async function carregarMemory() {
   const agente = document.getElementById('memFilter').value.trim();
   try {
@@ -658,7 +688,7 @@ async function carregarMemory() {
     const d = await api('/api/agent/memory' + params);
     const list = d.memorias || [];
     const el = document.getElementById('memoryList');
-    if (!list.length) { el.innerHTML = '<div class="empty-txt" style="font-size:.8rem">Sem memórias registradas.</div>'; return; }
+    if (!list.length) { el.innerHTML = '<div class="empty-txt" style="font-size:.8rem">Sem memÃ³rias registradas.</div>'; return; }
     el.innerHTML = list.map(m => `
       <div class="mem-item">
         <div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">
@@ -668,43 +698,37 @@ async function carregarMemory() {
         </div>
         <div style="color:#94a3b8;line-height:1.5">${(m.conteudo||'').substring(0,200)}${(m.conteudo||'').length>200?'...':''}</div>
       </div>`).join('');
-  } catch(e) { document.getElementById('memoryList').textContent = '❌ ' + e.message; }
+  } catch(e) { document.getElementById('memoryList').textContent = 'â ' + e.message; }
 }
 
-// ── RESEARCH ─────────────────────────────────────────
+// ââ RESEARCH âââââââââââââââââââââââââââââââââââââââââ
 async function carregarResearch() {
-  try {
-    const d = await api('/api/agent/memory?agente=NexusClaw&limit=30');
-    const list = (d.memorias||[]).filter(m => m.categoria && m.categoria !== 'geral');
-    const el = document.getElementById('researchLog');
+  const el = document.getElementById('researchLog');
+  const renderList = (list, isLocal) => {
     if (!list.length) { el.innerHTML = '<div class="empty-txt" style="font-size:.8rem">Nenhum aprendizado. Vá em Status → Pesquisar Agora.</div>'; return; }
-    el.innerHTML = list.map(m => `
+    const badge = isLocal ? '<div style="font-size:.7rem;color:#f59e0b;margin-bottom:10px">⚠️ Exibindo dados locais (Supabase offline)</div>' : '';
+    el.innerHTML = badge + list.map(m => `
       <div class="card" style="padding:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-weight:600;color:#a78bfa;font-size:.82rem">📚 ${m.categoria}</span>
+          <span style="font-weight:600;color:#a78bfa;font-size:.82rem">📚 ${m.categoria||'Geral'}</span>
           <span style="color:#4b5563;font-size:.68rem">${new Date(m.criado_em||Date.now()).toLocaleString('pt-BR')}</span>
         </div>
         <div style="font-size:.78rem;color:#94a3b8;line-height:1.6">${(m.conteudo||'').substring(0,300)}${(m.conteudo||'').length>300?'...':''}</div>
       </div>`).join('');
-  } catch(e) { document.getElementById('researchLog').textContent = '❌ ' + e.message; }
-}
-
-// ── TERMINAL ─────────────────────────────────────────
-async function executarTerminal() {
-  const cmd = document.getElementById('termInput').value.trim();
-  if (!cmd) return;
-  document.getElementById('termResponse').innerHTML = '<span class="sp"></span>executando...';
+  };
   try {
-    const d = await api('/api/terminal/exec', 'POST', { command: cmd });
-    document.getElementById('termResponse').textContent = d.stdout || d.msg || d.error || JSON.stringify(d);
-  } catch(e) { document.getElementById('termResponse').textContent = '❌ ' + e.message; }
+    const d = await api('/api/agent/memory?agente=NexusClaw&limit=30');
+    const list = (d.memorias||[]).filter(m => m.categoria && m.categoria !== 'geral');
+    if (list.length) { renderList(list, false); return; }
+    throw new Error('sem dados no Supabase');
+  } catch(e) {
+    try {
+      const d2 = await api('/api/research/local');
+      renderList((d2.memorias||[]).filter(m => m.categoria), true);
+    } catch(e2) { el.textContent = '❌ ' + e2.message; }
+  }
 }
-document.addEventListener('DOMContentLoaded', () => {
-  const ti = document.getElementById('termInput');
-  if(ti) ti.addEventListener('keydown', e => { if(e.key==='Enter') executarTerminal(); });
-});
 
-// ── AUDIT ─────────────────────────────────────────────
 async function carregarAudit() {
   try {
     const d = await api('/api/agent/memory?limit=20');
@@ -717,17 +741,74 @@ async function carregarAudit() {
         <span style="color:#818cf8;margin-right:5px">${m.agente||'?'}</span>
         <span style="color:#e2e8f0">[${m.categoria||'geral'}] ${(m.conteudo||'').substring(0,70)}</span>
       </div>`).join('');
-  } catch(e) { document.getElementById('auditLog').textContent = '❌ ' + e.message; }
+  } catch(e) { document.getElementById('auditLog').textContent = 'â ' + e.message; }
 }
 
-// ── ATUALIZAR TUDO ────────────────────────────────────
+// ââ ATUALIZAR TUDO ââââââââââââââââââââââââââââââââââââ
 async function atualizarTudo() {
   carregarStatus();
   carregarApprovals();
 }
 
-// Auto-refresh a cada 30s
-setInterval(() => { if(TOKEN) { carregarStatus(); carregarApprovals(); } }, 30000);
+// Auto-refresh inteligente com backoff
+let _refreshInterval = 30000;
+let _refreshTimer = null;
+let _lastActivity = Date.now();
+function agendaRefresh() {
+  if (_refreshTimer) clearTimeout(_refreshTimer);
+  const idle = Date.now() - _lastActivity;
+  _refreshInterval = idle < 120000 ? 15000 : 60000;
+  _refreshTimer = setTimeout(async () => {
+    if (TOKEN) { await atualizarTudo(); }
+    agendaRefresh();
+  }, _refreshInterval);
+}
+document.addEventListener('click', () => { _lastActivity = Date.now(); });
+document.addEventListener('keydown', () => { _lastActivity = Date.now(); });
+agendaRefresh();
+
+// ---- Terminal com histórico Up/Down ----
+let termHistory = [];
+let termHistIdx = -1;
+
+document.getElementById('termInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    executarTerminal();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (termHistory.length === 0) return;
+    termHistIdx = Math.min(termHistIdx + 1, termHistory.length - 1);
+    this.value = termHistory[termHistIdx];
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (termHistIdx <= 0) { termHistIdx = -1; this.value = ''; return; }
+    termHistIdx--;
+    this.value = termHistory[termHistIdx];
+  }
+});
+
+async function executarTerminal() {
+  const inp = document.getElementById('termInput');
+  const out = document.getElementById('termResponse');
+  const cmd = inp.value.trim();
+  if (!cmd) return;
+  if (termHistory[0] !== cmd) termHistory.unshift(cmd);
+  if (termHistory.length > 50) termHistory.pop();
+  termHistIdx = -1;
+  out.innerHTML = '<span style="color:#7ecfff">$ ' + escHtml(cmd) + '</span>\n<span style="color:#aaa">Executando...</span>';
+  try {
+    const res = await api('/api/terminal/exec', 'POST', { command: cmd });
+    const output = res.stdout || res.output || res.error || JSON.stringify(res);
+    out.innerHTML = '<span style="color:#7ecfff">$ ' + escHtml(cmd) + '</span>\n' + escHtml(output);
+  } catch(err) {
+    out.innerHTML = '<span style="color:#7ecfff">$ ' + escHtml(cmd) + '</span>\n<span style="color:#ff6b6b">Erro: ' + escHtml(err.message) + '</span>';
+  }
+  inp.value = '';
+  inp.focus();
+  out.scrollTop = out.scrollHeight;
+}
+
 </script>
 </body>
 </html>
