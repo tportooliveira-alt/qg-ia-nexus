@@ -195,6 +195,7 @@ app.get("/index_HOSTINGER.html", (req, res) => {
 
 // â DASHBOARD DE CONTROLE DO NEXUS
 app.get("/dashboard", (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
