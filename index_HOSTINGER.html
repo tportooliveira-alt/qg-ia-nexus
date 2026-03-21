@@ -384,6 +384,7 @@
           <option value="power">Power</option>
         </select>
         <input id="qg-token-input" type="password" placeholder="QG_AUTH_TOKEN"
+          value="4ddd7e8d65d766c2e353f00e16325ec8e4a6ff9252e46517ea11b8cc691855b1"
           class="mt-2 w-full bg-black border border-[#27272a] rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500" />
         <button onclick="salvarTokenVolume()"
           class="mt-2 w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-300 bg-[#09090b] border border-[#27272a] hover:bg-[#18181b] transition">
@@ -637,9 +638,10 @@
             out.scrollTop = out.scrollHeight;
 
             try {
+              const qgToken = document.getElementById('qg-token-input')?.value || localStorage.getItem('qg_token') || '';
               const res = await fetch('/api/nexus/comando', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-QG-Token': qgToken },
                 body: JSON.stringify({ prompt: msg })
               });
               const data = await res.json();
