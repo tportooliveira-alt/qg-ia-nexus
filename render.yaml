@@ -15,3 +15,7 @@ services:
         value: false
       - key: QG_AUTH_TOKEN
         value: 4ddd7e8d65d766c2e353f00e16325ec8e4a6ff9252e46517ea11b8cc691855b1
+      - key: FABRICA_API_URL
+        value: https://fabrica-ia-api.onrender.com
+      - key: FABRICA_API_KEY
+        value: qgia-fabrica-2026

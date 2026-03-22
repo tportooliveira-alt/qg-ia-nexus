@@ -357,7 +357,12 @@
         class="w-full mt-2 text-sm px-4 py-3 rounded-lg bg-white text-black hover:bg-zinc-200 transition font-bold">
         Entrar
       </button>
+      <button id="btn-cadastro" onclick="fazerCadastro()"
+        class="w-full text-sm px-4 py-2 rounded-lg bg-transparent border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition">
+        Criar conta
+      </button>
       <p id="erro-login" class="text-xs text-red-500 mt-2 hidden">Email ou senha incorretos.</p>
+      <p id="login-ok" class="text-xs text-green-400 mt-2 hidden">Conta criada! Verifique seu email para confirmar.</p>
       <p id="login-loading" class="text-xs text-zinc-400 mt-2 hidden">Verificando acesso...</p>
     </div>
   </div>
@@ -392,6 +397,37 @@
         btn.textContent = 'Entrar';
       } else {
         document.getElementById('login-overlay').style.display = 'none';
+      }
+    }
+
+    async function fazerCadastro() {
+      const email = document.getElementById('login-email').value.trim();
+      const senha = document.getElementById('login-senha').value;
+      const btn = document.getElementById('btn-cadastro');
+      const erro = document.getElementById('erro-login');
+      const ok = document.getElementById('login-ok');
+      const loading = document.getElementById('login-loading');
+
+      if (!email || !senha) { erro.textContent = 'Preencha email e senha.'; erro.classList.remove('hidden'); return; }
+      if (senha.length < 6) { erro.textContent = 'Senha precisa ter ao menos 6 caracteres.'; erro.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Criando conta...';
+      loading.classList.remove('hidden');
+      erro.classList.add('hidden');
+      ok.classList.add('hidden');
+
+      const { error } = await _supabase.auth.signUp({ email, password: senha });
+
+      btn.disabled = false;
+      btn.textContent = 'Criar conta';
+      loading.classList.add('hidden');
+
+      if (error) {
+        erro.textContent = error.message || 'Erro ao criar conta.';
+        erro.classList.remove('hidden');
+      } else {
+        ok.classList.remove('hidden');
       }
     }
 

@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-03-22T04:26:38.379Z",
+  "totalCases": 47,
+  "mismatches": 0,
+  "lowConfidenceMatches": 3,
+  "mismatchSamples": [],
+  "lowConfidenceSamples": [
+    {
+      "caseType": "ambiguous-no-integration-keyword",
+      "domain": "integration",
+      "confidence": 0.25,
+      "text": "Projeto com software, automacao eletrica, fundacoes civis e maquina mecanica em unico fluxo"
+    },
+    {
+      "caseType": "short-empty",
+      "domain": "software",
+      "confidence": 0,
+      "text": ""
+    },
+    {
+      "caseType": "generic-low-signal",
+      "domain": "software",
+      "confidence": 0,
+      "text": "Preciso de ajuda com meu projeto"
+    }
+  ],
+  "validationFindings": [],
+  "emptyKnowledgeDomains": [],
+  "genericRoutingDomain": "software",
+  "genericRoutingConfidence": 0
+}

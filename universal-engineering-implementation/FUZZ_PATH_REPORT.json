@@ -1,0 +1,604 @@
+{
+  "generatedAt": "2026-03-22T04:26:38.385Z",
+  "totalOriginal": 210,
+  "totalMutated": 1050,
+  "byMutation": {
+    "remove-vowels": {
+      "total": 210,
+      "mismatch": 180,
+      "mismatchRate": 0.857,
+      "lowConfidence": 30,
+      "lowConfidenceRate": 0.143
+    },
+    "drop-char": {
+      "total": 210,
+      "mismatch": 42,
+      "mismatchRate": 0.2,
+      "lowConfidence": 0,
+      "lowConfidenceRate": 0
+    },
+    "noise": {
+      "total": 210,
+      "mismatch": 13,
+      "mismatchRate": 0.062,
+      "lowConfidence": 0,
+      "lowConfidenceRate": 0
+    },
+    "trim-half": {
+      "total": 210,
+      "mismatch": 12,
+      "mismatchRate": 0.057,
+      "lowConfidence": 0,
+      "lowConfidenceRate": 0
+    },
+    "mixed-case": {
+      "total": 210,
+      "mismatch": 13,
+      "mismatchRate": 0.062,
+      "lowConfidence": 0,
+      "lowConfidenceRate": 0
+    }
+  },
+  "highRiskSamples": [
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0031",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0032",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0033",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0034",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0035",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0036",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0037",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0038",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0039",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0040",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0041",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0042",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0043",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0044",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0045",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0046",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0047",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0048",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0049",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0050",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0051",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0052",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0053",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0054",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0055",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0056",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0057",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0058",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0059",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "me-0060",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0061",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0062",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0063",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0064",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0065",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0066",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0067",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0068",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0069",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0070",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0071",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0072",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0073",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0074",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0075",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0076",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0077",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0078",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0079",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0080",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0081",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0082",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0083",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0084",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0085",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0086",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0087",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0088",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0089",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "ci-0090",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0091",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0092",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0093",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0094",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0095",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0096",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0097",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0098",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0099",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0100",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0101",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0102",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0103",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0104",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0105",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0106",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0107",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0108",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0109",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    },
+    {
+      "mutation": "remove-vowels",
+      "id": "el-0110",
+      "expected": "electrical",
+      "predicted": "software",
+      "confidence": 0
+    }
+  ]
+}

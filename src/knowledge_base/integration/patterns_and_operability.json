@@ -1,0 +1,17 @@
+﻿{
+  "integration_patterns": [
+    "event-driven orchestration",
+    "saga with compensation",
+    "anti-corruption layer",
+    "adapter/facade for legacy"
+  ],
+  "governance": {
+    "ownership": ["domain owner", "integration owner", "release owner"],
+    "cadence": ["weekly integration sync", "pre-release readiness review"],
+    "quality_gates": ["contract tests", "resilience tests", "rollback readiness"]
+  },
+  "operability": {
+    "telemetry": ["trace correlation", "domain health score", "error budget"],
+    "resilience": ["timeout and retry policy", "circuit breaker", "graceful degradation"]
+  }
+}

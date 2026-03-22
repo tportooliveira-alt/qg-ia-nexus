@@ -3,6 +3,7 @@ const qrcode = require("qrcode-terminal");
 const NexusService = require("./nexusService");
 const ApprovalService = require("./approvalService");
 const AuditService = require("./auditService");
+const PluginManager = require("../plugins/pluginManager");
 
 /**
  * 📱 MÓDULO WHATSAPP (CALIBRADO)
@@ -117,6 +118,27 @@ const WhatsAppService = {
           await sock.sendMessage(remetente, { text: `Pendências:\n${resumo}` });
         } catch (err) {
           await sock.sendMessage(remetente, { text: `❌ Falha ao listar pendências: ${err.message}` });
+        }
+        return;
+      }
+
+      // 🏭 COMANDO: !fabrica <ideia> — aciona a Fábrica de IA diretamente pelo WhatsApp
+      if (lower.startsWith('!fabrica')) {
+        const ideia = texto.replace(/^!fabrica\s*/i, '').trim();
+        if (!ideia || ideia.length < 5) {
+          await sock.sendMessage(remetente, { text: '⚠️ Use: *!fabrica* seguido da sua ideia de app.\nEx: !fabrica criar sistema de agendamento médico' });
+          return;
+        }
+        try {
+          const fabricaPlugin = PluginManager.get('fabricaIA');
+          const resultado = await fabricaPlugin.submeterIdeia(ideia);
+          const pipelineId = resultado.pipelineId || resultado.id || '(aguardando)';
+          try { await AuditService.registrar({ agente: "Priscila", acao: "fabrica_whatsapp", status: "ok", detalhe: { pipelineId, ideia: ideia.substring(0,80) }, origem: "whatsapp" }); } catch {}
+          await sock.sendMessage(remetente, {
+            text: `🏭 *FÁBRICA DE IA ACIONADA!*\n\nIdeia: "${ideia.substring(0,150)}"\nPipeline ID: *${pipelineId}*\n\nOs agentes já estão trabalhando. Quando concluído, veja os artefatos no Dashboard → aba Fábrica de IA.`
+          });
+        } catch (err) {
+          await sock.sendMessage(remetente, { text: `❌ Fábrica de IA indisponível: ${err.message}` });
         }
         return;
       }

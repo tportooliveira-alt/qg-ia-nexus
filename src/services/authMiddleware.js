@@ -38,10 +38,16 @@ function autenticarToken(req, res, next) {
     }
   }
 
+  // Método 3: Query param ?token= (necessário para EventSource/SSE — browser não envia headers)
+  const queryToken = req.query.token;
+  if (queryToken && queryToken === tokenValido) {
+    return next();
+  }
+
   // Nenhum método passou
   return res.status(403).json({
     error: "Acesso negado. Token de autenticação inválido ou ausente.",
-    dica: "Envie o header X-QG-Token ou Authorization: Bearer <TOKEN>"
+    dica: "Envie o header X-QG-Token, Authorization: Bearer <TOKEN>, ou ?token=<TOKEN>"
   });
 }
 

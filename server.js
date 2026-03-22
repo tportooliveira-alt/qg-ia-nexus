@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
@@ -23,11 +23,15 @@ const AgentRegistryService = require("./src/services/agentRegistryService");
 const AuditService = require("./src/services/auditService");
 const ResearchService = require("./src/services/researchService");
 const EvolutionService = require("./src/services/evolutionService");
+const RoutingService = require("./src/services/routingService");
+const KnowledgeService = require("./src/services/knowledgeService");
+const RequestValidationService = require("./src/services/requestValidationService");
+const PluginManager = require("./src/plugins/pluginManager");
 
-// ð¡ï¸ Importar Middlewares de SeguranÃ§a
+// ðŸ›¡ï¸ Importar Middlewares de SeguranÃ§a
 const { autenticarToken, validarPath, rateLimiter } = require("./src/services/authMiddleware");
 
-// ð Pastas que as rotas /api/fs podem acessar (ADICIONE AS SUAS AQUI)
+// ðŸ“ Pastas que as rotas /api/fs podem acessar (ADICIONE AS SUAS AQUI)
 const PASTAS_PERMITIDAS = [
   path.resolve(__dirname), // Raiz do projeto
   path.resolve(__dirname, "src"),
@@ -58,7 +62,7 @@ async function safeAudit(payload) {
   }
 }
 
-// ð¡ï¸ SEGURANÃA E MIDDLEWARES
+// ðŸ›¡ï¸ SEGURANÃ‡A E MIDDLEWARES
 app.use(cors({
   origin: ["https://ideiatoapp.me", "https://www.ideiatoapp.me", "http://localhost:3000", "http://127.0.0.1:3000", "https://qg-ia-nexus.onrender.com"],
   methods: ["GET", "POST", "OPTIONS"],
@@ -67,7 +71,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "50mb" }));
 
-// ð config.js â gerado dinamicamente, sÃ³ acessÃ­vel via localhost
+// ðŸ”‘ config.js â€” gerado dinamicamente, sÃ³ acessÃ­vel via localhost
 app.get('/config.js', (req, res) => {
   const ip = req.ip || req.connection.remoteAddress || '';
   const isLocal = ip === '::1' || ip === '127.0.0.1' || ip.includes('::ffff:127.0.0.1');
@@ -87,26 +91,55 @@ window.BACKEND_URL       = ${JSON.stringify(process.env.BACKEND_URL || '')};
 
 app.use(express.static(__dirname));
 
-// ð§  CONEXÃO SUPABASE (lÃª somente do .env â sem fallback hardcoded)
+// ðŸ“¦ CONEXÃƒO SUPABASE (lÃª somente do .env â€” sem fallback hardcoded)
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-  console.error("â ï¸ SUPABASE_URL ou SUPABASE_SERVICE_KEY nÃ£o definidos no .env!");
+  console.error("âŒ SUPABASE_URL ou SUPABASE_SERVICE_KEY nÃ£o definidos no .env!");
 }
 const supabase = createClient(
   process.env.SUPABASE_URL || "",
   process.env.SUPABASE_SERVICE_KEY || ""
 );
 
-// ð ROTA: VALIDAR TOKEN (nÃ£o depende do Supabase)
+// ðŸ”‘ ROTA: VALIDAR TOKEN (nÃ£o depende do Supabase)
 app.get("/api/auth/verify", autenticarToken, (req, res) => {
   res.json({ status: "ok", autenticado: true });
 });
 
-// ð¤ ROTA: ORQUESTRADOR DE AGENTES (ComunicaÃ§Ã£o via App) â PROTEGIDA
+// ðŸ¤– ROTA: ORQUESTRADOR DE AGENTES (ComunicaÃ§Ã£o via App) â€” PROTEGIDA
 app.post("/api/agentes/executar", autenticarToken, rateLimiter(30), async (req, res) => {
-  const { agente, prompt, contexto, ordemPreferencial } = req.body;
+  const { agente, prompt, contexto, ordemPreferencial, taskType, taskDescription } = req.body;
   try {
+    const routing = await RoutingService.getRoutingForTask(taskDescription || prompt || "", taskType || null);
+    if (routing.needsClarification) {
+      await safeAudit({
+        agente: agente || "desconhecido",
+        acao: "agente_executar_bloqueado_clarificacao",
+        status: "blocked",
+        detalhe: {
+          domain: routing.domain,
+          confidence: routing.detection?.confidence || 0
+        },
+        origem: "api"
+      });
+      return res.status(422).json({
+        status: "ClarificacaoNecessaria",
+        needsClarification: true,
+        domain: routing.domain,
+        confidence: routing.detection?.confidence || 0,
+        clarificationQuestions: routing.clarificationQuestions || [],
+        message: "Contexto insuficiente para roteamento especializado seguro. Responda as perguntas de clarificacao."
+      });
+    }
+
     const promptCompleto = `CONTEXTO DO SISTEMA:\n${contexto || ''}\n\nTAREFA DO AGENTE (${agente}):\n${prompt}`;
-    const { resultado, iaUsada } = await AIService.chamarIAComCascata(promptCompleto, ordemPreferencial);
+    const { resultado, iaUsada } = await AIService.chamarIAComCascata(
+      promptCompleto,
+      ordemPreferencial,
+      false,
+      null,
+      taskType || null,
+      taskDescription || prompt || null
+    );
     await safeAudit({ agente: agente || "desconhecido", acao: "agente_executar", status: "ok", detalhe: { iaUsada }, origem: "api" });
     res.json({ status: "Sucesso", agente_ia_usada: iaUsada, resultado: resultado });
   } catch (err) {
@@ -115,11 +148,11 @@ app.post("/api/agentes/executar", autenticarToken, rateLimiter(30), async (req, 
   }
 });
 
-// ð§  ROTA: NEXUS CLAW CORE (Comando Central Web) â PROTEGIDA
+// ðŸ° ROTA: NEXUS CLAW CORE (Comando Central Web) â€” PROTEGIDA
 app.post("/api/nexus/comando", autenticarToken, rateLimiter(20), async (req, res) => {
   const { prompt } = req.body;
   try {
-    const resposta = await NexusService.processarComando(prompt, body.historico || []);
+    const resposta = await NexusService.processarComando(prompt, req.body.historico || []);
     await safeAudit({ agente: "NexusClaw", acao: "nexus_comando", status: "ok", detalhe: { prompt }, origem: "api" });
     res.json({ status: "Sucesso", resposta });
   } catch (err) {
@@ -128,7 +161,7 @@ app.post("/api/nexus/comando", autenticarToken, rateLimiter(20), async (req, res
   }
 });
 
-// ð ROTAS: GESTÃO DE ARQUIVOS â PROTEGIDAS (Token + ValidaÃ§Ã£o de Path)
+// ðŸ“‚ ROTAS: GESTÃƒO DE ARQUIVOS â€” PROTEGIDAS (Token + ValidaÃ§Ã£o de Path)
 app.get("/api/fs/ler", autenticarToken, validarPath(PASTAS_PERMITIDAS), async (req, res) => {
   try {
     const content = await fs.readFile(req.pathSeguro, "utf-8");
@@ -146,7 +179,7 @@ app.post("/api/fs/escrever", autenticarToken, validarPath(PASTAS_PERMITIDAS), as
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ð­ ROTA: FÃBRICA DE SKILLS â PROTEGIDA (com sanitizaÃ§Ã£o de nome)
+// ðŸ­ ROTA: FÃBRICA DE SKILLS â€” PROTEGIDA (com sanitizaÃ§Ã£o de nome)
 app.post("/api/skills/factory", autenticarToken, async (req, res) => {
   try {
     const { nome, papel, icone, descricao } = req.body;
@@ -158,13 +191,13 @@ app.post("/api/skills/factory", autenticarToken, async (req, res) => {
     }
 
     const caminhoSeguro = path.join(__dirname, "src", "skills", "agentes", `${nomeSanitizado}.json`);
-    const novoAgente = { nome: nomeSanitizado, icone: icone || "ð¤", papel, descricao, criado_em: new Date().toISOString() };
+    const novoAgente = { nome: nomeSanitizado, icone: icone || "ðŸ¤–", papel, descricao, criado_em: new Date().toISOString() };
     await fs.writeFile(caminhoSeguro, JSON.stringify(novoAgente, null, 2), "utf-8");
     res.json({ status: "Sucesso", message: `Agente ${nomeSanitizado} fabricado!` });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ð ï¸ ROTA: TERMINAL ROOT â PROTEGIDA (Token + Rate Limit rigoroso)
+// ðŸš€ ROTA: TERMINAL ROOT â€” PROTEGIDA (Token + Rate Limit rigoroso)
 app.post("/api/terminal/exec", autenticarToken, rateLimiter(10), async (req, res) => {
   try {
     const result = await TerminalService.executarComAutoHealing(req.body.command);
@@ -173,7 +206,7 @@ app.post("/api/terminal/exec", autenticarToken, rateLimiter(10), async (req, res
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// â ROTA: AJUSTE DE VOLUME DE TOKENS
+// âœ… ROTA: AJUSTE DE VOLUME DE TOKENS
 app.post("/api/config/token-volume", autenticarToken, rateLimiter(10), async (req, res) => {
   try {
     const { volume } = req.body;
@@ -188,18 +221,18 @@ app.post("/api/config/token-volume", autenticarToken, rateLimiter(10), async (re
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// â FRONTEND HOSTINGER (arquivo direto)
+// âœ… FRONTEND HOSTINGER (arquivo direto)
 app.get("/index_HOSTINGER.html", (req, res) => {
   res.sendFile(path.join(__dirname, "index_HOSTINGER.html"));
 });
 
-// â DASHBOARD DE CONTROLE DO NEXUS
+// âœ… DASHBOARD DE CONTROLE DO NEXUS
 app.get("/dashboard", (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
-// ð¬ ROTA: PESQUISA AUTÃNOMA (disparo manual)
+// ðŸ” ROTA: PESQUISA AUTÃ”NOMA (disparo manual)
 app.post("/api/nexus/pesquisa", autenticarToken, rateLimiter(5), async (req, res) => {
   try {
     // Executa em background sem bloquear a resposta
@@ -210,7 +243,7 @@ app.post("/api/nexus/pesquisa", autenticarToken, rateLimiter(5), async (req, res
   }
 });
 
-// ð ROTA: LISTAR CONHECIMENTOS APRENDIDOS
+// ðŸ“š ROTA: LISTAR CONHECIMENTOS APRENDIDOS
 app.get("/api/nexus/conhecimentos", autenticarToken, rateLimiter(30), async (req, res) => {
   try {
     const dados = await EvolutionService.listarConhecimentos();
@@ -220,7 +253,7 @@ app.get("/api/nexus/conhecimentos", autenticarToken, rateLimiter(30), async (req
   }
 });
 
-// â ROTAS: GOVERNANCA DE APROVACOES (OpenClaw)
+// âœ… ROTAS: GOVERNANÃ‡A DE APROVAÃ‡Ã•ES (OpenClaw)
 app.post("/api/approvals/request", autenticarToken, rateLimiter(20), async (req, res) => {
   try {
     const { agente, acao, detalhes, origem } = req.body;
@@ -250,7 +283,7 @@ app.post("/api/approvals/decide", autenticarToken, rateLimiter(20), async (req, 
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// â ROTAS: MEMORIA PERSISTENTE (Supabase)
+// âœ… ROTAS: MEMÃ“RIA PERSISTENTE (Supabase)
 app.post("/api/agent/memory", autenticarToken, rateLimiter(30), async (req, res) => {
   try {
     const { agente, categoria, conteudo, projeto } = req.body;
@@ -273,7 +306,7 @@ app.get("/api/agent/memory", autenticarToken, rateLimiter(30), async (req, res) 
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// â ROTAS: REGISTRO DE AGENTES
+// âœ… ROTAS: REGISTRO DE AGENTES
 app.get("/api/agentes", autenticarToken, rateLimiter(60), async (req, res) => {
   try {
     const data = await AgentRegistryService.listarAgentes();
@@ -281,33 +314,7 @@ app.get("/api/agentes", autenticarToken, rateLimiter(60), async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ð©º ROTA: MONITOR DE SAÃDE (TELEMETRIA)
-// ── ROTAS ADICIONAIS ──────────────────────────────────
-app.get("/api/agents/list", autenticarToken, async (req, res) => {
-  try {
-    const AgentRegistry = require("./src/services/agentRegistryService");
-    const agentes = await AgentRegistry.listarAgentes();
-    res.json({ agentes });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get("/api/research/local", autenticarToken, async (req, res) => {
-  try {
-    const fs = require("fs").promises;
-    const path = require("path");
-    const file = path.join(__dirname, "src/logs/learned_facts.json");
-    const raw = await fs.readFile(file, "utf-8").catch(() => "[]");
-    const facts = JSON.parse(raw);
-    res.json({ memorias: facts.map(f => ({
-      agente: "NexusClaw",
-      categoria: f.categoria,
-      conteudo: f.fato,
-      criado_em: f.data,
-      fonte: f.fonte
-    })) });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
+// ðŸ“Š ROTA: MONITOR DE SAÃšDE (TELEMETRIA)
 app.get("/api/status", (req, res) => {
   const mem = process.memoryUsage();
   const waAtivo = process.env.ENABLE_WHATSAPP === "true";
@@ -329,21 +336,264 @@ app.get("/api/status", (req, res) => {
   });
 });
 
-// INICIALIZAÃÃO
+// ðŸ§  ROTA: DETECÃ‡ÃƒO DE DOMÃNIO DE ENGENHARIA
+app.post("/api/domain-detect", autenticarToken, rateLimiter(30), async (req, res) => {
+  try {
+    const validation = RequestValidationService.validateDomainDetectPayload(req.body);
+    if (!validation.ok) {
+      return res.status(400).json({ error: "Payload invalido", detalhes: validation.errors });
+    }
+    const { taskDescription, taskType } = validation.sanitized;
+
+    const routing = await RoutingService.getRoutingForTask(taskDescription, taskType);
+    await safeAudit({
+      agente: "RoutingService",
+      acao: "domain_detect",
+      status: "ok",
+      detalhe: { domain: routing.domain, taskType },
+      origem: "api"
+    });
+
+    res.json({
+      status: "Sucesso",
+      domain: routing.domain,
+      needsClarification: routing.needsClarification,
+      clarificationQuestions: routing.clarificationQuestions || [],
+      routing: routing,
+      agents: routing.agents || [],
+      providers: routing.allProviders
+    });
+  } catch (err) {
+    await safeAudit({
+      agente: "RoutingService",
+      acao: "domain_detect",
+      status: "erro",
+      detalhe: err.message,
+      origem: "api"
+    });
+    res.status(500).json({ error: "DetecÃ§Ã£o de domÃ­nio falhou: " + err.message });
+  }
+});
+
+// ðŸ§  ROTA: CONSULTA Ã€ BASE DE CONHECIMENTO
+app.get("/api/knowledge/:domain", autenticarToken, rateLimiter(30), async (req, res) => {
+  try {
+    const { domain } = req.params;
+    const queryValidation = RequestValidationService.validateKnowledgeQuery(req.query);
+    if (!queryValidation.ok) {
+      return res.status(400).json({ error: "Query invalida", detalhes: queryValidation.errors });
+    }
+    const { category, search, maxResults } = queryValidation.sanitized;
+    await KnowledgeService.ensureReady();
+
+    let result;
+    if (search) {
+      result = KnowledgeService.searchKnowledge(domain, search, parseInt(maxResults || "50", 10));
+    } else {
+      result = KnowledgeService.getKnowledge(domain, category);
+    }
+
+    if (!result) {
+      return res.status(404).json({ error: `DomÃ­nio '${domain}' ou categoria '${category}' nÃ£o encontrado` });
+    }
+
+    await safeAudit({
+      agente: "KnowledgeService",
+      acao: "knowledge_query",
+      status: "ok",
+      detalhe: { domain, category, search },
+      origem: "api"
+    });
+
+    res.json({
+      status: "Sucesso",
+      domain,
+      category,
+      search: search || null,
+      data: result
+    });
+  } catch (err) {
+    await safeAudit({
+      agente: "KnowledgeService",
+      acao: "knowledge_query",
+      status: "erro",
+      detalhe: err.message,
+      origem: "api"
+    });
+    res.status(500).json({ error: "Consulta Ã  base de conhecimento falhou: " + err.message });
+  }
+});
+
+// 🧠 ROTA: RESUMO DA BASE DE CONHECIMENTO
+app.get("/api/knowledge", autenticarToken, rateLimiter(30), async (req, res) => {
+  try {
+    await KnowledgeService.ensureReady();
+    res.json({
+      status: "Sucesso",
+      domains: KnowledgeService.getAvailableDomains(),
+      summary: KnowledgeService.getKnowledgeSummary()
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Resumo da base de conhecimento falhou: " + err.message });
+  }
+});
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ðŸ­ ROTAS: FÃBRICA DE IA (Plugin â€” proxy servidorâ†’servidor)
+// Todas protegidas por X-QG-Token. A X-Chave-Fabrica fica no servidor.
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+const fabricaPlugin = PluginManager.get('fabricaIA');
+
+// Flag de controle — pode ser desligada sem derrubar o servidor
+let fabricaAtiva = process.env.FABRICA_ENABLED !== 'false';
+
+// Middleware local: bloqueia rotas da Fábrica quando desligada
+function verificarFabricaAtiva(req, res, next) {
+  if (!fabricaAtiva) {
+    return res.status(503).json({
+      error: 'Fábrica de IA desligada pelo operador.',
+      dica: 'Ligue novamente em POST /api/fabrica/toggle ou no Dashboard.'
+    });
+  }
+  next();
+}
+
+// POST /api/fabrica/toggle — liga/desliga o plugin
+app.post('/api/fabrica/toggle', autenticarToken, async (req, res) => {
+  fabricaAtiva = !fabricaAtiva;
+  fabricaPlugin.ativo = fabricaAtiva; // sincroniza com o nexusService
+  await safeAudit({ agente: 'NexusClaw', acao: 'fabrica_toggle', status: fabricaAtiva ? 'ligado' : 'desligado', detalhe: {}, origem: 'api' });
+  console.log('[FÁBRICA] Plugin ' + (fabricaAtiva ? '🟢 LIGADO' : '🔴 DESLIGADO'));
+  res.json({ status: 'Sucesso', fabricaAtiva, mensagem: fabricaAtiva ? 'Fábrica LIGADA' : 'Fábrica DESLIGADA' });
+});
+
+// GET /api/fabrica/toggle — retorna estado atual
+app.get('/api/fabrica/toggle', autenticarToken, (req, res) => {
+  res.json({ fabricaAtiva });
+});
+
+// GET /api/fabrica/status â€” verifica se a FÃ¡brica estÃ¡ online
+app.get("/api/fabrica/status", autenticarToken, rateLimiter(30), async (req, res) => {
+  try {
+    const data = await fabricaPlugin.statusFabrica();
+    res.json({ status: "Sucesso", fabrica: data });
+  } catch (err) {
+    res.status(502).json({ error: "FÃ¡brica de IA inacessÃ­vel: " + err.message });
+  }
+});
+
+// POST /api/fabrica/orquestrar â€” submete ideia e inicia pipeline
+app.post('/api/fabrica/orquestrar', autenticarToken, verificarFabricaAtiva, rateLimiter(10), async (req, res) => {
+  const { ideia } = req.body;
+  if (!ideia) return res.status(400).json({ error: "Campo 'ideia' obrigatÃ³rio" });
+  try {
+    const data = await fabricaPlugin.submeterIdeia(ideia);
+    const pipelineId = data.pipelineId || data.id || null;
+    if (pipelineId) {
+      // Salva na memÃ³ria do Nexus para rastreamento
+      try {
+        await MemoryService.registrar({
+          agente: "NexusClaw",
+          categoria: "fabrica_pipeline",
+          conteudo: `Pipeline ${pipelineId} iniciado: "${ideia.substring(0, 120)}"`,
+          projeto: "fabrica-ia"
+        });
+      } catch { /* nÃ£o bloqueia se memÃ³ria falhar */ }
+    }
+    await safeAudit({ agente: "NexusClaw", acao: "fabrica_orquestrar", status: "ok", detalhe: { pipelineId, ideia: ideia.substring(0, 80) }, origem: "api" });
+    res.json({ status: "Sucesso", pipelineId, ...data });
+  } catch (err) {
+    await safeAudit({ agente: "NexusClaw", acao: "fabrica_orquestrar", status: "erro", detalhe: err.message, origem: "api" });
+    res.status(502).json({ error: "FÃ¡brica de IA falhou: " + err.message });
+  }
+});
+
+// GET /api/fabrica/pipeline/:id/status â€” consulta status do pipeline
+app.get('/api/fabrica/pipeline/:id/status', autenticarToken, verificarFabricaAtiva, rateLimiter(30), async (req, res) => {
+  try {
+    const data = await fabricaPlugin.statusPipeline(req.params.id);
+    res.json({ status: "Sucesso", pipeline: data });
+  } catch (err) {
+    res.status(502).json({ error: "Erro ao consultar pipeline: " + err.message });
+  }
+});
+
+// GET /api/fabrica/pipeline/:id/stream â€” proxy SSE (retransmite eventos da FÃ¡brica)
+app.get('/api/fabrica/pipeline/:id/stream', autenticarToken, verificarFabricaAtiva, (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  const pipelineId = req.params.id;
+
+  const streamReq = fabricaPlugin.abrirStream(
+    pipelineId,
+    (chunk) => {
+      res.write(chunk); // retransmite eventos SSE diretamente
+    },
+    () => {
+      res.write('data: {"tipo":"stream_encerrado"}\n\n');
+      res.end();
+    },
+    (err) => {
+      res.write(`data: {"tipo":"erro","mensagem":${JSON.stringify(err.message)}}\n\n`);
+      res.end();
+    }
+  );
+
+  // Se o cliente desconectar, aborta o stream upstream
+  req.on('close', () => {
+    if (streamReq) streamReq.destroy();
+  });
+});
+
+// POST /api/fabrica/pipeline/:id/cancelar â€” cancela pipeline em execuÃ§Ã£o
+app.post('/api/fabrica/pipeline/:id/cancelar', autenticarToken, verificarFabricaAtiva, rateLimiter(10), async (req, res) => {
+  try {
+    const data = await fabricaPlugin.cancelarPipeline(req.params.id);
+    res.json({ status: "Sucesso", ...data });
+  } catch (err) {
+    res.status(502).json({ error: "Erro ao cancelar pipeline: " + err.message });
+  }
+});
+
+// GET /api/fabrica/projetos â€” lista projetos gerados pela FÃ¡brica
+app.get('/api/fabrica/projetos', autenticarToken, verificarFabricaAtiva, rateLimiter(30), async (req, res) => {
+  try {
+    const data = await fabricaPlugin.listarProjetos();
+    res.json({ status: "Sucesso", ...data });
+  } catch (err) {
+    res.status(502).json({ error: "Erro ao listar projetos: " + err.message });
+  }
+});
+
+// GET /api/fabrica/projetos/:id â€” detalha projeto especÃ­fico
+app.get('/api/fabrica/projetos/:id', autenticarToken, verificarFabricaAtiva, rateLimiter(30), async (req, res) => {
+  try {
+    const data = await fabricaPlugin.buscarProjeto(req.params.id);
+    res.json({ status: "Sucesso", ...data });
+  } catch (err) {
+    res.status(502).json({ error: "Erro ao buscar projeto: " + err.message });
+  }
+});
+
+// INICIALIZAÃ‡ÃƒO
 app.listen(port, async () => {
-  console.log(`ð QG IA SERVER [CALIBRAÃÃO INTERNA] rodando na porta ${port}`);
-  console.log(`ð¥ï¸  Dashboard: http://localhost:${port}/dashboard`);
+  console.log(`ðŸš€ QG IA SERVER [CALIBRAÃ‡ÃƒO INTERNA] rodando na porta ${port}`);
+  console.log(`ðŸ“± Dashboard: http://localhost:${port}/dashboard`);
   
   // Ligar a Ponte de WhatsApp
   if (process.env.ENABLE_WHATSAPP === "true") {
     try {
-      console.log(`ð WhatsApp SERVICE: Inicializando conexÃ£o...`);
+      console.log(`ðŸ“Œ WhatsApp SERVICE: Inicializando conexÃ£o...`);
       await WhatsAppService.conectar();
     } catch (e) {
-      console.log(`â WhatsApp SERVICE: Falha ao iniciar ponte.`, e.message);
+      console.log(`âŒ WhatsApp SERVICE: Falha ao iniciar ponte.`, e.message);
     }
   } else {
-    console.log(`â¹ï¸ WhatsApp SERVICE: Desativado (ENABLE_WHATSAPP != true).`);
+    console.log(`â­• WhatsApp SERVICE: Desativado (ENABLE_WHATSAPP != true).`);
   }
   
   // Ligar o Banco MySQL da Hostinger
@@ -352,24 +602,24 @@ app.listen(port, async () => {
     try {
       await MySQLService.inicializarTabelas();
       await FinancialService.inicializarTabelaFinanceira();
-      console.log(`ð¾ MySQL: Conectado ao banco ${process.env.DB_NAME} e tabela financeira pronta.`);
+      console.log(`ðŸ’° MySQL: Conectado ao banco ${process.env.DB_NAME} e tabela financeira pronta.`);
     } catch (e) {
-      console.log(`â ï¸ MySQL: Falha ao conectar.`, e.message);
+      console.log(`âŒ MySQL: Falha ao conectar.`, e.message);
     }
   } else {
-    console.log(`â¹ï¸ MySQL: Desativado (credenciais ausentes).`);
+    console.log(`â­• MySQL: Desativado (credenciais ausentes).`);
   }
 
-  // ð¬ CRON: PESQUISA AUTÃNOMA A CADA 6 HORAS
-  // (evita consumo excessivo de tokens â pesquisa 6 temas por rodada)
+  // ðŸ” CRON: PESQUISA AUTÃ”NOMA A CADA 6 HORAS
+  // (evita consumo excessivo de tokens â€” pesquisa 6 temas por rodada)
   cron.schedule('0 */6 * * *', async () => {
-    console.log('[CRON] ð¬ Iniciando ciclo de pesquisa autÃ´noma...');
+    console.log('[CRON] ðŸ” Iniciando ciclo de pesquisa autÃ´noma...');
     try {
       await ResearchService.cicloDeEstudoIntensivo();
-      console.log('[CRON] â Ciclo de pesquisa concluÃ­do.');
+      console.log('[CRON] âœ… Ciclo de pesquisa concluÃ­do.');
     } catch (e) {
-      console.error('[CRON] â Falha no ciclo de pesquisa:', e.message);
+      console.error('[CRON] âŒ Falha no ciclo de pesquisa:', e.message);
     }
   });
-  console.log('[CRON] ð¬ Pesquisa autÃ´noma agendada: a cada 6 horas.');
+  console.log('[CRON] ðŸ” Pesquisa autÃ´noma agendada: a cada 6 horas.');
 });

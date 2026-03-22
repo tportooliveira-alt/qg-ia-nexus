@@ -1,0 +1,1052 @@
+[
+  {
+    "id": "so-0001",
+    "taskDescription": "Desenvolver API REST para linha de producao com autenticacao e logs",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0002",
+    "taskDescription": "Criar backend escalavel para fabrica inteligente com banco relacional",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0003",
+    "taskDescription": "Implementar frontend web de plataforma industrial com dashboard interativo",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0004",
+    "taskDescription": "Refatorar sistema de sistema de transporte para microservicos",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0005",
+    "taskDescription": "Construir app mobile para edificio comercial com notificacoes em tempo real",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0006",
+    "taskDescription": "Desenvolver API REST para equipamento hospitalar com autenticacao e logs",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0007",
+    "taskDescription": "Criar backend escalavel para linha de producao com banco relacional",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0008",
+    "taskDescription": "Implementar frontend web de fabrica inteligente com dashboard interativo",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0009",
+    "taskDescription": "Refatorar sistema de plataforma industrial para microservicos",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0010",
+    "taskDescription": "Construir app mobile para sistema de transporte com notificacoes em tempo real",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0011",
+    "taskDescription": "Desenvolver API REST para edificio comercial com autenticacao e logs",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0012",
+    "taskDescription": "Criar backend escalavel para equipamento hospitalar com banco relacional",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0013",
+    "taskDescription": "Implementar frontend web de linha de producao com dashboard interativo",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0014",
+    "taskDescription": "Refatorar sistema de fabrica inteligente para microservicos",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0015",
+    "taskDescription": "Construir app mobile para plataforma industrial com notificacoes em tempo real",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0016",
+    "taskDescription": "Desenvolver API REST para sistema de transporte com autenticacao e logs",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0017",
+    "taskDescription": "Criar backend escalavel para edificio comercial com banco relacional",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0018",
+    "taskDescription": "Implementar frontend web de equipamento hospitalar com dashboard interativo",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0019",
+    "taskDescription": "Refatorar sistema de linha de producao para microservicos",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0020",
+    "taskDescription": "Construir app mobile para fabrica inteligente com notificacoes em tempo real",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0021",
+    "taskDescription": "Desenvolver API REST para plataforma industrial com autenticacao e logs",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0022",
+    "taskDescription": "Criar backend escalavel para sistema de transporte com banco relacional",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0023",
+    "taskDescription": "Implementar frontend web de edificio comercial com dashboard interativo",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0024",
+    "taskDescription": "Refatorar sistema de equipamento hospitalar para microservicos",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0025",
+    "taskDescription": "Construir app mobile para linha de producao com notificacoes em tempo real",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0026",
+    "taskDescription": "Desenvolver API REST para fabrica inteligente com autenticacao e logs",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0027",
+    "taskDescription": "Criar backend escalavel para plataforma industrial com banco relacional",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0028",
+    "taskDescription": "Implementar frontend web de sistema de transporte com dashboard interativo",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0029",
+    "taskDescription": "Refatorar sistema de edificio comercial para microservicos",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "so-0030",
+    "taskDescription": "Construir app mobile para equipamento hospitalar com notificacoes em tempo real",
+    "expectedDomain": "software"
+  },
+  {
+    "id": "me-0031",
+    "taskDescription": "Projetar conjunto mecanico de linha de producao com analise de torque",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0032",
+    "taskDescription": "Selecionar material e usinagem para componente de fabrica inteligente",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0033",
+    "taskDescription": "Criar modelo CAD de plataforma industrial para fabricacao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0034",
+    "taskDescription": "Avaliar vibracao e fadiga em estrutura mecanica de sistema de transporte",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0035",
+    "taskDescription": "Otimizar transmissao e engrenagens para edificio comercial",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0036",
+    "taskDescription": "Projetar conjunto mecanico de equipamento hospitalar com analise de torque",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0037",
+    "taskDescription": "Selecionar material e usinagem para componente de linha de producao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0038",
+    "taskDescription": "Criar modelo CAD de fabrica inteligente para fabricacao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0039",
+    "taskDescription": "Avaliar vibracao e fadiga em estrutura mecanica de plataforma industrial",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0040",
+    "taskDescription": "Otimizar transmissao e engrenagens para sistema de transporte",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0041",
+    "taskDescription": "Projetar conjunto mecanico de edificio comercial com analise de torque",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0042",
+    "taskDescription": "Selecionar material e usinagem para componente de equipamento hospitalar",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0043",
+    "taskDescription": "Criar modelo CAD de linha de producao para fabricacao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0044",
+    "taskDescription": "Avaliar vibracao e fadiga em estrutura mecanica de fabrica inteligente",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0045",
+    "taskDescription": "Otimizar transmissao e engrenagens para plataforma industrial",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0046",
+    "taskDescription": "Projetar conjunto mecanico de sistema de transporte com analise de torque",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0047",
+    "taskDescription": "Selecionar material e usinagem para componente de edificio comercial",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0048",
+    "taskDescription": "Criar modelo CAD de equipamento hospitalar para fabricacao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0049",
+    "taskDescription": "Avaliar vibracao e fadiga em estrutura mecanica de linha de producao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0050",
+    "taskDescription": "Otimizar transmissao e engrenagens para fabrica inteligente",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0051",
+    "taskDescription": "Projetar conjunto mecanico de plataforma industrial com analise de torque",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0052",
+    "taskDescription": "Selecionar material e usinagem para componente de sistema de transporte",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0053",
+    "taskDescription": "Criar modelo CAD de edificio comercial para fabricacao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0054",
+    "taskDescription": "Avaliar vibracao e fadiga em estrutura mecanica de equipamento hospitalar",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0055",
+    "taskDescription": "Otimizar transmissao e engrenagens para linha de producao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0056",
+    "taskDescription": "Projetar conjunto mecanico de fabrica inteligente com analise de torque",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0057",
+    "taskDescription": "Selecionar material e usinagem para componente de plataforma industrial",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0058",
+    "taskDescription": "Criar modelo CAD de sistema de transporte para fabricacao",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0059",
+    "taskDescription": "Avaliar vibracao e fadiga em estrutura mecanica de edificio comercial",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "me-0060",
+    "taskDescription": "Otimizar transmissao e engrenagens para equipamento hospitalar",
+    "expectedDomain": "mechanical"
+  },
+  {
+    "id": "ci-0061",
+    "taskDescription": "Dimensionar fundacao e estrutura de concreto para linha de producao",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0062",
+    "taskDescription": "Planejar obra civil de fabrica inteligente com cronograma executivo",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0063",
+    "taskDescription": "Calcular carga e estabilidade estrutural de plataforma industrial",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0064",
+    "taskDescription": "Definir infraestrutura urbana para sistema de transporte",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0065",
+    "taskDescription": "Projetar ponte e acessos de edificio comercial com normas tecnicas",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0066",
+    "taskDescription": "Dimensionar fundacao e estrutura de concreto para equipamento hospitalar",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0067",
+    "taskDescription": "Planejar obra civil de linha de producao com cronograma executivo",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0068",
+    "taskDescription": "Calcular carga e estabilidade estrutural de fabrica inteligente",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0069",
+    "taskDescription": "Definir infraestrutura urbana para plataforma industrial",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0070",
+    "taskDescription": "Projetar ponte e acessos de sistema de transporte com normas tecnicas",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0071",
+    "taskDescription": "Dimensionar fundacao e estrutura de concreto para edificio comercial",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0072",
+    "taskDescription": "Planejar obra civil de equipamento hospitalar com cronograma executivo",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0073",
+    "taskDescription": "Calcular carga e estabilidade estrutural de linha de producao",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0074",
+    "taskDescription": "Definir infraestrutura urbana para fabrica inteligente",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0075",
+    "taskDescription": "Projetar ponte e acessos de plataforma industrial com normas tecnicas",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0076",
+    "taskDescription": "Dimensionar fundacao e estrutura de concreto para sistema de transporte",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0077",
+    "taskDescription": "Planejar obra civil de edificio comercial com cronograma executivo",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0078",
+    "taskDescription": "Calcular carga e estabilidade estrutural de equipamento hospitalar",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0079",
+    "taskDescription": "Definir infraestrutura urbana para linha de producao",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0080",
+    "taskDescription": "Projetar ponte e acessos de fabrica inteligente com normas tecnicas",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0081",
+    "taskDescription": "Dimensionar fundacao e estrutura de concreto para plataforma industrial",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0082",
+    "taskDescription": "Planejar obra civil de sistema de transporte com cronograma executivo",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0083",
+    "taskDescription": "Calcular carga e estabilidade estrutural de edificio comercial",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0084",
+    "taskDescription": "Definir infraestrutura urbana para equipamento hospitalar",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0085",
+    "taskDescription": "Projetar ponte e acessos de linha de producao com normas tecnicas",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0086",
+    "taskDescription": "Dimensionar fundacao e estrutura de concreto para fabrica inteligente",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0087",
+    "taskDescription": "Planejar obra civil de plataforma industrial com cronograma executivo",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0088",
+    "taskDescription": "Calcular carga e estabilidade estrutural de sistema de transporte",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0089",
+    "taskDescription": "Definir infraestrutura urbana para edificio comercial",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "ci-0090",
+    "taskDescription": "Projetar ponte e acessos de equipamento hospitalar com normas tecnicas",
+    "expectedDomain": "civil"
+  },
+  {
+    "id": "el-0091",
+    "taskDescription": "Projetar circuito eletrico de potencia para linha de producao",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0092",
+    "taskDescription": "Desenvolver firmware embarcado para controle de fabrica inteligente",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0093",
+    "taskDescription": "Definir automacao com sensores e atuadores em plataforma industrial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0094",
+    "taskDescription": "Analisar protecao, corrente e tensao no sistema de sistema de transporte",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0095",
+    "taskDescription": "Criar arquitetura eletrica e IoT para edificio comercial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0096",
+    "taskDescription": "Projetar circuito eletrico de potencia para equipamento hospitalar",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0097",
+    "taskDescription": "Desenvolver firmware embarcado para controle de linha de producao",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0098",
+    "taskDescription": "Definir automacao com sensores e atuadores em fabrica inteligente",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0099",
+    "taskDescription": "Analisar protecao, corrente e tensao no sistema de plataforma industrial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0100",
+    "taskDescription": "Criar arquitetura eletrica e IoT para sistema de transporte",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0101",
+    "taskDescription": "Projetar circuito eletrico de potencia para edificio comercial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0102",
+    "taskDescription": "Desenvolver firmware embarcado para controle de equipamento hospitalar",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0103",
+    "taskDescription": "Definir automacao com sensores e atuadores em linha de producao",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0104",
+    "taskDescription": "Analisar protecao, corrente e tensao no sistema de fabrica inteligente",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0105",
+    "taskDescription": "Criar arquitetura eletrica e IoT para plataforma industrial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0106",
+    "taskDescription": "Projetar circuito eletrico de potencia para sistema de transporte",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0107",
+    "taskDescription": "Desenvolver firmware embarcado para controle de edificio comercial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0108",
+    "taskDescription": "Definir automacao com sensores e atuadores em equipamento hospitalar",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0109",
+    "taskDescription": "Analisar protecao, corrente e tensao no sistema de linha de producao",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0110",
+    "taskDescription": "Criar arquitetura eletrica e IoT para fabrica inteligente",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0111",
+    "taskDescription": "Projetar circuito eletrico de potencia para plataforma industrial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0112",
+    "taskDescription": "Desenvolver firmware embarcado para controle de sistema de transporte",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0113",
+    "taskDescription": "Definir automacao com sensores e atuadores em edificio comercial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0114",
+    "taskDescription": "Analisar protecao, corrente e tensao no sistema de equipamento hospitalar",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0115",
+    "taskDescription": "Criar arquitetura eletrica e IoT para linha de producao",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0116",
+    "taskDescription": "Projetar circuito eletrico de potencia para fabrica inteligente",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0117",
+    "taskDescription": "Desenvolver firmware embarcado para controle de plataforma industrial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0118",
+    "taskDescription": "Definir automacao com sensores e atuadores em sistema de transporte",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0119",
+    "taskDescription": "Analisar protecao, corrente e tensao no sistema de edificio comercial",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "el-0120",
+    "taskDescription": "Criar arquitetura eletrica e IoT para equipamento hospitalar",
+    "expectedDomain": "electrical"
+  },
+  {
+    "id": "ch-0121",
+    "taskDescription": "Otimizar reacao quimica e rendimento de linha de producao",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0122",
+    "taskDescription": "Projetar processo industrial de separacao para fabrica inteligente",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0123",
+    "taskDescription": "Definir seguranca quimica e controle de efluentes em plataforma industrial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0124",
+    "taskDescription": "Selecionar catalisador e parametros de reator para sistema de transporte",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0125",
+    "taskDescription": "Balancear massa e energia do processo de edificio comercial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0126",
+    "taskDescription": "Otimizar reacao quimica e rendimento de equipamento hospitalar",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0127",
+    "taskDescription": "Projetar processo industrial de separacao para linha de producao",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0128",
+    "taskDescription": "Definir seguranca quimica e controle de efluentes em fabrica inteligente",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0129",
+    "taskDescription": "Selecionar catalisador e parametros de reator para plataforma industrial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0130",
+    "taskDescription": "Balancear massa e energia do processo de sistema de transporte",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0131",
+    "taskDescription": "Otimizar reacao quimica e rendimento de edificio comercial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0132",
+    "taskDescription": "Projetar processo industrial de separacao para equipamento hospitalar",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0133",
+    "taskDescription": "Definir seguranca quimica e controle de efluentes em linha de producao",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0134",
+    "taskDescription": "Selecionar catalisador e parametros de reator para fabrica inteligente",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0135",
+    "taskDescription": "Balancear massa e energia do processo de plataforma industrial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0136",
+    "taskDescription": "Otimizar reacao quimica e rendimento de sistema de transporte",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0137",
+    "taskDescription": "Projetar processo industrial de separacao para edificio comercial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0138",
+    "taskDescription": "Definir seguranca quimica e controle de efluentes em equipamento hospitalar",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0139",
+    "taskDescription": "Selecionar catalisador e parametros de reator para linha de producao",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0140",
+    "taskDescription": "Balancear massa e energia do processo de fabrica inteligente",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0141",
+    "taskDescription": "Otimizar reacao quimica e rendimento de plataforma industrial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0142",
+    "taskDescription": "Projetar processo industrial de separacao para sistema de transporte",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0143",
+    "taskDescription": "Definir seguranca quimica e controle de efluentes em edificio comercial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0144",
+    "taskDescription": "Selecionar catalisador e parametros de reator para equipamento hospitalar",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0145",
+    "taskDescription": "Balancear massa e energia do processo de linha de producao",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0146",
+    "taskDescription": "Otimizar reacao quimica e rendimento de fabrica inteligente",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0147",
+    "taskDescription": "Projetar processo industrial de separacao para plataforma industrial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0148",
+    "taskDescription": "Definir seguranca quimica e controle de efluentes em sistema de transporte",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0149",
+    "taskDescription": "Selecionar catalisador e parametros de reator para edificio comercial",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "ch-0150",
+    "taskDescription": "Balancear massa e energia do processo de equipamento hospitalar",
+    "expectedDomain": "chemical"
+  },
+  {
+    "id": "pr-0151",
+    "taskDescription": "Melhorar UX e usabilidade de linha de producao para usuarios iniciantes",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0152",
+    "taskDescription": "Desenhar interface UI de fabrica inteligente com foco em acessibilidade",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0153",
+    "taskDescription": "Criar prototipo navegavel de plataforma industrial para testes com usuarios",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0154",
+    "taskDescription": "Definir jornada do usuario e ergonomia de sistema de transporte",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0155",
+    "taskDescription": "Planejar estrategia de produto para edificio comercial com metricas",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0156",
+    "taskDescription": "Melhorar UX e usabilidade de equipamento hospitalar para usuarios iniciantes",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0157",
+    "taskDescription": "Desenhar interface UI de linha de producao com foco em acessibilidade",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0158",
+    "taskDescription": "Criar prototipo navegavel de fabrica inteligente para testes com usuarios",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0159",
+    "taskDescription": "Definir jornada do usuario e ergonomia de plataforma industrial",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0160",
+    "taskDescription": "Planejar estrategia de produto para sistema de transporte com metricas",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0161",
+    "taskDescription": "Melhorar UX e usabilidade de edificio comercial para usuarios iniciantes",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0162",
+    "taskDescription": "Desenhar interface UI de equipamento hospitalar com foco em acessibilidade",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0163",
+    "taskDescription": "Criar prototipo navegavel de linha de producao para testes com usuarios",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0164",
+    "taskDescription": "Definir jornada do usuario e ergonomia de fabrica inteligente",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0165",
+    "taskDescription": "Planejar estrategia de produto para plataforma industrial com metricas",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0166",
+    "taskDescription": "Melhorar UX e usabilidade de sistema de transporte para usuarios iniciantes",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0167",
+    "taskDescription": "Desenhar interface UI de edificio comercial com foco em acessibilidade",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0168",
+    "taskDescription": "Criar prototipo navegavel de equipamento hospitalar para testes com usuarios",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0169",
+    "taskDescription": "Definir jornada do usuario e ergonomia de linha de producao",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0170",
+    "taskDescription": "Planejar estrategia de produto para fabrica inteligente com metricas",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0171",
+    "taskDescription": "Melhorar UX e usabilidade de plataforma industrial para usuarios iniciantes",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0172",
+    "taskDescription": "Desenhar interface UI de sistema de transporte com foco em acessibilidade",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0173",
+    "taskDescription": "Criar prototipo navegavel de edificio comercial para testes com usuarios",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0174",
+    "taskDescription": "Definir jornada do usuario e ergonomia de equipamento hospitalar",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0175",
+    "taskDescription": "Planejar estrategia de produto para linha de producao com metricas",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0176",
+    "taskDescription": "Melhorar UX e usabilidade de fabrica inteligente para usuarios iniciantes",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0177",
+    "taskDescription": "Desenhar interface UI de plataforma industrial com foco em acessibilidade",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0178",
+    "taskDescription": "Criar prototipo navegavel de sistema de transporte para testes com usuarios",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0179",
+    "taskDescription": "Definir jornada do usuario e ergonomia de edificio comercial",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "pr-0180",
+    "taskDescription": "Planejar estrategia de produto para equipamento hospitalar com metricas",
+    "expectedDomain": "product"
+  },
+  {
+    "id": "in-0181",
+    "taskDescription": "Orquestrar integracao multidominio de linha de producao entre software, eletrica e mecanica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0182",
+    "taskDescription": "Coordenar projeto interdisciplinar de fabrica inteligente com interfaces entre dominios",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0183",
+    "taskDescription": "Definir arquitetura de integracao para plataforma industrial com varios times",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0184",
+    "taskDescription": "Planejar sincronizacao de sistemas complexos de sistema de transporte com governanca tecnica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0185",
+    "taskDescription": "Executar orquestracao completa de edificio comercial envolvendo civil, automacao e software",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0186",
+    "taskDescription": "Orquestrar integracao multidominio de equipamento hospitalar entre software, eletrica e mecanica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0187",
+    "taskDescription": "Coordenar projeto interdisciplinar de linha de producao com interfaces entre dominios",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0188",
+    "taskDescription": "Definir arquitetura de integracao para fabrica inteligente com varios times",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0189",
+    "taskDescription": "Planejar sincronizacao de sistemas complexos de plataforma industrial com governanca tecnica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0190",
+    "taskDescription": "Executar orquestracao completa de sistema de transporte envolvendo civil, automacao e software",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0191",
+    "taskDescription": "Orquestrar integracao multidominio de edificio comercial entre software, eletrica e mecanica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0192",
+    "taskDescription": "Coordenar projeto interdisciplinar de equipamento hospitalar com interfaces entre dominios",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0193",
+    "taskDescription": "Definir arquitetura de integracao para linha de producao com varios times",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0194",
+    "taskDescription": "Planejar sincronizacao de sistemas complexos de fabrica inteligente com governanca tecnica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0195",
+    "taskDescription": "Executar orquestracao completa de plataforma industrial envolvendo civil, automacao e software",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0196",
+    "taskDescription": "Orquestrar integracao multidominio de sistema de transporte entre software, eletrica e mecanica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0197",
+    "taskDescription": "Coordenar projeto interdisciplinar de edificio comercial com interfaces entre dominios",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0198",
+    "taskDescription": "Definir arquitetura de integracao para equipamento hospitalar com varios times",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0199",
+    "taskDescription": "Planejar sincronizacao de sistemas complexos de linha de producao com governanca tecnica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0200",
+    "taskDescription": "Executar orquestracao completa de fabrica inteligente envolvendo civil, automacao e software",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0201",
+    "taskDescription": "Orquestrar integracao multidominio de plataforma industrial entre software, eletrica e mecanica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0202",
+    "taskDescription": "Coordenar projeto interdisciplinar de sistema de transporte com interfaces entre dominios",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0203",
+    "taskDescription": "Definir arquitetura de integracao para edificio comercial com varios times",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0204",
+    "taskDescription": "Planejar sincronizacao de sistemas complexos de equipamento hospitalar com governanca tecnica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0205",
+    "taskDescription": "Executar orquestracao completa de linha de producao envolvendo civil, automacao e software",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0206",
+    "taskDescription": "Orquestrar integracao multidominio de fabrica inteligente entre software, eletrica e mecanica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0207",
+    "taskDescription": "Coordenar projeto interdisciplinar de plataforma industrial com interfaces entre dominios",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0208",
+    "taskDescription": "Definir arquitetura de integracao para sistema de transporte com varios times",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0209",
+    "taskDescription": "Planejar sincronizacao de sistemas complexos de edificio comercial com governanca tecnica",
+    "expectedDomain": "integration"
+  },
+  {
+    "id": "in-0210",
+    "taskDescription": "Executar orquestracao completa de equipamento hospitalar envolvendo civil, automacao e software",
+    "expectedDomain": "integration"
+  }
+]

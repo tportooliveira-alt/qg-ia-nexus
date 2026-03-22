@@ -3,6 +3,7 @@ const path = require("path");
 const AIService = require("./aiService");
 const TerminalService = require("./terminalService");
 const MemoryService = require("./memoryService");
+const PluginManager = require("../plugins/pluginManager");
 
 const NexusService = {
     async carregarContextoOtimizado(prompt) {
@@ -34,7 +35,17 @@ const NexusService = {
                   const ski = await fs.readFile(sk("SkillHub.json"), "utf-8").catch(() => "{}");
                   contextoOpcional += "\nSKILL HUB: " + ski + "\n";
           }
-          if (p.includes("agro") || p.includes("fazenda") || p.includes("rebanho") || p.includes("pasto") || p.includes("gado")) {
+          if (
+        p.includes("fabrica") || p.includes("fábrica") || p.includes("factory") ||
+        p.includes("criar app") || p.includes("gerar app") || p.includes("gerar projeto") ||
+        p.includes("criar sistema") || p.includes("gerar sistema") || p.includes("construir app") ||
+        p.includes("desenvolver app") || p.includes("quero um app") || p.includes("preciso de um app") ||
+        p.includes("ideia para app") || p.includes("transformar ideia") || p.includes("pipeline")
+      ) {
+              const fab = await fs.readFile(kb("NEXUS_FABRICA_PLUGIN.md"), "utf-8").catch(() => "");
+              contextoOpcional += "\nFÁBRICA DE IA (PLUGIN ATIVO):\n" + fab + "\n";
+      }
+      if (p.includes("agro") || p.includes("fazenda") || p.includes("rebanho") || p.includes("pasto") || p.includes("gado")) {
                   contextoOpcional += "\nCONTEXTO AGRO: O QG esta desenvolvendo AgroMacro (27 modulos PWA: rebanho, lotes, pastos, financeiro, rastreabilidade, IA consultor, KPIs) e Fazenda Cerebro (React Native, agentes paralelos, voz+foto+texto).\n";
           }
           if (p.includes("frigorifico") || p.includes("frigogest") || p.includes("abate") || p.includes("carne")) {
@@ -74,6 +85,53 @@ const NexusService = {
               "5. Voce tem memoria das ultimas pesquisas e pode referencia-las.\n" +
               "6. Se o usuario pedir algo relacionado aos projetos (AgroMacro, FrigoGest, Fazenda Cerebro), consulte o contexto e de orientacoes especificas.\n" +
               "7. Seja proativo: se identificar um problema ou oportunidade, mencione sem esperar ser perguntado.\n";
+
+      // 🏭 DETECÇÃO DE INTENÇÃO FÁBRICA — aciona pipeline automaticamente
+      const pLower = prompt.toLowerCase();
+      const intencaoFabrica = (
+        pLower.includes("criar app") || pLower.includes("gerar app") || pLower.includes("gerar projeto") ||
+        pLower.includes("criar sistema") || pLower.includes("gerar sistema") || pLower.includes("construir app") ||
+        pLower.includes("desenvolver app") || pLower.includes("quero um app") || pLower.includes("preciso de um app") ||
+        pLower.includes("ideia para app") || pLower.includes("transformar ideia em app") ||
+        pLower.startsWith("!fabrica") || pLower.startsWith("fabrica,") ||
+        (pLower.includes("fabrica") && (pLower.includes("app") || pLower.includes("sistema") || pLower.includes("projeto")))
+      );
+
+      if (intencaoFabrica) {
+        const fabricaPlugin = PluginManager.get('fabricaIA');
+        if (!fabricaPlugin.ativo) {
+          return "⚠️ FÁBRICA DE IA está DESLIGADA.\nLigue novamente no Dashboard → aba Fábrica de IA → botão Ligar.";
+        }
+        try {
+          const resultado = await fabricaPlugin.submeterIdeia(prompt);
+          const pipelineId = resultado.pipelineId || resultado.id || '(aguardando)';
+          try {
+            await MemoryService.registrar({
+              agente: "NexusClaw",
+              categoria: "fabrica_pipeline",
+              conteudo: `Pipeline ${pipelineId} iniciado: "${prompt.substring(0, 120)}"`,
+              projeto: "fabrica-ia"
+            });
+          } catch { /* memória não bloqueia */ }
+          return (
+            "🏭 FÁBRICA DE IA ACIONADA!\n\n" +
+            `Ideia registrada: "${prompt.substring(0, 150)}"\n` +
+            `Pipeline ID: ${pipelineId}\n\n` +
+            "Os agentes especializados já estão trabalhando:\n" +
+            "Analista → Comandante → Arquiteto + Designer → CoderChief → Auditor\n\n" +
+            "📡 Acompanhe em tempo real no Dashboard → aba Fábrica de IA\n" +
+            `→ Stream: /api/fabrica/pipeline/${pipelineId}/stream\n` +
+            `→ Projetos: /api/fabrica/projetos`
+          );
+        } catch (err) {
+          return (
+            "⚠️ FÁBRICA DE IA: Detectei que você quer criar um app, mas a Fábrica retornou um erro:\n" +
+            err.message + "\n\n" +
+            "Verifique se FABRICA_API_URL e FABRICA_API_KEY estão configurados no .env, " +
+            "e se a Fábrica está online em /api/fabrica/status."
+          );
+        }
+      }
 
       const modoComplexo =
               prompt.toLowerCase().includes("analise") ||

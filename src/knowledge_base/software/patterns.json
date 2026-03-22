@@ -1,0 +1,108 @@
+{
+  "architectural_patterns": {
+    "microservices": {
+      "description": "Arquitetura de serviços independentes e fracamente acoplados",
+      "when_to_use": ["sistemas distribuídos", "escalabilidade horizontal", "equipes independentes"],
+      "benefits": ["deploy independente", "tecnologia agnóstica", "isolamento de falhas"],
+      "challenges": ["complexidade de comunicação", "consistência eventual", "debugging distribuído"],
+      "technologies": ["Docker", "Kubernetes", "API Gateway", "Service Mesh"]
+    },
+    "monolithic_modular": {
+      "description": "Aplicação única com módulos bem definidos",
+      "when_to_use": ["times pequenos", "requisitos simples", "MVP/protótipo"],
+      "benefits": ["simplicidade", "performance", "debugging fácil"],
+      "challenges": ["acoplamento", "escalabilidade limitada", "tecnologia única"],
+      "technologies": ["Spring Boot", "Django", "Express.js", "Rails"]
+    },
+    "serverless": {
+      "description": "Execução de código sem gerenciamento de servidores",
+      "when_to_use": ["eventos esporádicos", "APIs REST", "processamento em lote"],
+      "benefits": ["zero manutenção", "auto-scaling", "pay-per-use"],
+      "challenges": ["cold starts", "vendor lock-in", "limites de execução"],
+      "technologies": ["AWS Lambda", "Azure Functions", "Google Cloud Functions"]
+    }
+  },
+  "design_patterns": {
+    "repository": {
+      "description": "Abstração da camada de acesso a dados",
+      "code_example": "class UserRepository { async findById(id) { /* implementação */ } }",
+      "languages": ["JavaScript", "TypeScript", "Java", "C#", "Python"]
+    },
+    "factory": {
+      "description": "Criação de objetos sem especificar a classe exata",
+      "code_example": "class PaymentProcessorFactory { static create(type) { switch(type) { case 'credit_card': return new CreditCardProcessor(); } } }",
+      "languages": ["JavaScript", "TypeScript", "Java", "C#", "Python"]
+    },
+    "observer": {
+      "description": "Padrão publish-subscribe para comunicação entre objetos",
+      "code_example": "class EventEmitter { on(event, callback) { this.listeners[event].push(callback); } emit(event, data) { this.listeners[event].forEach(cb => cb(data)); } }",
+      "languages": ["JavaScript", "TypeScript", "Java", "C#", "Python"]
+    }
+  },
+  "security_practices": {
+    "authentication": {
+      "jwt": "JSON Web Tokens com expiração curta",
+      "refresh_tokens": "Para sessões longas e renovação automática",
+      "mfa": "Multi-factor authentication obrigatório"
+    },
+    "authorization": {
+      "rbac": "Role-Based Access Control",
+      "abac": "Attribute-Based Access Control",
+      "least_privilege": "Princípio do menor privilégio"
+    },
+    "data_protection": {
+      "encryption_in_transit": "TLS 1.3+ obrigatório",
+      "encryption_at_rest": "AES-256 para dados armazenados",
+      "password_hashing": "bcrypt ou Argon2"
+    }
+  },
+  "performance_patterns": {
+    "caching_strategy": {
+      "browser_cache": "Cache-Control, ETags",
+      "cdn": "Distribuição global de assets",
+      "application_cache": "Redis, Memcached",
+      "database_cache": "Query result caching"
+    },
+    "database_optimization": {
+      "indexing": "Índices adequados para queries frequentes",
+      "query_optimization": "EXPLAIN, query planning",
+      "connection_pooling": "Reutilização de conexões",
+      "read_replicas": "Balanceamento de leitura"
+    }
+  },
+  "testing_patterns": {
+    "unit_tests": {
+      "scope": "Funções isoladamente",
+      "tools": ["Jest", "Mocha", "JUnit", "pytest"],
+      "coverage": "Mínimo 80%",
+      "mocks": "Para dependências externas"
+    },
+    "integration_tests": {
+      "scope": "Comunicação entre módulos",
+      "tools": ["Supertest", "TestContainers", "Selenium"],
+      "focus": "APIs externas, bancos de dados"
+    },
+    "e2e_tests": {
+      "scope": "Fluxo completo do usuário",
+      "tools": ["Cypress", "Selenium", "Playwright"],
+      "focus": "UI, APIs, workflows completos"
+    }
+  },
+  "deployment_patterns": {
+    "blue_green": {
+      "description": "Duas versões idênticas do ambiente",
+      "benefits": ["zero downtime", "rollback instantâneo"],
+      "tools": ["Kubernetes", "Docker Compose", "Cloud platforms"]
+    },
+    "canary": {
+      "description": "Deploy gradual com monitoramento",
+      "benefits": ["risco reduzido", "rollback automático"],
+      "tools": ["Istio", "AWS CodeDeploy", "Azure DevOps"]
+    },
+    "feature_flags": {
+      "description": "Controle de features em runtime",
+      "benefits": ["deploy sem exposição", "A/B testing"],
+      "tools": ["LaunchDarkly", "Split.io", "Custom implementations"]
+    }
+  }
+}

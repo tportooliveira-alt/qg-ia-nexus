@@ -1,0 +1,16 @@
+﻿{
+  "frameworks": {
+    "discovery": ["problem interviews", "job-to-be-done", "opportunity mapping"],
+    "delivery": ["MVP slicing", "acceptance criteria", "release checklist"],
+    "evaluation": ["task success rate", "time on task", "error rate", "NPS/CSAT"]
+  },
+  "accessibility": {
+    "baseline": ["keyboard navigation", "contrast", "screen-reader labels"],
+    "advanced": ["focus management", "content hierarchy", "motion sensitivity"]
+  },
+  "handoff": [
+    "design tokens",
+    "component behavior specs",
+    "state and error rules"
+  ]
+}

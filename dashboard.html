@@ -160,7 +160,138 @@
     .chat-box { height: 50vh !important; }
   }
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+// ── FÁBRICA DE IA ─────────────────────────────────────────────
+let _fabricaStream = null;
+
+async function fabricaOrquestrar() {
+  const ideia = document.getElementById('fabricaIdeia').value.trim();
+  const el = document.getElementById('fabricaStatus');
+  if (!ideia) { el.textContent = '⚠️ Escreva a ideia do app antes de criar.'; return; }
+  el.innerHTML = '<span class="sp"></span>Enviando para a Fábrica de IA...';
+  try {
+    const d = await api('/api/fabrica/orquestrar', 'POST', { ideia });
+    if (d.error) { el.textContent = '❌ ' + d.error; return; }
+    const pid = d.pipelineId || d.id || '(aguardando)';
+    el.innerHTML = '🏭 Pipeline iniciado! ID: <strong style="color:#4ade80">' + pid + '</strong><br><span style="font-size:.75rem;color:#6b7280">Acompanhe abaixo ou no Chat.</span>';
+    document.getElementById('fabricaPipelineId').value = pid;
+    setTimeout(() => fabricaConectarStream(), 300);
+  } catch(e) { el.textContent = '❌ Erro: ' + e.message; }
+}
+
+async function fabricaToggle() {
+  const btn = document.getElementById('btnFabricaToggle');
+  btn.disabled = true;
+  try {
+    const d = await api('/api/fabrica/toggle', 'POST');
+    atualizarBotaoToggle(d.fabricaAtiva);
+  } catch(e) {
+    alert('Erro ao alternar Fábrica: ' + e.message);
+  }
+  btn.disabled = false;
+}
+
+function atualizarBotaoToggle(ativa) {
+  const btn = document.getElementById('btnFabricaToggle');
+  if (!btn) return;
+  if (ativa) {
+    btn.textContent = '🟢 Ligada';
+    btn.className = 'btn btn-success btn-sm';
+  } else {
+    btn.textContent = '🔴 Desligada';
+    btn.className = 'btn btn-danger btn-sm';
+  }
+}
+
+async function carregarStatusFabrica() {
+  const el = document.getElementById('fabricaHealthStatus');
+  try {
+    const d = await api('/api/fabrica/status');
+    const fab = d.fabrica || {};
+    const online = fab.status || fab.message || 'Online';
+    el.innerHTML = '<span style="color:#4ade80">✔ Fábrica Online</span> — ' + escHtml(String(online));
+    const t = await api('/api/fabrica/toggle');
+    atualizarBotaoToggle(t.fabricaAtiva);
+  } catch(e) { el.innerHTML = '<span style="color:#f87171">✘ Fábrica Offline</span> — ' + escHtml(e.message); }
+}
+
+function fabricaConectarStream() {
+  const pid = document.getElementById('fabricaPipelineId').value.trim();
+  const log = document.getElementById('fabricaStreamLog');
+  if (!pid) { log.textContent = '⚠️ Informe o Pipeline ID.'; return; }
+  if (_fabricaStream) { _fabricaStream.close(); _fabricaStream = null; }
+  log.innerHTML = '<span style="color:#7ecfff">📡 Conectando ao pipeline ' + escHtml(pid) + '...</span>\n';
+  const url = window.location.origin + '/api/fabrica/pipeline/' + encodeURIComponent(pid) + '/stream?token=' + encodeURIComponent(TOKEN);
+  const es = new EventSource(url);
+  _fabricaStream = es;
+  es.onmessage = (e) => {
+    try {
+      const ev = JSON.parse(e.data);
+      const tipo = ev.tipo || 'evento';
+      const agente = ev.agente || '';
+      const msg = ev.mensagem || ev.status || ev.resultado || '';
+      const cor = tipo === 'erro' ? '#f87171' : (tipo.includes('concluido') || tipo === 'pipeline_concluido') ? '#4ade80' : '#a5f3fc';
+      log.innerHTML += '<span style="color:' + cor + '">[' + escHtml(tipo) + ']</span>'
+        + (agente ? ' <span style="color:#818cf8">' + escHtml(agente) + '</span>' : '')
+        + (msg ? ' ' + escHtml(String(msg).substring(0, 120)) : '') + '\n';
+      log.scrollTop = log.scrollHeight;
+      if (tipo === 'pipeline_concluido' || tipo === 'stream_encerrado') {
+        es.close(); _fabricaStream = null;
+        log.innerHTML += '<span style="color:#4ade80">✔ Pipeline concluído.</span>\n';
+        carregarProjetosFabrica();
+      }
+    } catch {}
+  };
+  es.onerror = () => {
+    log.innerHTML += '<span style="color:#f87171">❌ Conexão SSE encerrada.</span>\n';
+    es.close(); _fabricaStream = null;
+  };
+}
+
+async function fabricaCancelarPipeline() {
+  const pid = document.getElementById('fabricaPipelineId').value.trim();
+  const log = document.getElementById('fabricaStreamLog');
+  if (!pid) { log.textContent = '⚠️ Informe o Pipeline ID.'; return; }
+  if (_fabricaStream) { _fabricaStream.close(); _fabricaStream = null; }
+  try {
+    await api('/api/fabrica/pipeline/' + encodeURIComponent(pid) + '/cancelar', 'POST');
+    log.innerHTML += '<span style="color:#fbbf24">⏹ Pipeline cancelado.</span>\n';
+  } catch(e) { log.innerHTML += '<span style="color:#f87171">❌ ' + escHtml(e.message) + '</span>\n'; }
+}
+
+async function carregarProjetosFabrica() {
+  const el = document.getElementById('fabricaProjetos');
+  el.innerHTML = '<div class="empty-txt" style="font-size:.78rem">Carregando...</div>';
+  try {
+    const d = await api('/api/fabrica/projetos');
+    const projetos = d.projetos || d.data || [];
+    if (!projetos.length) {
+      el.innerHTML = '<div class="empty-txt" style="font-size:.78rem">Nenhum projeto gerado ainda.</div>';
+      return;
+    }
+    el.innerHTML = projetos.slice(0, 20).map(p => {
+      const nome = escHtml(p.nome || p.name || p.id || 'Projeto');
+      const id = escHtml(p.id || '-');
+      const tipo = escHtml(p.tipo || p.type || '');
+      const dt = p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '';
+      const status = p.status || 'gerado';
+      const pillClass = (status === 'concluido' || status === 'aprovado') ? 'pill-green' : 'pill-yellow';
+      return '<div class="list-item">'
+        + '<div class="li-content">'
+        + '<div class="li-title">' + nome + '</div>'
+        + '<div class="li-sub">ID: ' + id + (tipo ? ' &bull; ' + tipo : '') + (dt ? ' &bull; ' + dt : '') + '</div>'
+        + '</div>'
+        + '<span class="pill ' + pillClass + '">' + escHtml(status) + '</span>'
+        + '</div>';
+    }).join('');
+  } catch(e) { el.textContent = '❌ ' + e.message; }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+</script>
 </head>
 <body>
 
@@ -204,6 +335,7 @@
     <button class="tab" onclick="trocarTab('pesquisa')" id="tab-pesquisa">ð¬ Pesquisas</button>
     <button class="tab" onclick="trocarTab('terminal')" id="tab-terminal">ð¥ï¸ Terminal</button>
     <button class="tab" onclick="trocarTab('ideias')" id="tab-ideias">ð¡ IdeaOrganizer</button>
+    <button class="tab" onclick="trocarTab('fabrica')" id="tab-fabrica">&#x1F3ED; F&aacute;brica de IA</button>
   </div>
 
   <!-- âââââââââââââââ TAB: FERRAMENTAS âââââââââââââââ -->
@@ -420,6 +552,51 @@
     ></iframe>
   </div>
 
+
+  <!-- ─────────────── TAB: FÁBRICA DE IA ─────────────── -->
+  <div id="pagFabrica" class="page" style="gap:16px">
+
+    <div class="grid">
+      <!-- Enviar ideia -->
+      <div class="card grid-full">
+        <div class="card-title">&#x1F3ED; F&aacute;brica de IA &mdash; Gerenciador de Pipelines</div>
+        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Descreva um app ou sistema e a F&aacute;brica de IA ir&aacute; gerar SQL + Backend + Frontend com 6 agentes especializados.</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <textarea class="inp" id="fabricaIdeia" rows="3" placeholder="Ex: app de gest&atilde;o de estoque com cadastro de produtos, movimenta&ccedil;&atilde;o e relat&oacute;rios..." style="flex:1;resize:vertical"></textarea>
+          <button class="btn btn-primary" style="align-self:flex-start;padding:10px 18px" onclick="fabricaOrquestrar()">&#x25B6; Criar App</button>
+        </div>
+        <div id="fabricaStatus" class="rbox" style="min-height:60px"><span class="empty-txt">Resultado aparece aqui...</span></div>
+      </div>
+
+      <!-- Status da Fabrica -->
+      <div class="card">
+        <div class="card-title">&#x2665; Status da F&aacute;brica</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div id="fabricaHealthStatus" style="font-size:.82rem;color:#6b7280;flex:1">Verificando...</div><button id="btnFabricaToggle" class="btn btn-sm" style="min-width:80px" onclick="fabricaToggle()">...</button></div><button class="btn btn-ghost btn-sm" onclick="carregarStatusFabrica()">&#x21BB; Atualizar</button>
+      </div>
+
+      <!-- Pipeline ativo -->
+      <div class="card">
+        <div class="card-title">&#x26A1; Acompanhar Pipeline</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" class="inp" id="fabricaPipelineId" placeholder="Pipeline ID" style="flex:1" />
+          <button class="btn btn-ghost btn-sm" onclick="fabricaConectarStream()">&#x1F4E1; Stream</button>
+          <button class="btn btn-danger btn-sm" onclick="fabricaCancelarPipeline()">&#x23F9;</button>
+        </div>
+        <div id="fabricaStreamLog" style="background:#070714;border:1px solid #1e1b4b;border-radius:8px;padding:10px;min-height:120px;max-height:260px;overflow-y:auto;font-size:.73rem;line-height:1.6;color:#a5f3fc"><span class="empty-txt">Conecte a um pipeline para ver eventos...</span></div>
+      </div>
+    </div>
+
+    <!-- Projetos gerados -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0">&#x1F4C1; Projetos Gerados</div>
+        <button class="btn btn-ghost btn-sm" onclick="carregarProjetosFabrica()">&#x21BB; Atualizar</button>
+      </div>
+      <div id="fabricaProjetos"><div class="empty-txt" style="font-size:.78rem">Carregando projetos...</div></div>
+    </div>
+
+  </div>
+
 </div><!-- fim mainApp -->
 
 <script>
@@ -483,6 +660,7 @@ function trocarTab(nome) {
   if (nome === 'terminal') carregarAudit();
   if (nome === 'status') carregarStatus();
   // Carrega o iframe do IdeaOrganizer sÃ³ quando entrar na aba (lazy load)
+  if (nome === 'fabrica') { carregarStatusFabrica(); carregarProjetosFabrica(); }
   if (nome === 'ideias') {
     const fr = document.getElementById('iframeIdeias');
     if (!fr.src || fr.src === window.location.href) {

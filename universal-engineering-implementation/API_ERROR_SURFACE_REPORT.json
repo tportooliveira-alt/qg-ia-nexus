@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-03-22T04:02:16.779Z",
+  "domainPayloadFuzz": {
+    "total": 1200,
+    "accepted": 559,
+    "rejected": 641,
+    "unexpectedEmptyAccepted": 0
+  },
+  "knowledgeQueryFuzz": {
+    "total": 1200,
+    "clampViolations": 0
+  },
+  "routingFuzz": {
+    "total": 1000,
+    "clarificationTrue": 947,
+    "clarificationRate": 0.947,
+    "exceptions": 0
+  },
+  "detectorRobustness": {
+    "total": 2000,
+    "exceptions": 0
+  }
+}
