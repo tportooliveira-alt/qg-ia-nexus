@@ -68,20 +68,29 @@ Esta pesquisa completa identifica e estuda todos os tipos principais de engenhei
 **Tecnologias:** Firewalls, SIEM, encryption, penetration testing
 **Demanda:** Extremamente alta (todas as empresas)
 
+### 9. 🧠 Prompt Engineer & AI Application Designer
+**Arquivo:** `PromptEngineer_AIDesigner.md`
+**Foco:** Design de sistemas IA + engenharia de prompts + traduzir a visão do criador em sistemas funcionais
+**Salário EUA:** $145k/ano (senior)
+**Tecnologias:** LangChain, CrewAI, Claude SDK, n8n, LangGraph, LangFlow, Flowise
+**Demanda:** Extremamente alta e crescente — papel mais estratégico da era de IA
+**Diferencial:** Ouve o criador com profundidade cirúrgica, decompõe a ideia em etapas, desenha o app inteiro (como n8n) antes de escrever uma linha de código
+
 ## 📈 Análise Comparativa
 
 ### Por Salário (EUA)
-1. Security Engineer: $128k
-2. Machine Learning Engineer: $120k
-3. DevOps Engineer: $114k
-4. Front-end Engineer: $106k
-5. Full-stack Engineer: $102k
-6. Back-end Engineer: $100k
-7. QA Engineer: $81k
-8. Game Developer: $81k
+1. Prompt Engineer & AI Designer: $145k (senior)
+2. Security Engineer: $128k
+3. Machine Learning Engineer: $120k
+4. DevOps Engineer: $114k
+5. Front-end Engineer: $106k
+6. Full-stack Engineer: $102k
+7. Back-end Engineer: $100k
+8. QA Engineer: $81k
+9. Game Developer: $81k
 
 ### Por Demanda
-1. **Extremamente Alta:** Full-stack, ML, Security
+1. **Extremamente Alta:** Prompt Engineer & AI Designer, Full-stack, ML, Security
 2. **Muito Alta:** Front-end, Back-end, DevOps
 3. **Alta:** QA, Game Development
 
