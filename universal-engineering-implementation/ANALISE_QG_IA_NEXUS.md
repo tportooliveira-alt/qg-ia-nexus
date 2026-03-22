@@ -30,7 +30,7 @@ Oportunidades de melhoria (alto nível)
 4. Expor métricas: contador de chamadas por provider, latência, custo estimado, iterações por projeto; integrar Prometheus/Grafana.
 5. Converter agentes JSON em uma camada executável com contratos (input schema / output schema) e validações de contrato (JSON Schema).
 
-Plano de implementação (por fases)
+Plano de implementação (por fases)otimo agora o
 - Fase A (1-3 dias): adicionar `agentRouting.json`, pequenas mudanças em `aiService.chamarIAComCascata()` para respeitar roteamento externo; criar `docs/` com análise.
 - Fase B (3-7 dias): integrar Vector DB (Pinecone/Weaviate), adaptar `memoryService` para armazenar embeddings; criar scripts de indexação da pasta `src/knowledge_base`.
 - Fase C (5-10 dias): implementar sandbox de execução para código gerado e adicioná-lo ao pipeline de auditoria (`auditService` + `evolutionService`).

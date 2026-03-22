@@ -19,6 +19,7 @@
     "scan:error-surface": "node tests/error-surface-scan.js"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.81",
     "@supabase/supabase-js": "^2.39.0",
     "@whiskeysockets/baileys": "^6.5.0",
     "cors": "^2.8.5",

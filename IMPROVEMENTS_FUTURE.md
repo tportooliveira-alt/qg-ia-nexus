@@ -208,4 +208,87 @@ Transformar o Nexus em um **Sistema de IA Pessoal Autônomo** capaz de:
 
 ---
 
-*Documento vivo — revisar mensalmente com base em aprendizados e feedback.*
+## ✅ MELHORIAS IMPLEMENTADAS — Sessão 22/03/2026
+
+### Nexus: Integração com Fábrica de IA (Plugin System)
+
+| Arquivo | O que foi feito |
+|---------|----------------|
+| `src/plugins/fabricaPlugin.js` | Cliente HTTP/SSE para a Fábrica de IA. Métodos: submeterIdeia, abrirStream, statusFabrica, statusPipeline, listarProjetos, cancelarPipeline |
+| `src/plugins/pluginManager.js` | Registry de plugins. Permite ligar/desligar cada plugin sem tocar no server.js |
+| `server.js` | 7 novas rotas `/api/fabrica/*` com proxy SSE, toggle liga/desliga, auth via X-QG-Token |
+| `src/services/nexusService.js` | Detecção automática de intenção fábrica. VidaDigital sempre carregado (não só por keyword). Fábrica acionada automaticamente ao detectar "criar app", "gerar projeto" etc. |
+| `src/services/whatsappService.js` | Comando `!fabrica <ideia>` via WhatsApp |
+| `src/services/authMiddleware.js` | Suporte a `?token=` na query string (necessário para EventSource/SSE do browser) |
+| `dashboard.html` | Aba "Fábrica de IA" com: textarea de ideia, botão Criar App, status health, log SSE em tempo real, tabela de projetos, botão liga/desliga |
+| `index.html` | Cadastro de conta via Supabase Auth (botão "Criar conta") |
+| `src/knowledge_base/NEXUS_FABRICA_PLUGIN.md` | Knowledge base ensinando o Nexus sobre a Fábrica |
+| `.env` / `render.yaml` | Variáveis FABRICA_API_URL e FABRICA_API_KEY |
+
+### Fábrica de IA: Auditoria e Hardening dos Agentes
+
+| Arquivo | Problema | Correção |
+|---------|----------|----------|
+| `agents/commander.js` | Sem fallback: JSON inválido travava o pipeline todo | Fallback completo com plano básico inferido da ideia |
+| `agents/auditor.js` | Truncava sql/app em 2000 chars (auditava só o começo), sem try/catch no JSON.parse, score podia ser inválido | Limites: sql/app→6000, arquitetura→4000, outros→2000. try/catch adicionado. Score clampado: `Math.min(100, Math.max(0, Number(score) \|\| 60))` |
+| `agents/sub/BackendAgent.js` | Sempre gerava Node.js/Express + Supabase independente do stack definido pelo Comandante | Lê `arquitetura.stack` e gera system prompt dinâmico respeitando a stack do plano |
+| `agents/sub/PlanilhaAgent.js` | Usava `chamarIACodigo` (DeepSeek) — ruim para dados estruturados e fórmulas | Trocado para `chamarIARaciocinio` (Anthropic/OpenAI) |
+| `agents/designer.js` | Paleta hardcoded roxa/ciano para todos os projetos | Lê `tom_design` do Analista e aplica paleta correta: corporativo=azul/branco, minimalista=B&W, colorido=vibrante, dark=roxo/ciano |
+| `agents/aiService.js` | Groq: `llama-3.1-8b-instant` (fraco), Anthropic: `claude-haiku-4-5-20251001` (desatualizado) | Groq→`llama-3.3-70b-versatile`, Anthropic→`claude-sonnet-4-6` |
+| `agents/CoderChief.js` | `apresentacao` usava DocumentoAgent (errado), sem SecurityAgent dinâmico | ApresentacaoAgent próprio, SecurityAgent contratado automaticamente para projetos `complexa` ou com >5 tabelas |
+
+### Novos Sub-agentes Criados
+
+| Agente | Responsabilidade |
+|--------|-----------------|
+| `agents/sub/ApresentacaoAgent.js` | Gera apresentações PowerPoint/Slides com slides estruturados, notas do apresentador, paleta de cores, HTML preview |
+| `agents/sub/SecurityAgent.js` | Revisor OWASP Top 10: SQL Injection, XSS, IDOR, configurações inseguras. Contratado automaticamente em projetos complexos |
+
+---
+
+## 🔜 PRÓXIMAS MELHORIAS PRIORITÁRIAS
+
+### Infraestrutura MCP (Alta Prioridade)
+
+| MCP | Prioridade | O que habilita |
+|-----|-----------|----------------|
+| GitHub MCP | P0 | Nexus opera repositórios, cria PRs, analisa commits autonomamente |
+| Supabase MCP | P0 | Nexus lê/escreve no banco diretamente sem código intermediário |
+| Sentry MCP | P0 | Nexus monitora erros em produção em tempo real |
+| Playwright MCP | P0 | Nexus testa UIs geradas pela Fábrica automaticamente |
+| Zapier/Composio | P1 | Automações: docs, planilhas, calendário, e-mail |
+| Figma MCP | P1 | Design-to-code: importa layouts direto do Figma |
+| Notion MCP | P1 | Knowledge operations: sincroniza com base de conhecimento |
+
+### Quality Gate em CI (Alta Prioridade)
+- GitHub Actions: rodar `tests/quality-gate.js` em todo push
+- Bloquear merge se benchmark < 90%
+- Bloquear se erros de validação > 0
+- Trend report automático por PR
+
+### Vector DB para Memória Semântica
+- **Problema atual:** memórias no Supabase são texto simples, sem busca semântica
+- **Solução:** Pinecone ou Weaviate para embeddings
+- **Benefício:** Nexus busca memórias por significado, não por keyword. RAG real.
+- **Impacto:** Respostas muito mais contextuais, menos alucinações
+
+### Sandbox de Execução para Código Gerado
+- **Problema atual:** código gerado pela Fábrica não é executado/testado antes de entregar
+- **Solução:** Container isolado (Firecracker/Docker) que roda e valida o código
+- **Integração:** auditService + evolutionService com feedback loop
+- **Benefício:** Taxa de código funcional sobe de ~60% para ~90%
+
+### Engenharia Universal na Fábrica
+- **O que é:** Fábrica não só gera software, mas projeta mecânica, civil, elétrica, produtos
+- **Status:** Knowledge base e agentes JSON já criados (MechanicalEngineer, CivilArchitect, ElectricalEngineer, ChemicalEngineer, ProductDesigner, SystemsIntegrator)
+- **Falta:** Integrar esses agentes no pipeline da Fábrica de IA (commander→architect→coderchief)
+- **Fase 2 (em andamento):** DomainDetector como serviço, pipeline multi-domínio, artefatos técnicos por domínio
+
+### Agentes Especializados nos Projetos Ativos
+- **AgroMacro Agent:** conhecimento pecuária brasileira, IoT rural, KPIs de rebanho
+- **FrigoGest Agent:** pipeline frigorífico, rastreabilidade, SISBOV
+- **DevOps Agent:** deploy automático das apps geradas pela Fábrica, monitoramento de infra
+
+---
+
+*Documento vivo — atualizado em 22/03/2026. Revisar mensalmente.*

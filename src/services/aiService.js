@@ -84,6 +84,49 @@ const AIService = {
     return data.content[0].text;
   },
 
+  async callAnthropicStream(prompt, maxTokens = null, onChunk) {
+    if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY ausente");
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: getMaxTokens("Anthropic", maxTokens),
+        stream: true,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error(`Anthropic stream falhou com status: ${res.status}`);
+
+    return new Promise((resolve, reject) => {
+      let fullText = "";
+      let buffer = "";
+      res.body.on("data", (chunk) => {
+        buffer += chunk.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+              fullText += parsed.delta.text;
+              onChunk(parsed.delta.text);
+            }
+          } catch { /* linha incompleta, ignora */ }
+        }
+      });
+      res.body.on("end", () => resolve(fullText));
+      res.body.on("error", reject);
+    });
+  },
+
   async callOpenAI(prompt, maxTokens = null) {
     if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY ausente");
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
