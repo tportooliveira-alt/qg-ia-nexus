@@ -68,7 +68,15 @@ Esta pesquisa completa identifica e estuda todos os tipos principais de engenhei
 **Tecnologias:** Firewalls, SIEM, encryption, penetration testing
 **Demanda:** Extremamente alta (todas as empresas)
 
-### 9. 🧠 Prompt Engineer & AI Application Designer
+### 9. 🎨 Design & Architecture Engineer para Apps de IA
+**Arquivo:** `DesignArquitetura_Engineer.md`
+**Foco:** Design visual + arquitetura de sistemas IA + design systems + UX para IA
+**Salário EUA:** $175k/ano (senior)
+**Tecnologias:** Figma, React, Tailwind, Storybook, Node.js, Supabase, draw.io
+**Demanda:** Extremamente alta — poucos profissionais dominam design E arquitetura
+**Diferencial:** Estudo baseado no ecossistema real QG IA Nexus — inclui diagramas, paleta de cores, padrões de UX para IA, fluxos específicos do FrigoGest e AgroMacro
+
+### 10. 🧠 Prompt Engineer & AI Application Designer
 **Arquivo:** `PromptEngineer_AIDesigner.md`
 **Foco:** Design de sistemas IA + engenharia de prompts + traduzir a visão do criador em sistemas funcionais
 **Salário EUA:** $145k/ano (senior)
@@ -79,8 +87,9 @@ Esta pesquisa completa identifica e estuda todos os tipos principais de engenhei
 ## 📈 Análise Comparativa
 
 ### Por Salário (EUA)
-1. Prompt Engineer & AI Designer: $145k (senior)
-2. Security Engineer: $128k
+1. Design & Architecture Engineer: $175k (senior)
+2. Prompt Engineer & AI Designer: $145k (senior)
+3. Security Engineer: $128k
 3. Machine Learning Engineer: $120k
 4. DevOps Engineer: $114k
 5. Front-end Engineer: $106k
@@ -90,7 +99,7 @@ Esta pesquisa completa identifica e estuda todos os tipos principais de engenhei
 9. Game Developer: $81k
 
 ### Por Demanda
-1. **Extremamente Alta:** Prompt Engineer & AI Designer, Full-stack, ML, Security
+1. **Extremamente Alta:** Design & Architecture Engineer, Prompt Engineer & AI Designer, Full-stack, ML, Security
 2. **Muito Alta:** Front-end, Back-end, DevOps
 3. **Alta:** QA, Game Development
 
