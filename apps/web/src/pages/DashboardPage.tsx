@@ -1,56 +1,83 @@
+import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from '../api/client'
+
+interface NexusStatus {
+  status: string
+  agente: string
+  uptime: number
+  token_volume: string
+  memoria: { rss: string; heapUsed: string }
+  servicos: Record<string, string>
+}
+
+function formatUptime(seconds: number) {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
 export function DashboardPage() {
+  const { data: nexusStatus } = useQuery({
+    queryKey: ['nexus-status'],
+    queryFn: () => apiFetch<NexusStatus>('/status'),
+    refetchInterval: 30000,
+  })
+
   return (
-    <div className="p-6 min-h-screen bg-[#050505]">
+    <div className="p-6 h-full overflow-y-auto bg-[#050505]">
 
       {/* ── Hero Strip ── */}
       <section className="mb-8 border border-white/5 bg-[#0B0D10] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="font-headline font-bold text-3xl tracking-tighter text-on-surface">
-            Nexus Claw <span className="text-primary">Online</span>
+            {nexusStatus?.agente || 'Nexus Claw'}{' '}
+            <span className="text-primary">{nexusStatus?.status || '...'}</span>
           </h1>
           <p className="font-label text-xs text-slate-500 uppercase tracking-widest mt-1">
-            Operational Protocol v4.2.0-Alpha
+            Uptime: {nexusStatus ? formatUptime(nexusStatus.uptime) : '...'} · Volume: {nexusStatus?.token_volume || '...'}
           </p>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10">
             <div className="w-2 h-2 rounded-full bg-[#22C55E]"></div>
-            <span className="font-label text-[10px] text-on-surface uppercase tracking-tighter">Core Systems: Stable</span>
+            <span className="font-label text-[10px] text-on-surface uppercase tracking-tighter">
+              AutoHealing: {nexusStatus?.servicos?.autoHealing || '...'}
+            </span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10">
             <div className="w-2 h-2 rounded-full bg-[#22C55E]"></div>
-            <span className="font-label text-[10px] text-on-surface uppercase tracking-tighter">API Gateway: Active</span>
+            <span className="font-label text-[10px] text-on-surface uppercase tracking-tighter">
+              Multi-IA: {nexusStatus?.servicos?.multiIA || '...'}
+            </span>
           </div>
-          <button className="bg-primary-container text-on-primary-fixed font-headline font-bold text-xs uppercase px-4 py-2 rounded-md glow-hover transition-all">
-            Initiate Sweep
-          </button>
         </div>
       </section>
 
       {/* ── InsightCards Grid ── */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
-        {/* Custo Diário */}
+        {/* Heap Usado */}
         <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full -mr-8 -mt-8"></div>
           <div>
-            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Custo Diário</span>
+            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Memória Heap</span>
             <div className="flex items-baseline gap-1 mt-1">
-              <span className="font-label text-primary">$</span>
-              <h2 className="font-headline font-bold text-2xl text-on-surface">142.84</h2>
+              <h2 className="font-headline font-bold text-2xl text-on-surface">{nexusStatus?.memoria?.heapUsed || '...'}</h2>
             </div>
           </div>
           <div className="flex items-center gap-1 text-[10px] font-label text-[#22C55E]">
-            <span className="material-symbols-outlined text-xs">trending_down</span>
-            <span>12% vrs. yesterday</span>
+            <span className="material-symbols-outlined text-xs">memory</span>
+            <span>RSS: {nexusStatus?.memoria?.rss || '...'}</span>
           </div>
         </div>
 
-        {/* Jobs Ativos */}
+        {/* Uptime */}
         <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32">
           <div>
-            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Jobs Ativos</span>
-            <h2 className="font-headline font-bold text-2xl text-on-surface mt-1">1,024</h2>
+            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Uptime</span>
+            <h2 className="font-headline font-bold text-2xl text-on-surface mt-1">
+              {nexusStatus ? formatUptime(nexusStatus.uptime) : '...'}
+            </h2>
           </div>
           <div className="flex gap-1 h-4 items-end">
             <div className="flex-1 bg-primary/20 h-1/2"></div>
@@ -62,28 +89,30 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Latência Média */}
+        {/* WhatsApp */}
         <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32">
           <div>
-            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Latência Média</span>
-            <h2 className="font-headline font-bold text-2xl text-on-surface mt-1">
-              42<span className="text-sm font-normal text-slate-500 ml-1">ms</span>
+            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">WhatsApp</span>
+            <h2 className="font-headline font-bold text-xl text-on-surface mt-1">
+              {nexusStatus?.servicos?.whatsapp || '...'}
             </h2>
           </div>
           <div className="font-label text-[10px] text-primary uppercase tracking-tighter bg-primary/5 px-2 py-1 self-start">
-            Optimized: Cluster-A
+            Pesquisa: {nexusStatus?.servicos?.cron_pesquisa || '...'}
           </div>
         </div>
 
-        {/* Falhas 24h */}
+        {/* Multi-IA */}
         <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32">
           <div>
-            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Falhas (24h)</span>
-            <h2 className="font-headline font-bold text-2xl text-error mt-1">03</h2>
+            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Multi-IA</span>
+            <h2 className="font-headline font-bold text-xl text-on-surface mt-1">
+              {nexusStatus?.servicos?.multiIA || '...'}
+            </h2>
           </div>
-          <div className="flex items-center gap-1 text-[10px] font-label text-error uppercase">
-            <span className="material-symbols-outlined text-xs">warning</span>
-            <span>Action Required: Node-7</span>
+          <div className="flex items-center gap-1 text-[10px] font-label text-[#22C55E] uppercase">
+            <span className="material-symbols-outlined text-xs">auto_awesome</span>
+            <span>AutoHealing: {nexusStatus?.servicos?.autoHealing || '...'}</span>
           </div>
         </div>
 
@@ -260,19 +289,21 @@ export function DashboardPage() {
       </section>
 
       {/* ── Floating HUD ── */}
-      <div className="fixed bottom-6 right-6 flex flex-col items-end gap-2 pointer-events-none">
-        <div className="bg-[#0B0D10] border border-primary/30 p-3 flex items-center gap-4 backdrop-blur-md pointer-events-auto">
-          <div className="flex flex-col">
-            <span className="font-label text-[9px] text-slate-500 uppercase tracking-widest">Global Heat</span>
-            <span className="font-headline font-bold text-lg text-primary tracking-tighter">98.2%</span>
-          </div>
-          <div className="w-[1px] h-8 bg-white/10"></div>
-          <div className="flex flex-col">
-            <span className="font-label text-[9px] text-slate-500 uppercase tracking-widest">Active Threads</span>
-            <span className="font-headline font-bold text-lg text-on-surface tracking-tighter">4,092</span>
+      {nexusStatus && (
+        <div className="fixed bottom-6 right-6 flex flex-col items-end gap-2 pointer-events-none">
+          <div className="bg-[#0B0D10] border border-primary/30 p-3 flex items-center gap-4 backdrop-blur-md pointer-events-auto">
+            <div className="flex flex-col">
+              <span className="font-label text-[9px] text-slate-500 uppercase tracking-widest">Heap</span>
+              <span className="font-headline font-bold text-lg text-primary tracking-tighter">{nexusStatus.memoria.heapUsed}</span>
+            </div>
+            <div className="w-[1px] h-8 bg-white/10"></div>
+            <div className="flex flex-col">
+              <span className="font-label text-[9px] text-slate-500 uppercase tracking-widest">Uptime</span>
+              <span className="font-headline font-bold text-lg text-on-surface tracking-tighter">{formatUptime(nexusStatus.uptime)}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   )

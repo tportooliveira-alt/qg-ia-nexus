@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 
@@ -16,6 +17,7 @@ const NAV = [
 export function AppShell() {
   const { logout } = useAuthStore()
   const navigate = useNavigate()
+  const [expanded, setExpanded] = useState(false)
 
   function handleLogout() {
     logout()
@@ -38,7 +40,11 @@ export function AppShell() {
       </header>
 
       {/* ── NavigationDrawer ── */}
-      <aside className="fixed left-0 top-12 h-full w-16 hover:w-48 transition-all duration-300 z-40 bg-[#050505] border-r border-white/5 flex flex-col pt-4 gap-2 overflow-hidden group">
+      <aside
+        onMouseEnter={() => setExpanded(true)}
+        onMouseLeave={() => setExpanded(false)}
+        className="fixed left-0 top-12 h-full w-16 hover:w-48 transition-all duration-300 z-40 bg-[#050505] border-r border-white/5 flex flex-col pt-4 gap-2 overflow-hidden group"
+      >
         <div className="px-4 mb-4">
           <span className="font-label text-[11px] uppercase tracking-widest text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
             SYSTEM_OS
@@ -79,7 +85,7 @@ export function AppShell() {
       </aside>
 
       {/* ── Content Area ── */}
-      <div className="ml-16 mt-12 h-[calc(100vh-3rem)] overflow-hidden">
+      <div className={`transition-all duration-300 mt-12 h-[calc(100vh-3rem)] overflow-hidden ${expanded ? 'ml-48' : 'ml-16'}`}>
         <Outlet />
       </div>
 

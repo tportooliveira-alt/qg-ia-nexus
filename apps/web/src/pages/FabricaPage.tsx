@@ -60,8 +60,9 @@ export function FabricaPage() {
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>🏭 Fábrica de IA</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
-            Status: <span style={{ color: status?.fabrica?.status === 'online' ? 'var(--color-success)' : 'var(--color-error)' }}>
-              {status?.fabrica?.status || '...'}
+            Status:{' '}
+            <span style={{ color: status?.fabrica?.status === 'online' ? 'var(--color-success)' : status?.fabrica?.status ? 'var(--color-error)' : 'var(--color-text-muted)' }}>
+              {status?.fabrica?.status === 'online' ? 'Online' : status?.fabrica?.status ? `Offline — ${status.fabrica.status}` : 'Conectando...'}
             </span>
           </p>
         </div>
