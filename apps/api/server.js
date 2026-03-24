@@ -28,13 +28,22 @@ app.use(express.json({ limit: "50mb" }));
 // ─── Static (public/) ─────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "public")));
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// ─── Dashboard (legacy) ───────────────────────────────────────────────────────
 app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+  const dashHtml = path.join(__dirname, "public", "dashboard.html");
+  const indexHtml = path.join(__dirname, "public", "index.html");
+  res.sendFile(require("fs").existsSync(dashHtml) ? dashHtml : indexHtml);
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use("/api", routes);
+
+// ─── SPA Fallback (React Router) ─────────────────────────────────────────────
+// Deve ficar DEPOIS das rotas API. Serve index.html para qualquer rota
+// não reconhecida, permitindo que o React Router gerencie a navegação.
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // ─── Bootstrap (listen + WhatsApp + MySQL + cron) ────────────────────────────
 bootstrap(app, port);
