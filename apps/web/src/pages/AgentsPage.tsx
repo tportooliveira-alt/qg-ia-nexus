@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../api/client'
 import { useNavigate } from 'react-router-dom'
+import { AgentNetwork } from '../components/AgentNetwork'
 
 interface Agent {
   nome: string
@@ -37,6 +38,7 @@ export function AgentsPage() {
   const navigate = useNavigate()
   const [selected, setSelected] = useState<Agent | null>(null)
   const [testando, setTestando] = useState(false)
+  const [aba, setAba] = useState<'grid' | 'rede'>('grid')
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['agents'],
@@ -66,13 +68,36 @@ export function AgentsPage() {
   return (
     <div style={{ height: '100%', overflowY: 'auto', padding: 24 }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Agentes & Provedores de IA</h2>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          {data?.agentes?.length || 0} agentes registrados — clique para conversar
-        </p>
+      {/* Header + Tabs */}
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 700 }}>Agentes & Provedores de IA</h2>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
+            {data?.agentes?.length || 0} agentes · clique para conversar
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 4, background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)', borderRadius: 8, padding: 4 }}>
+          {(['grid', 'rede'] as const).map(a => (
+            <button key={a} onClick={() => setAba(a)} style={{
+              padding: '6px 18px', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+              background: aba === a ? 'var(--color-primary-500)' : 'transparent',
+              color: aba === a ? 'white' : 'var(--color-text-muted)',
+            }}>
+              {a === 'grid' ? '⊞ Grid' : '🕸 Rede'}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* ── Aba Rede (grafo n8n) ── */}
+      {aba === 'rede' && (
+        <div style={{ marginBottom: 24 }}>
+          <AgentNetwork />
+        </div>
+      )}
+
+      {/* ── Conteúdo da aba Grid ── */}
+      {aba !== 'grid' ? null : <>
 
       {/* ── Painel de Saúde dos Providers ── */}
       <div style={{
@@ -217,6 +242,8 @@ export function AgentsPage() {
       </div>
 
       {/* ── Modal de detalhe do agente ── */}
+      </> /* fim aba grid */}
+
       {selected && (
         <div
           onClick={() => setSelected(null)}

@@ -32,7 +32,7 @@ const ResearchService = {
     try {
       const { resultado, iaUsada } = await AIService.chamarIAComCascata(
         prompt,
-        ['Gemini', 'Anthropic', 'DeepSeek', 'Groq', 'Cerebras', 'OpenAI']
+        ['Gemini', 'Groq', 'Cerebras', 'DeepSeek', 'SambaNova', 'xAI', 'Anthropic', 'OpenAI']
       );
       
       await EvolutionService.registrarAprendizado(

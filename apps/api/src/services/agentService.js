@@ -1,66 +1,107 @@
-const { query } = require("@anthropic-ai/claude-agent-sdk");
 const path = require("path");
+const AIService = require("./aiService");
 
 const NEXUS_ROOT = path.resolve(__dirname, "../..");
 
+// Verifica se o Anthropic Agent SDK pode ser usado
+function temAnthropicKey() {
+  return !!(process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.length > 10);
+}
+
 /**
- * Executa um agente autônomo com o Claude Agent SDK.
- * O agente pode ler arquivos, executar buscas e analisar o projeto.
+ * Executa um agente autônomo.
+ * - Com ANTHROPIC_API_KEY: usa Claude Agent SDK (ferramentas reais: Read, Glob, Grep, WebSearch)
+ * - Sem chave: usa cascata de IAs (Gemini/Groq/Cerebras) como fallback
  *
- * @param {string} tarefa - Descrição da tarefa para o agente
- * @param {object} [opcoes]
- * @param {string[]} [opcoes.ferramentas] - Ferramentas permitidas (padrão: seguras, sem escrita)
- * @param {string} [opcoes.dir] - Diretório de trabalho (padrão: raiz do Nexus)
- * @param {AbortController} [opcoes.abortController]
+ * @param {string} tarefa - Descrição da tarefa
+ * @param {object} opcoes
  * @returns {AsyncGenerator} - Gera eventos: { tipo, conteudo }
  */
 async function* executarAgente(tarefa, opcoes = {}) {
-  const {
-    ferramentas = ["Read", "Glob", "Grep", "WebSearch", "WebFetch"],
-    dir = NEXUS_ROOT,
-    abortController,
-  } = opcoes;
+  if (temAnthropicKey()) {
+    // Modo autônomo completo com Claude Agent SDK
+    try {
+      const { query } = require("@anthropic-ai/claude-agent-sdk");
+      const {
+        ferramentas = ["Read", "Glob", "Grep", "WebSearch", "WebFetch"],
+        dir = NEXUS_ROOT,
+        abortController,
+      } = opcoes;
 
-  const params = {
-    prompt: tarefa,
-    options: {
-      allowedTools: ferramentas,
-      cwd: dir,
-      ...(abortController ? { abortController } : {}),
-    },
-  };
+      const params = {
+        prompt: tarefa,
+        options: {
+          allowedTools: ferramentas,
+          cwd: dir,
+          ...(abortController ? { abortController } : {}),
+        },
+      };
 
-  for await (const msg of query(params)) {
-    const tipo = msg.type;
+      yield { tipo: "inicio", conteudo: "Agente Autônomo iniciado (Claude Agent SDK)" };
 
-    if (tipo === "assistant") {
-      // Mensagem de texto do agente
-      const blocos = msg.message?.content || [];
-      for (const bloco of blocos) {
-        if (bloco.type === "text" && bloco.text) {
-          yield { tipo: "texto", conteudo: bloco.text };
-        } else if (bloco.type === "tool_use") {
-          yield { tipo: "ferramenta", conteudo: `[${bloco.name}] ${JSON.stringify(bloco.input).substring(0, 120)}` };
+      for await (const msg of query(params)) {
+        const tipo = msg.type;
+        if (tipo === "assistant") {
+          const blocos = msg.message?.content || [];
+          for (const bloco of blocos) {
+            if (bloco.type === "text" && bloco.text) {
+              yield { tipo: "texto", conteudo: bloco.text };
+            } else if (bloco.type === "tool_use") {
+              yield { tipo: "ferramenta", conteudo: `[${bloco.name}] ${JSON.stringify(bloco.input).substring(0, 120)}` };
+            }
+          }
+        } else if (tipo === "result") {
+          yield {
+            tipo: "resultado",
+            conteudo: msg.result || "",
+            subtype: msg.subtype,
+            custo: msg.usage ? `${msg.usage.input_tokens} in / ${msg.usage.output_tokens} out tokens` : null,
+          };
+        } else if (tipo === "system" && msg.subtype === "init") {
+          yield { tipo: "inicio", conteudo: `Agente iniciado | modelo: ${msg.model}` };
         }
       }
-    } else if (tipo === "result") {
-      yield {
-        tipo: "resultado",
-        conteudo: msg.result || "",
-        subtype: msg.subtype,
-        custo: msg.usage ? `${msg.usage.input_tokens} in / ${msg.usage.output_tokens} out tokens` : null,
-      };
-    } else if (tipo === "system") {
-      if (msg.subtype === "init") {
-        yield { tipo: "inicio", conteudo: `Agente iniciado | modelo: ${msg.model}` };
-      }
+      return;
+    } catch (err) {
+      console.warn("[AGENT] Claude Agent SDK falhou, usando fallback cascata:", err.message);
     }
+  }
+
+  // Fallback: cascata de IAs sem ferramentas externas
+  yield { tipo: "inicio", conteudo: "Agente iniciado via cascata de IAs (Gemini/Groq/Cerebras)" };
+
+  try {
+    const promptCompleto =
+      "Você é um agente autônomo de análise e execução de tarefas. " +
+      "Responda em português, seja detalhado e estruturado.\n\n" +
+      "TAREFA:\n" + tarefa;
+
+    let fullText = "";
+    yield { tipo: "ferramenta", conteudo: "[CascataIA] Iniciando processamento..." };
+
+    await AIService.callGeminiStream(promptCompleto, null, (chunk) => {
+      fullText += chunk;
+      // não yield durante stream para evitar muitos eventos
+    }).catch(async () => {
+      await AIService.callGroqStream(promptCompleto, null, (chunk) => { fullText += chunk; })
+        .catch(async () => {
+          await AIService.callCerebrasStream(promptCompleto, null, (chunk) => { fullText += chunk; })
+            .catch(async () => {
+              const r = await AIService.callDeepSeek(promptCompleto, null);
+              fullText = r;
+            });
+        });
+    });
+
+    yield { tipo: "texto", conteudo: fullText };
+    yield { tipo: "resultado", conteudo: fullText, subtype: "success", custo: null };
+  } catch (err) {
+    yield { tipo: "erro", conteudo: `Todas as IAs falharam: ${err.message}` };
   }
 }
 
 /**
  * Executa o agente e retorna o resultado final como string.
- * Útil para chamadas simples sem streaming.
  */
 async function consultarAgente(tarefa, opcoes = {}) {
   const eventos = [];
