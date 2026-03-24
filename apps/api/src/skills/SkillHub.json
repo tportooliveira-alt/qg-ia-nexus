@@ -1,117 +1,196 @@
 {
   "nome": "Skill Hub Global (Academia de Especialistas)",
-  "descricao": "Catálogo central de Model Context Protocols (MCPs) e repositórios confiáveis globais. O Thiago Claw usa este hub para baixar inteligência extra.",
-  "repositorios_confiaveis": [
+  "descricao": "Catálogo central de MCPs, repositórios GitHub confiáveis e fontes de conhecimento técnico real. Os agentes consultam este hub antes de recomendar qualquer biblioteca, integração ou solução.",
+  "versao": "2.0.0",
+
+  "regras_de_confianca": {
+    "descricao": "Um repositório só entra nesta lista se passar em todos os critérios abaixo",
+    "criterios": [
+      "Organização oficial do produto (não fork, não clone)",
+      "Mais de 1000 stars no GitHub",
+      "Commit nos últimos 6 meses (projeto ativo)",
+      "Licença MIT, Apache 2.0 ou BSD (pode usar comercialmente)",
+      "Sem histórico de malware ou supply chain attack"
+    ]
+  },
+
+  "mcps_oficiais": [
     {
-      "nome": "GitHub MCP",
-      "tipo": "Controle de Versão e Código",
-      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/github",
-      "status": "Aprovado para Estudo",
-      "descricao": "Permite aos agentes ler, commitar e gerenciar PRs no GitHub."
+      "nome": "MCP Servers (Anthropic Oficial)",
+      "organizacao": "modelcontextprotocol",
+      "origem": "https://github.com/modelcontextprotocol/servers",
+      "confianca": "MAXIMO",
+      "descricao": "Repositório oficial com todos os MCPs mantidos pela Anthropic",
+      "sub_servidores": [
+        {
+          "nome": "GitHub MCP",
+          "path": "src/github",
+          "uso": "Agents lêem, commitam e gerenciam PRs no GitHub automaticamente"
+        },
+        {
+          "nome": "PostgreSQL MCP",
+          "path": "src/postgres",
+          "uso": "Arquiteto verifica schemas existentes, cria tabelas, roda queries"
+        },
+        {
+          "nome": "Brave Search MCP",
+          "path": "src/brave-search",
+          "uso": "Scout pesquisa documentação de APIs novas em tempo real"
+        },
+        {
+          "nome": "Puppeteer MCP",
+          "path": "src/puppeteer",
+          "uso": "Agents acessam sites como humano — scraping de docs, cotações, regulamentos"
+        },
+        {
+          "nome": "Filesystem MCP",
+          "path": "src/filesystem",
+          "uso": "Codificador escreve arquivos (.js, .sql, .zip) no servidor"
+        },
+        {
+          "nome": "Fetch MCP",
+          "path": "src/fetch",
+          "uso": "Busca conteúdo de qualquer URL — docs, APIs, páginas técnicas"
+        }
+      ]
     },
     {
-      "nome": "PostgreSQL & Supabase MCP",
-      "tipo": "Banco de Dados e Memória",
-      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/postgres",
-      "status": "Aprovado para Estudo",
-      "descricao": "Permite executar queries complexas, analisar esquemas e otimizar bancos."
+      "nome": "MCP TypeScript SDK",
+      "organizacao": "modelcontextprotocol",
+      "origem": "https://github.com/modelcontextprotocol/typescript-sdk",
+      "confianca": "MAXIMO",
+      "uso": "Criar MCPs customizados para o QG IA (novos plugins internos)"
     },
     {
-      "nome": "Brave Web Search MCP",
-      "tipo": "Pesquisa Global",
-      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search",
-      "status": "Aprovado para Estudo",
-      "descricao": "Navegação em tempo real para encontrar documentações de APIs que acabaram de lançar."
-    },
-    {
-      "nome": "Puppeteer Web Scraper",
-      "tipo": "Automação UX/UI",
-      "origem": "https://github.com/modelcontextprotocol/servers/tree/main/src/puppeteer",
-      "status": "Aprovado para Estudo",
-      "descricao": "Permite que os agentes 'vejam' o site como um humano, tirem prints e cliquem em botões."
+      "nome": "Google Stitch MCP",
+      "organizacao": "Google",
+      "origem": "https://stitch.withgoogle.com",
+      "api": "https://stitch.googleapis.com/mcp",
+      "confianca": "MAXIMO",
+      "uso": "Designer gera interfaces visuais (HTML/Tailwind) a partir de prompts — já integrado em stitchMcp.js"
     }
   ],
+
+  "github_ias_utilizadas": {
+    "descricao": "Repos oficiais das IAs que o sistema usa — consultar para atualizações de modelos e APIs",
+    "repos": [
+      {
+        "nome": "Gemini AI (Google)",
+        "origem": "https://github.com/google-gemini/generative-ai-js",
+        "confianca": "MAXIMO",
+        "modelos_recomendados": {
+          "rapido_gratis": "gemini-2.0-flash",
+          "complexo_gratis": "gemini-2.5-flash",
+          "maximo": "gemini-2.5-pro"
+        }
+      },
+      {
+        "nome": "Groq SDK",
+        "origem": "https://github.com/groq/groq-typescript",
+        "confianca": "MAXIMO",
+        "uso": "Analista — ultra-rápido e grátis para tarefas de triagem"
+      },
+      {
+        "nome": "Anthropic SDK (Claude)",
+        "origem": "https://github.com/anthropics/anthropic-sdk-node",
+        "confianca": "MAXIMO",
+        "uso": "Auditor final — revisor de qualidade obrigatório antes de entregar ao usuário"
+      },
+      {
+        "nome": "DeepSeek AI",
+        "origem": "https://github.com/deepseek-ai",
+        "confianca": "ALTO",
+        "uso": "Corretor — especialista em consertar código com bugs"
+      }
+    ]
+  },
+
+  "github_stack_oficial": {
+    "descricao": "Repos oficiais do stack do projeto — usar SEMPRE a versão deste repo, nunca fork",
+    "backend": [
+      { "nome": "Express.js",     "origem": "https://github.com/expressjs/express",           "confianca": "MAXIMO" },
+      { "nome": "MySQL2 (Node)",  "origem": "https://github.com/sidorares/node-mysql2",        "confianca": "MAXIMO" },
+      { "nome": "Supabase JS",    "origem": "https://github.com/supabase/supabase-js",         "confianca": "MAXIMO" },
+      { "nome": "node-fetch",     "origem": "https://github.com/node-fetch/node-fetch",        "confianca": "MAXIMO" },
+      { "nome": "dotenv",         "origem": "https://github.com/motdotla/dotenv",              "confianca": "MAXIMO" }
+    ],
+    "frontend": [
+      { "nome": "React",          "origem": "https://github.com/facebook/react",               "confianca": "MAXIMO" },
+      { "nome": "Vite",           "origem": "https://github.com/vitejs/vite",                  "confianca": "MAXIMO" },
+      { "nome": "React Router",   "origem": "https://github.com/remix-run/react-router",       "confianca": "MAXIMO" },
+      { "nome": "TanStack Query", "origem": "https://github.com/TanStack/query",               "confianca": "MAXIMO" },
+      { "nome": "Tailwind CSS",   "origem": "https://github.com/tailwindlabs/tailwindcss",     "confianca": "MAXIMO" }
+    ]
+  },
+
+  "fontes_conhecimento_tecnico": {
+    "descricao": "Sites onde desenvolvedores e engenheiros realmente aprendem — Scout usa Brave Search ou Puppeteer para buscar nestas fontes antes de recomendar soluções",
+    "software_e_dev": [
+      { "site": "https://github.com",               "tipo": "codigo_real",     "uso": "Projetos open source, padrões reais de implementação" },
+      { "site": "https://stackoverflow.com",        "tipo": "solucoes_reais",  "uso": "Soluções para problemas reais testados pela comunidade" },
+      { "site": "https://developer.mozilla.org",    "tipo": "referencia_web",  "uso": "Referência oficial HTML, CSS, JavaScript" },
+      { "site": "https://roadmap.sh",               "tipo": "trilhas",         "uso": "Trilhas reais de aprendizado por área técnica" },
+      { "site": "https://refactoring.guru",         "tipo": "arquitetura",     "uso": "Padrões de projeto, clean code, SOLID" },
+      { "site": "https://12factor.net",             "tipo": "arquitetura",     "uso": "12 fatores para apps modernos em produção" },
+      { "site": "https://martinfowler.com",         "tipo": "arquitetura",     "uso": "Arquitetura de software por Martin Fowler" },
+      { "site": "https://highscalability.com",      "tipo": "escala",          "uso": "Como grandes sistemas (Netflix, Uber) funcionam de verdade" },
+      { "site": "https://devdocs.io",               "tipo": "docs_unificadas", "uso": "Documentação de todas as linguagens e frameworks num lugar" }
+    ],
+    "ia_e_ml": [
+      { "site": "https://huggingface.co",           "tipo": "modelos",         "uso": "Modelos open source, datasets, papers aplicados" },
+      { "site": "https://arxiv.org",                "tipo": "pesquisa",        "uso": "Papers científicos mais recentes antes de virar produto" },
+      { "site": "https://paperswithcode.com",       "tipo": "pesquisa_pratica","uso": "Papers + código funcionando para reproduzir resultados" }
+    ],
+    "engenharia_mecanica": [
+      { "site": "https://www.asme.org",             "tipo": "normas",          "uso": "Normas ASME, artigos técnicos de engenharia mecânica" },
+      { "site": "https://www.engineeringtoolbox.com","tipo": "calculos",       "uso": "Calculadoras e referências de engenharia" }
+    ],
+    "engenharia_eletrica": [
+      { "site": "https://www.ieee.org",             "tipo": "normas",          "uso": "Padrões IEEE, artigos de elétrica/eletrônica" },
+      { "site": "https://www.allaboutcircuits.com", "tipo": "pratica",         "uso": "Tutoriais e referências de circuitos" }
+    ],
+    "engenharia_civil": [
+      { "site": "https://www.asce.org",             "tipo": "normas",          "uso": "Normas ASCE, estruturas, geotecnia" }
+    ],
+    "engenharia_quimica": [
+      { "site": "https://www.aiche.org",            "tipo": "normas",          "uso": "AIChE — processos químicos, petroquímica, bioprocessos" }
+    ],
+    "agronegocio_brasil": [
+      { "site": "https://www.embrapa.br",           "tipo": "pesquisa_oficial","uso": "Pesquisa técnica agropecuária brasileira oficial" },
+      { "site": "https://www.cepea.esalq.usp.br",  "tipo": "mercado",         "uso": "Cotações e preços de commodities agrícolas" },
+      { "site": "https://www.mapa.gov.br",          "tipo": "regulamentos",    "uso": "Regulamentações do Ministério da Agricultura" },
+      { "site": "https://www.beef2live.com",        "tipo": "pecuaria_intl",   "uso": "Referência internacional de pecuária bovina" }
+    ],
+    "devops_infra": [
+      { "site": "https://docs.docker.com",          "tipo": "infra",           "uso": "Containers Docker — docs oficiais" },
+      { "site": "https://kubernetes.io/docs",       "tipo": "orquestracao",    "uso": "Kubernetes — orquestração de containers" }
+    ]
+  },
+
   "agentes_especialistas": [
-    {
-      "nome": "Backend Specialist",
-      "descricao": "Especialista em arquitetura backend para Node.js, Python e sistemas modernos serverless/edge. Focado em desenvolvimento de APIs, lógica de servidor, integração de banco de dados e segurança."
-    },
-    {
-      "nome": "Code Archaeologist",
-      "descricao": "Especialista em código legado, refatoração e compreensão de sistemas não documentados. Útil para ler código confuso, engenharia reversa e planejamento de modernização."
-    },
-    {
-      "nome": "Database Architect",
-      "descricao": "Arquiteto de banco de dados especialista em design de esquema, otimização de consultas, migrações e bancos de dados serverless modernos."
-    },
-    {
-      "nome": "Debugger",
-      "descricao": "Especialista em depuração sistemática, análise de causa raiz e investigação de falhas (crashes). Útil para bugs complexos e problemas de produção."
-    },
-    {
-      "nome": "DevOps Engineer",
-      "descricao": "Especialista em implantação (deployment), gerenciamento de servidores, CI/CD e operações de produção. Lida com operações de alto risco e infraestrutura."
-    },
-    {
-      "nome": "Documentation Writer",
-      "descricao": "Especialista em documentação técnica, como READMEs, documentação de API e registros de alterações (changelogs)."
-    },
-    {
-      "nome": "Explorer Agent",
-      "descricao": "Agente de descoberta avançada de base de código, análise arquitetural profunda e pesquisa proativa. Atua como os 'olhos e ouvidos' do framework."
-    },
-    {
-      "nome": "Frontend Specialist",
-      "descricao": "Arquiteto Frontend Sênior especializado em sistemas React/Next.js sustentáveis com foco em performance, UI/UX e design responsivo."
-    },
-    {
-      "nome": "Game Developer",
-      "descricao": "Desenvolvedor de jogos para todas as plataformas (PC, Web, Mobile, VR/AR), cobrindo mecânicas, multiplayer, gráficos 2D/3D e otimização."
-    },
-    {
-      "nome": "Mobile Developer",
-      "descricao": "Especialista em desenvolvimento móvel cross-platform com React Native e Flutter, focando em performance nativa e padrões mobile."
-    },
-    {
-      "nome": "Orchestrator",
-      "descricao": "Coordenação multi-agente e orquestração de tarefas complexas que exigem múltiplas perspectivas e execução coordenada."
-    },
-    {
-      "nome": "Penetration Tester",
-      "descricao": "Especialista em segurança ofensiva, testes de invasão, operações de red team e exploração de vulnerabilidades."
-    },
-    {
-      "nome": "Performance Optimizer",
-      "descricao": "Especialista em otimização de performance, profiling, Core Web Vitals e otimização de pacotes (bundles)."
-    },
-    {
-      "nome": "Product Manager",
-      "descricao": "Especialista em requisitos de produto, histórias de usuário e critérios de aceitação. Focado em definir funcionalidades e priorizar trabalho."
-    },
-    {
-      "nome": "Product Owner",
-      "descricao": "Facilitador estratégico entre necessidades de negócio e execução técnica. Especialista em elicitação de requisitos e gestão de backlog."
-    },
-    {
-      "nome": "Project Planner",
-      "descricao": "Agente de planejamento inteligente que decompõe solicitações em tarefas, planeja estrutura de arquivos e define dependências."
-    },
-    {
-      "nome": "QA Automation Engineer",
-      "descricao": "Especialista em infraestrutura de automação de testes e testes E2E (End-to-End), focado em quebrar o sistema para garantir robustez."
-    },
-    {
-      "nome": "Security Auditor",
-      "descricao": "Especialista de elite em cibersegurança focado em OWASP 2025, segurança de cadeia de suprimentos e arquitetura Zero Trust."
-    },
-    {
-      "nome": "SEO Specialist",
-      "descricao": "Especialista em SEO e GEO (Generative Engine Optimization), otimizando para motores de busca tradicionais e baseados em IA."
-    },
-    {
-      "nome": "Test Engineer",
-      "descricao": "Especialista em testes, TDD (Test Driven Development) e automação de testes unitários e de integração."
-    }
+    { "nome": "Backend Specialist",    "descricao": "Arquitetura backend Node.js/Python, APIs, banco de dados, segurança. Consulta: github.com, stackoverflow.com, 12factor.net" },
+    { "nome": "Code Archaeologist",    "descricao": "Código legado, refatoração, engenharia reversa. Consulta: refactoring.guru, stackoverflow.com" },
+    { "nome": "Database Architect",    "descricao": "Design de schema, otimização de queries, migrações. Consulta: postgresql.org, supabase.com/docs" },
+    { "nome": "Debugger",              "descricao": "Depuração sistemática, análise de causa raiz. Consulta: stackoverflow.com, devdocs.io" },
+    { "nome": "DevOps Engineer",       "descricao": "Deployment, servidores, CI/CD, produção. Consulta: docs.docker.com, kubernetes.io" },
+    { "nome": "Documentation Writer",  "descricao": "READMEs, docs de API, changelogs. Consulta: developer.mozilla.org, devdocs.io" },
+    { "nome": "Explorer Agent",        "descricao": "Descoberta de codebase, análise arquitetural. Consulta: github.com, martinfowler.com" },
+    { "nome": "Frontend Specialist",   "descricao": "React/Next.js, performance, UI/UX. Consulta: developer.mozilla.org, github.com/facebook/react" },
+    { "nome": "Mobile Developer",      "descricao": "React Native e Flutter, performance nativa. Consulta: reactnative.dev, flutter.dev" },
+    { "nome": "Orchestrator",          "descricao": "Coordenação multi-agente, tarefas complexas. Consulta: arxiv.org, paperswithcode.com" },
+    { "nome": "Security Auditor",      "descricao": "OWASP 2025, Zero Trust, supply chain. Consulta: owasp.org, ieee.org" },
+    { "nome": "Performance Optimizer", "descricao": "Profiling, Core Web Vitals, bundles. Consulta: developer.mozilla.org, highscalability.com" },
+    { "nome": "Product Manager",       "descricao": "Requisitos, histórias de usuário, backlog. Consulta: roadmap.sh" },
+    { "nome": "QA Automation Engineer","descricao": "Testes E2E, automação, TDD. Consulta: github.com, devdocs.io" },
+    { "nome": "Mechanical Engineer",   "descricao": "Projetos mecânicos, cálculos estruturais, normas ASME. Consulta: asme.org, engineeringtoolbox.com" },
+    { "nome": "Electrical Engineer",   "descricao": "Elétrica, eletrônica, automação, normas IEEE. Consulta: ieee.org, allaboutcircuits.com" },
+    { "nome": "Civil Architect",       "descricao": "Estruturas, geotecnia, normas ASCE/ABNT. Consulta: asce.org" },
+    { "nome": "Chemical Engineer",     "descricao": "Processos químicos, bioprocessos, normas AIChE. Consulta: aiche.org" },
+    { "nome": "Agro Specialist",       "descricao": "Pecuária, lavoura, rastreabilidade, cotações. Consulta: embrapa.br, cepea.esalq.usp.br, mapa.gov.br" },
+    { "nome": "AI Research Scout",     "descricao": "Papers de IA, modelos novos, benchmarks. Consulta: arxiv.org, huggingface.co, paperswithcode.com" },
+    { "nome": "Game Developer",        "descricao": "Jogos PC/Web/Mobile/VR, mecânicas, gráficos 2D/3D. Consulta: github.com, stackoverflow.com" },
+    { "nome": "SEO Specialist",        "descricao": "SEO, GEO (IA Search), otimização para busca. Consulta: developer.mozilla.org, roadmap.sh" }
   ],
-  "diretriz_de_aprendizado": "Antes de assumir um projeto complexo, o Thiago Claw deve mapear quais destas skills são necessárias, instalá-las no servidor via npm e treinar seus novos agentes contratados para usá-las."
+
+  "diretriz_de_aprendizado": "Antes de assumir qualquer projeto, o agente Scout deve: 1) identificar o domínio (software, mecânica, agro, etc.), 2) localizar as fontes certas neste hub, 3) buscar via Brave Search ou Puppeteer MCP APENAS nos sites aprovados desta lista, 4) nunca recomendar biblioteca ou solução sem confirmar que o repo de origem está na lista de confiança máxima."
 }
