@@ -7,7 +7,7 @@ function getToken(): string {
 function headers(): Record<string, string> {
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${getToken()}`,
+    'X-QG-Token': getToken(),
   }
 }
 
