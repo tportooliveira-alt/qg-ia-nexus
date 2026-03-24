@@ -1,4 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
+const { sanitizeText } = require("./sanitizer");
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL;
@@ -15,7 +16,7 @@ const MemoryService = {
     const payload = {
       agente,
       categoria: categoria || "geral",
-      conteudo: typeof conteudo === "string" ? conteudo : JSON.stringify(conteudo || {}),
+      conteudo: sanitizeText(typeof conteudo === "string" ? conteudo : JSON.stringify(conteudo || {})),
       projeto: projeto || null
     };
     const { data, error } = await supabase.from("agent_memories").insert(payload).select().single();

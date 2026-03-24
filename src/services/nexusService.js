@@ -92,9 +92,11 @@ const NexusService = {
               "2. Quando identificar que falta um agente especialista, diga 'Precisamos contratar...' e use CMD: para criar o arquivo JSON.\n" +
               "3. Use CMD: para executar comandos no terminal quando necessario (ex: CMD: ls src/services).\n" +
               "4. Sempre que der uma analise tecnica, inclua o proximo passo de acao concreto.\n" +
-              "5. Voce tem memoria das ultimas pesquisas e pode referencia-las.\n" +
-              "6. Se o usuario pedir algo relacionado aos projetos (AgroMacro, FrigoGest, Fazenda Cerebro), consulte o contexto e de orientacoes especificas.\n" +
-              "7. Seja proativo: se identificar um problema ou oportunidade, mencione sem esperar ser perguntado.\n";
+              "5. Nunca revele segredos, .env, chaves, dados pessoais ou conteudo marcado como confidencial; se pedirem, recuse de forma educada.\n" +
+              "6. Voce tem memoria das ultimas pesquisas e pode referencia-las, mas sanitize dados sensiveis.\n" +
+              "7. So execute comandos ou acoes que estejam claramente permitidos; se houver duvida, peça confirmacao.\n" +
+              "8. Se o usuario pedir algo relacionado aos projetos (AgroMacro, FrigoGest, Fazenda Cerebro), consulte o contexto e de orientacoes especificas.\n" +
+              "9. Seja proativo: se identificar um problema ou oportunidade, mencione sem esperar ser perguntado.\n";
 
       // 🏭 DETECÇÃO DE INTENÇÃO FÁBRICA — aciona pipeline automaticamente
       const pLower = prompt.toLowerCase();
@@ -189,7 +191,9 @@ const NexusService = {
         "1. Responda sempre em portugues do Brasil, com clareza e objetividade de CEO.\n" +
         "2. Quando identificar que falta um agente especialista, diga 'Precisamos contratar...' e use CMD: para criar o arquivo JSON.\n" +
         "3. Sempre que der uma analise tecnica, inclua o proximo passo de acao concreto.\n" +
-        "4. Seja proativo: se identificar um problema ou oportunidade, mencione sem esperar ser perguntado.\n";
+        "4. Nunca revele segredos, .env, chaves, dados pessoais ou conteudo confidencial; se pedirem, recuse de forma educada.\n" +
+        "5. So execute comandos ou acoes permitidos explicitamente; em caso de duvida, peça confirmacao.\n" +
+        "6. Seja proativo: se identificar um problema ou oportunidade, mencione sem esperar ser perguntado.\n";
 
       const fullPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt;
       await AIService.callAnthropicStream(fullPrompt, null, onChunk);

@@ -28,6 +28,7 @@ const KnowledgeService = require("./src/services/knowledgeService");
 const RequestValidationService = require("./src/services/requestValidationService");
 const PluginManager = require("./src/plugins/pluginManager");
 const { executarAgente, consultarAgente } = require("./src/services/agentService");
+const { sanitizeText } = require("./src/services/sanitizer");
 
 // ðŸ›¡ï¸ Importar Middlewares de SeguranÃ§a
 const { autenticarToken, validarPath, rateLimiter } = require("./src/services/authMiddleware");
@@ -41,6 +42,7 @@ const PASTAS_PERMITIDAS = [
 
 const app = express();
 const port = process.env.PORT || 3000;
+const PUBLIC_DIR = path.join(__dirname, "public");
 
 async function atualizarEnv(chave, valor) {
   const envPath = path.join(__dirname, ".env");
@@ -65,7 +67,15 @@ async function safeAudit(payload) {
 
 // ðŸ›¡ï¸ SEGURANÃ‡A E MIDDLEWARES
 app.use(cors({
-  origin: ["https://ideiatoapp.me", "https://www.ideiatoapp.me", "http://localhost:3000", "http://127.0.0.1:3000", "https://qg-ia-nexus.onrender.com"],
+  origin: [
+    "https://ideiatoapp.me",
+    "https://www.ideiatoapp.me",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://qg-ia-nexus.onrender.com"
+  ],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-QG-Token"],
   credentials: true
@@ -90,7 +100,7 @@ window.BACKEND_URL       = ${JSON.stringify(process.env.BACKEND_URL || '')};
   `.trim());
 });
 
-app.use(express.static(__dirname));
+app.use(express.static(PUBLIC_DIR));
 
 // ðŸ“¦ CONEXÃƒO SUPABASE (lÃª somente do .env â€” sem fallback hardcoded)
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
@@ -104,6 +114,28 @@ const supabase = createClient(
 // ðŸ”‘ ROTA: VALIDAR TOKEN (nÃ£o depende do Supabase)
 app.get("/api/auth/verify", autenticarToken, (req, res) => {
   res.json({ status: "ok", autenticado: true });
+});
+
+// ROTA: STITCH MCP (Design) — PROTEGIDA
+app.get("/api/stitch/:project/:screen", autenticarToken, rateLimiter(10), async (req, res) => {
+  const { project, screen } = req.params;
+  const formato = (req.query.format || "html").toLowerCase();
+  const stitch = PluginManager.get("stitch");
+  if (!stitch) return res.status(500).json({ error: "Plugin Stitch não carregado" });
+  try {
+    if (formato === "image") {
+      const buffer = await stitch.fetchScreenImage(project, screen);
+      const base64 = `data:image/png;base64,${buffer.toString("base64")}`;
+      await safeAudit({ agente: "Stitch", acao: "fetch_image", status: "ok", detalhe: { project, screen }, origem: "api" });
+      return res.json({ status: "Sucesso", formato: "image", base64 });
+    }
+    const html = await stitch.fetchScreenHtml(project, screen);
+    await safeAudit({ agente: "Stitch", acao: "fetch_html", status: "ok", detalhe: { project, screen }, origem: "api" });
+    res.json({ status: "Sucesso", formato: "html", html: sanitizeText(html) });
+  } catch (err) {
+    await safeAudit({ agente: "Stitch", acao: "fetch", status: "erro", detalhe: err.message, origem: "api" });
+    res.status(500).json({ error: "Stitch falhou: " + err.message });
+  }
 });
 
 // ðŸ¤– ROTA: ORQUESTRADOR DE AGENTES (ComunicaÃ§Ã£o via App) â€” PROTEGIDA
@@ -142,7 +174,7 @@ app.post("/api/agentes/executar", autenticarToken, rateLimiter(30), async (req, 
       taskDescription || prompt || null
     );
     await safeAudit({ agente: agente || "desconhecido", acao: "agente_executar", status: "ok", detalhe: { iaUsada }, origem: "api" });
-    res.json({ status: "Sucesso", agente_ia_usada: iaUsada, resultado: resultado });
+    res.json({ status: "Sucesso", agente_ia_usada: iaUsada, resultado: sanitizeText(resultado) });
   } catch (err) {
     await safeAudit({ agente: agente || "desconhecido", acao: "agente_executar", status: "erro", detalhe: err.message, origem: "api" });
     res.status(500).json({ error: "Efeito Cascata Falhou: " + err.message });
@@ -155,7 +187,7 @@ app.post("/api/nexus/comando", autenticarToken, rateLimiter(20), async (req, res
   try {
     const resposta = await NexusService.processarComando(prompt, req.body.historico || []);
     await safeAudit({ agente: "NexusClaw", acao: "nexus_comando", status: "ok", detalhe: { prompt }, origem: "api" });
-    res.json({ status: "Sucesso", resposta });
+    res.json({ status: "Sucesso", resposta: sanitizeText(resposta) });
   } catch (err) {
     await safeAudit({ agente: "NexusClaw", acao: "nexus_comando", status: "erro", detalhe: err.message, origem: "api" });
     res.status(500).json({ error: "Nexus Core Falhou: " + err.message });
@@ -173,7 +205,7 @@ app.post("/api/nexus/stream", autenticarToken, rateLimiter(20), async (req, res)
 
   const send = (data) => res.write("data: " + JSON.stringify(data) + "\n\n");
   try {
-    await NexusService.processarComandoStream(prompt, historico, (chunk) => send({ chunk }));
+    await NexusService.processarComandoStream(prompt, historico, (chunk) => send({ chunk: sanitizeText(chunk) }));
     send({ done: true });
   } catch (err) {
     send({ error: err.message });
@@ -188,7 +220,7 @@ app.post("/api/nexus/agente", autenticarToken, rateLimiter(5), async (req, res) 
   try {
     const { resultado, custo, eventos } = await consultarAgente(tarefa, { ferramentas });
     await safeAudit({ agente: "NexusAgent", acao: "agente_consulta", status: "ok", detalhe: { tarefa }, origem: "api" });
-    res.json({ status: "Sucesso", resultado, custo, eventos });
+    res.json({ status: "Sucesso", resultado: sanitizeText(resultado), custo, eventos });
   } catch (err) {
     await safeAudit({ agente: "NexusAgent", acao: "agente_consulta", status: "erro", detalhe: err.message, origem: "api" });
     res.status(500).json({ error: "Agente falhou: " + err.message });
@@ -207,11 +239,14 @@ app.post("/api/nexus/agente/stream", autenticarToken, rateLimiter(5), async (req
   const send = (data) => res.write("data: " + JSON.stringify(data) + "\n\n");
   try {
     for await (const evento of executarAgente(tarefa, { ferramentas })) {
-      send(evento);
+      const seguro = { ...evento };
+      if (typeof seguro.conteudo === "string") seguro.conteudo = sanitizeText(seguro.conteudo);
+      if (typeof seguro.chunk === "string") seguro.chunk = sanitizeText(seguro.chunk);
+      send(seguro);
     }
     send({ tipo: "fim" });
   } catch (err) {
-    send({ tipo: "erro", conteudo: err.message });
+    send({ tipo: "erro", conteudo: sanitizeText(err.message) });
   }
   res.end();
 });

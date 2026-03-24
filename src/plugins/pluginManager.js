@@ -6,9 +6,11 @@
  */
 
 const FabricaPlugin = require('./fabricaPlugin');
+const StitchMcp = require('./stitchMcp');
 
 const plugins = {
-  fabricaIA: FabricaPlugin
+  fabricaIA: FabricaPlugin,
+  stitch: StitchMcp
 };
 
 const PluginManager = {
