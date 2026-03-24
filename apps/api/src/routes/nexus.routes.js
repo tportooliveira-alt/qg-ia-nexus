@@ -3,6 +3,7 @@ const { autenticarToken, rateLimiter } = require("../services/authMiddleware");
 const NexusService = require("../services/nexusService");
 const EvolutionService = require("../services/evolutionService");
 const ResearchService = require("../services/researchService");
+const SessionService = require("../services/sessionService");
 const { executarAgente, consultarAgente } = require("../services/agentService");
 const safeAudit = require("../utils/safeAudit");
 
@@ -21,18 +22,32 @@ router.post("/nexus/comando", autenticarToken, rateLimiter(20), async (req, res)
   }
 });
 
-// Chat streaming SSE
+// Chat streaming SSE (com sessionId para reconexão)
 router.post("/nexus/stream", autenticarToken, rateLimiter(20), async (req, res) => {
-  const { prompt, historico = [] } = req.body;
+  const { prompt, historico = [], sessionId } = req.body;
+  const session = SessionService.createOrResume(sessionId);
+
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders();
+
   const send = (data) => res.write("data: " + JSON.stringify(data) + "\n\n");
+
+  // Reenvia conteúdo parcial se for reconexão
+  if (session.resumed && session.partial) {
+    send({ chunk: session.partial, resumed: true });
+  }
+  send({ sessionId: session.id });
+
   try {
-    await NexusService.processarComandoStream(prompt, historico, (chunk) => send({ chunk }));
-    send({ done: true });
+    await NexusService.processarComandoStream(prompt, historico, (chunk) => {
+      SessionService.update(session.id, chunk);
+      send({ chunk });
+    });
+    SessionService.complete(session.id);
+    send({ done: true, sessionId: session.id });
   } catch (err) {
     send({ error: err.message });
   }

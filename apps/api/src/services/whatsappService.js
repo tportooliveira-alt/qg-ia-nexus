@@ -11,8 +11,27 @@ const PluginManager = require("../plugins/pluginManager");
 const WhatsAppService = {
   _sock: null, // socket exposto para outros serviços enviarem mensagens
 
+  async _getAuthState() {
+    // Usa Redis (Upstash) se configurado — persiste sessão no Render entre deploys
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      try {
+        const { useRedisAuthState } = require('@whiskeysockets/baileys');
+        const { createClient } = require('@upstash/redis');
+        const redis = createClient({
+          url: process.env.UPSTASH_REDIS_REST_URL,
+          token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        });
+        console.log('[WhatsApp] Usando Redis (Upstash) para persistência da sessão.');
+        return await useRedisAuthState(redis);
+      } catch (e) {
+        console.warn('[WhatsApp] Redis indisponível, usando arquivo local:', e.message);
+      }
+    }
+    return await useMultiFileAuthState('auth_info_baileys');
+  },
+
   async conectar() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+    const { state, saveCreds } = await this._getAuthState();
     
     // Busca a versão mais recente do WhatsApp para evitar erro 405
     const { version, isLatest } = await fetchLatestBaileysVersion();
