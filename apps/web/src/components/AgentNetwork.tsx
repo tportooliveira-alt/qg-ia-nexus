@@ -1,175 +1,39 @@
 /**
- * AgentNetwork — Blueprint completo do QG IA
- * Grafo n8n detalhado: providers, agentes, sub-agentes, projetos, infra
- * Com animações contínuas, pulsação e fluxo de dados em tempo real
+ * AgentNetwork — Estilo n8n exato
+ * Cards retangulares, ícone colorido, setas bezier curvas, labels nas conexões
+ * Atividade em tempo real (polling 3s) + feed de status abaixo
  */
 
 import { useState, useEffect, useCallback } from 'react'
 
-// ─── Tipos ─────────────────────────────────────────────────────────────────
-type TipoNo = 'orquestrador' | 'fabrica' | 'especialista' | 'suporte' | 'provider' | 'infra' | 'projeto'
-type StatusNo = 'ativo' | 'idle' | 'trabalhando' | 'offline'
-
-interface No {
-  id: string; label: string; icone: string; cor: string
-  x: number; y: number; tipo: TipoNo
-  descricao?: string; providers?: string[]
-  status?: StatusNo; projeto?: string
+// ── Tipos ──────────────────────────────────────────────────────────────────
+interface CardNode {
+  id: string
+  label: string
+  subtitle?: string
+  icone: string
+  cor: string
+  x: number
+  y: number
+  w?: number
+  h?: number
+  portLeft?: boolean
+  portRight?: boolean
+  portTop?: boolean
+  portBottom?: boolean
+  descricao?: string
 }
 
-interface Aresta {
-  de: string; para: string; label?: string
-  tipo?: 'principal' | 'fabrica' | 'suporte' | 'provider' | 'infra'
-  dashed?: boolean; bidirecional?: boolean
+interface Conn {
+  de: string
+  para: string
+  label?: string
+  dashed?: boolean
+  // porta de saída: 'right'|'bottom' / entrada: 'left'|'top'
+  saida?: 'right' | 'bottom'
+  entrada?: 'left' | 'top'
 }
 
-// ─── Nós do grafo ──────────────────────────────────────────────────────────
-// ViewBox: 1500 × 780
-const NOS: No[] = [
-  // ── PROVEDORES DE IA (coluna esquerda) ──
-  { id: 'gem',   label: 'Gemini',    icone: '◈', cor: '#4285F4', x: 95,  y: 130, tipo: 'provider', descricao: 'Gemini 2.0 Flash — principal', status: 'ativo' },
-  { id: 'groq',  label: 'Groq',      icone: '⚡', cor: '#F97316', x: 95,  y: 220, tipo: 'provider', descricao: 'llama-3.3-70b-versatile', status: 'ativo' },
-  { id: 'crbr',  label: 'Cerebras',  icone: '🧠', cor: '#A78BFA', x: 95,  y: 310, tipo: 'provider', descricao: 'llama-3.3-70b — ultra-rápido', status: 'idle' },
-  { id: 'sbvn',  label: 'SambaNova', icone: '🌊', cor: '#06B6D4', x: 95,  y: 400, tipo: 'provider', descricao: 'Meta-Llama-3.3-70B', status: 'idle' },
-  { id: 'xai',   label: 'xAI',       icone: '✕',  cor: '#D1D5DB', x: 95,  y: 490, tipo: 'provider', descricao: 'Grok-3-mini', status: 'idle' },
-  { id: 'dsk',   label: 'DeepSeek',  icone: '⊘',  cor: '#6B7280', x: 95,  y: 580, tipo: 'provider', descricao: 'Sem crédito (402)', status: 'offline' },
-
-  // ── ORQUESTRADOR CENTRAL ──
-  { id: 'nexus', label: 'NEXUS CLAW', icone: '🦂', cor: '#1EE0E0', x: 560, y: 90, tipo: 'orquestrador',
-    descricao: 'CEO Supremo — orquestra todos os agentes, projetos e providers',
-    providers: ['Gemini','Groq','Cerebras','SambaNova'], status: 'ativo' },
-
-  // ── AGENTES ESPECIALISTAS ──
-  { id: 'scout',     label: 'Scout',          icone: '🔎', cor: '#F59E0B', x: 310, y: 220, tipo: 'especialista', descricao: 'Pesquisa na web + coleta de dados', status: 'idle' },
-  { id: 'gemcode',   label: 'GeminiCode',     icone: '💠', cor: '#A78BFA', x: 560, y: 220, tipo: 'especialista', descricao: 'Análise e revisão de código', status: 'idle' },
-  { id: 'openclaw',  label: 'OpenClawBR',     icone: '🌐', cor: '#22D3EE', x: 800, y: 220, tipo: 'especialista', descricao: 'UI/UX e desenvolvimento web', status: 'idle' },
-
-  // ── SERVIÇOS DE APRENDIZADO ──
-  { id: 'evolution', label: 'Auto-Aprend.',   icone: '📚', cor: '#22C55E', x: 1010, y: 120, tipo: 'suporte', descricao: 'Ciclo de estudo a cada 6h → salva no Supabase', status: 'trabalhando' },
-  { id: 'research',  label: 'Research',       icone: '🔬', cor: '#34D399', x: 1010, y: 240, tipo: 'suporte', descricao: 'Pesquisa autônoma — arXiv, web, síntese', status: 'idle' },
-  { id: 'autocorr',  label: 'AutoCorreção',   icone: '🔄', cor: '#FCD34D', x: 1010, y: 360, tipo: 'suporte', descricao: 'Cron a cada 12h — analisa erros e corrige', status: 'idle' },
-
-  // ── FÁBRICA DE IA (pipeline) ──
-  { id: 'analista',   label: 'Analista',    icone: '📋', cor: '#EF4444', x: 200, y: 490, tipo: 'fabrica', descricao: 'Analisa requisitos e cria PRD' },
-  { id: 'comandante', label: 'Comandante',  icone: '⚔️',  cor: '#F97316', x: 360, y: 490, tipo: 'fabrica', descricao: 'Define estratégia e divide tarefas' },
-  { id: 'arquiteto',  label: 'Arquiteto',   icone: '🏗️',  cor: '#EAB308', x: 520, y: 490, tipo: 'fabrica', descricao: 'Projeta arquitetura técnica + DB' },
-  { id: 'coder',      label: 'CoderChief',  icone: '💻', cor: '#84CC16', x: 680, y: 490, tipo: 'fabrica', descricao: 'Gera código + orquestra sub-agentes' },
-  { id: 'auditor',    label: 'Auditor',     icone: '⚖️',  cor: '#22C55E', x: 840, y: 490, tipo: 'fabrica', descricao: 'Valida, testa e aprova o resultado' },
-
-  // ── SUB-AGENTES DO CODER ──
-  { id: 'sub1', label: 'Sub-Backend',  icone: '⚡', cor: '#6366F1', x: 580, y: 620, tipo: 'fabrica', descricao: 'APIs, lógica de negócio, integrações' },
-  { id: 'sub2', label: 'Sub-Frontend', icone: '⚡', cor: '#6366F1', x: 700, y: 620, tipo: 'fabrica', descricao: 'React, componentes, rotas, UI' },
-  { id: 'sub3', label: 'Sub-Infra',    icone: '⚡', cor: '#6366F1', x: 820, y: 620, tipo: 'fabrica', descricao: 'Banco de dados, Docker, deploy' },
-
-  // ── PROJETOS ATIVOS ──
-  { id: 'qgia',      label: 'QG IA Nexus',  icone: '🏰', cor: '#1EE0E0', x: 1180, y: 100,  tipo: 'projeto', descricao: 'Plataforma central — chat, fábrica, memória, whatsapp' },
-  { id: 'agromacro', label: 'AgroMacro',    icone: '🐄', cor: '#4ADE80', x: 1320, y: 220,  tipo: 'projeto', descricao: 'PWA 27 módulos — rebanho, pasto, financeiro, IA consultora' },
-  { id: 'gestcort',  label: 'GestCort',     icone: '🌾', cor: '#86EFAC', x: 1320, y: 380,  tipo: 'projeto', descricao: 'App gestão gado de corte — lotes, pasto, fluxo de caixa' },
-  { id: 'frigogest', label: 'FrigoGest',    icone: '🥩', cor: '#FCA5A5', x: 1180, y: 490,  tipo: 'projeto', descricao: 'Frigorífico — 16 agentes IA em 5 tiers de automação' },
-
-  // ── INFRAESTRUTURA ──
-  { id: 'supabase',  label: 'Supabase',  icone: '🗄', cor: '#3ECF8E', x: 340, y: 690, tipo: 'infra', descricao: 'Banco primário — agent_memories + audit_logs (500MB free)' },
-  { id: 'mysql',     label: 'MySQL',     icone: '🐬', cor: '#00758F', x: 520, y: 690, tipo: 'infra', descricao: 'Hostinger backup — async, não-bloqueante' },
-  { id: 'whatsapp',  label: 'WhatsApp',  icone: '📱', cor: '#25D366', x: 700, y: 690, tipo: 'infra', descricao: 'Gateway WhatsApp via Baileys — aguardando QR', status: 'idle' },
-  { id: 'hostinger', label: 'Hostinger', icone: '🌍', cor: '#FF6B35', x: 880, y: 690, tipo: 'infra', descricao: 'Servidor Node.js — porta 3000, SSL' },
-]
-
-// ─── Arestas ───────────────────────────────────────────────────────────────
-const ARESTAS: Aresta[] = [
-  // Providers → Nexus
-  { de: 'gem',  para: 'nexus', tipo: 'provider' },
-  { de: 'groq', para: 'nexus', tipo: 'provider' },
-  { de: 'crbr', para: 'nexus', tipo: 'provider' },
-  { de: 'sbvn', para: 'nexus', tipo: 'provider' },
-  { de: 'xai',  para: 'nexus', tipo: 'provider' },
-  { de: 'dsk',  para: 'nexus', tipo: 'provider', dashed: true },
-
-  // Nexus → especialistas
-  { de: 'nexus', para: 'scout',    label: 'pesquisa', tipo: 'suporte' },
-  { de: 'nexus', para: 'gemcode',  label: 'código',   tipo: 'suporte' },
-  { de: 'nexus', para: 'openclaw', label: 'web/UI',   tipo: 'suporte' },
-
-  // Nexus → aprendizado
-  { de: 'nexus',    para: 'evolution', label: 'aprende', tipo: 'suporte' },
-  { de: 'nexus',    para: 'autocorr',  label: 'monitora', tipo: 'suporte' },
-  { de: 'research', para: 'evolution', tipo: 'suporte' },
-  { de: 'evolution', para: 'nexus',   label: 'memória', tipo: 'suporte', dashed: true, bidirecional: false },
-  { de: 'autocorr',  para: 'nexus',   label: 'correção', tipo: 'suporte', dashed: true },
-
-  // Nexus → projetos
-  { de: 'nexus', para: 'qgia',      tipo: 'principal' },
-  { de: 'nexus', para: 'agromacro', tipo: 'principal' },
-  { de: 'nexus', para: 'gestcort',  tipo: 'principal' },
-  { de: 'nexus', para: 'frigogest', tipo: 'principal' },
-
-  // Nexus → Fábrica
-  { de: 'nexus', para: 'analista', label: 'ideia', tipo: 'fabrica' },
-
-  // Pipeline fábrica
-  { de: 'analista',   para: 'comandante', tipo: 'fabrica' },
-  { de: 'comandante', para: 'arquiteto',  tipo: 'fabrica' },
-  { de: 'arquiteto',  para: 'coder',      tipo: 'fabrica' },
-  { de: 'coder',      para: 'auditor',    tipo: 'fabrica' },
-  { de: 'auditor',    para: 'coder',      label: 'revisão', tipo: 'fabrica', dashed: true },
-
-  // CoderChief → sub-agentes
-  { de: 'coder', para: 'sub1', tipo: 'fabrica' },
-  { de: 'coder', para: 'sub2', tipo: 'fabrica' },
-  { de: 'coder', para: 'sub3', tipo: 'fabrica' },
-
-  // Fábrica entrega projetos
-  { de: 'auditor', para: 'agromacro', tipo: 'fabrica' },
-  { de: 'auditor', para: 'gestcort',  tipo: 'fabrica' },
-  { de: 'auditor', para: 'frigogest', tipo: 'fabrica' },
-
-  // → Infraestrutura
-  { de: 'nexus',     para: 'supabase',  tipo: 'infra' },
-  { de: 'evolution', para: 'supabase',  tipo: 'infra' },
-  { de: 'nexus',     para: 'mysql',     tipo: 'infra', dashed: true },
-  { de: 'nexus',     para: 'whatsapp',  tipo: 'infra' },
-  { de: 'nexus',     para: 'hostinger', tipo: 'infra' },
-]
-
-// ─── Cores das arestas ─────────────────────────────────────────────────────
-const ARESTA_COR: Record<string, string> = {
-  fabrica:   '#F59E0B',
-  suporte:   '#1EE0E0',
-  principal: '#8B5CF6',
-  provider:  '#4B5563',
-  infra:     '#22C55E',
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
-function pontoNoBordo(a: No, b: No, raio: number): [number, number, number, number] {
-  const dx = b.x - a.x, dy = b.y - a.y
-  const len = Math.sqrt(dx * dx + dy * dy) || 1
-  const nx = dx / len, ny = dy / len
-  return [a.x + nx * raio, a.y + ny * raio, b.x - nx * raio, b.y - ny * raio]
-}
-
-function raioNo(tipo: TipoNo): number {
-  if (tipo === 'orquestrador') return 38
-  if (tipo === 'projeto') return 32
-  if (tipo === 'provider') return 24
-  return 26
-}
-
-// ─── Status badge ──────────────────────────────────────────────────────────
-const STATUS_COR: Record<string, string> = {
-  ativo:       '#22C55E',
-  trabalhando: '#F59E0B',
-  idle:        '#4B5563',
-  offline:     '#374151',
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  ativo:       '● ATIVO',
-  trabalhando: '◉ PROCESS.',
-  idle:        '○ IDLE',
-  offline:     '✕ OFFLINE',
-}
-
-// ─── Interface para dados da API ───────────────────────────────────────────
 interface AtividadeAPI {
   agenteId: string
   status: string
@@ -179,276 +43,335 @@ interface AtividadeAPI {
   desde: number
 }
 
-// ─── Componente principal ──────────────────────────────────────────────────
-export function AgentNetwork() {
-  const [selecionado, setSelecionado] = useState<No | null>(null)
-  const [pulsando, setPulsando] = useState<Set<string>>(new Set(['nexus', 'gem', 'groq', 'evolution']))
-  const [simulando, setSimulando] = useState(false)
-  const [etapaAtiva, setEtapaAtiva] = useState<string | null>(null)
+// ── Nós ────────────────────────────────────────────────────────────────────
+const W = 168, H = 58, WP = 180, HP = 62  // padrão / principal
 
-  // ── Atividade real do servidor ──────────────────────────────────────────
+const CARDS: CardNode[] = [
+  // ─── ENTRADA ───
+  { id: 'chat',    label: 'Chat Web',    subtitle: 'Quando mensagem recebida', icone: '💬', cor: '#6366F1', x: 40,   y: 190, portRight: true,  descricao: 'Interface web — usuário envia mensagem' },
+  { id: 'zap',     label: 'WhatsApp',    subtitle: 'Quando mensagem recebida', icone: '📱', cor: '#25D366', x: 40,   y: 280, portRight: true,  descricao: 'Gateway WhatsApp via Baileys' },
+
+  // ─── ORQUESTRADOR ───
+  { id: 'nexus',   label: 'NEXUS CLAW',  subtitle: 'Tools Agent · CEO Supremo',icone: '🦂', cor: '#1EE0E0', x: 310,  y: 215, w: WP, h: HP, portLeft: true, portRight: true, portBottom: true, descricao: 'Orquestra todos os agentes, projetos e providers' },
+
+  // ─── RESPOSTA ───
+  { id: 'resp',    label: 'Resposta SSE',subtitle: 'Stream token a token',      icone: '📡', cor: '#8B5CF6', x: 610,  y: 225, portLeft: true,  descricao: 'Envia resposta via Server-Sent Events' },
+
+  // ─── MODEL (providers) ───
+  { id: 'gem',     label: 'Gemini',      subtitle: '2.0 Flash · Principal',    icone: '◈',  cor: '#4285F4', x: 80,   y: 420, portLeft: true, portRight: true, descricao: 'Google Gemini — provider principal' },
+  { id: 'groq',    label: 'Groq',        subtitle: 'llama-3.3-70b',            icone: '⚡', cor: '#F97316', x: 280,  y: 420, portLeft: true, portRight: true, descricao: 'Groq — backup ultra-rápido' },
+  { id: 'crbr',    label: 'Cerebras',    subtitle: 'llama-3.3-70b',            icone: '🧠', cor: '#A78BFA', x: 480,  y: 420, portLeft: true, portRight: true, descricao: 'Cerebras — fallback' },
+  { id: 'sbvn',    label: 'SambaNova',   subtitle: 'Meta-Llama-3.3-70B',       icone: '🌊', cor: '#06B6D4', x: 680,  y: 420, portLeft: true, portRight: true, descricao: 'SambaNova — último fallback' },
+
+  // ─── MEMORY ───
+  { id: 'supa',    label: 'Supabase',    subtitle: 'Memórias · Auditoria',     icone: '🗄', cor: '#3ECF8E', x: 380,  y: 570, portLeft: true, portTop: true,   descricao: 'Banco primário — 500MB free' },
+  { id: 'mysql',   label: 'MySQL',       subtitle: 'Backup async · Hostinger', icone: '🐬', cor: '#00758F', x: 570,  y: 570, portLeft: true, portTop: true,   descricao: 'Backup não-bloqueante' },
+
+  // ─── TOOLS ───
+  { id: 'scout',   label: 'Scout',       subtitle: 'Pesquisa web',             icone: '🔎', cor: '#F59E0B', x: 840,  y: 140, portLeft: true, portBottom: true, descricao: 'Coleta dados e pesquisa na internet' },
+  { id: 'research',label: 'Research',    subtitle: 'Ciclo 6h · arXiv/web',     icone: '🔬', cor: '#34D399', x: 840,  y: 240, portLeft: true, portBottom: true, descricao: 'Pesquisa autônoma + síntese' },
+  { id: 'autocorr',label: 'AutoCorreção',subtitle: 'Ciclo 12h · erros',        icone: '🔄', cor: '#FCD34D', x: 840,  y: 340, portLeft: true, portBottom: true, descricao: 'Analisa logs e corrige automaticamente' },
+  { id: 'fabrica', label: 'Fábrica de IA',subtitle:'Pipeline multi-agente',    icone: '🏭', cor: '#EF4444', x: 840,  y: 440, portLeft: true, portBottom: true, descricao: 'Gera apps completos com pipeline de 5 agentes' },
+
+  // ─── PIPELINE FÁBRICA ───
+  { id: 'analista',   label: 'Analista',   subtitle: 'Requisitos · PRD',     icone: '📋', cor: '#EF4444', x: 680,  y: 640, portLeft: true, portRight: true,  descricao: 'Analisa a ideia e cria documento de requisitos' },
+  { id: 'comandante', label: 'Comandante', subtitle: 'Estratégia · Tarefas', icone: '⚔️',  cor: '#F97316', x: 880,  y: 640, portLeft: true, portRight: true,  descricao: 'Define estratégia e divide em tarefas' },
+  { id: 'arquiteto',  label: 'Arquiteto',  subtitle: 'Arquitetura · DB',     icone: '🏗️',  cor: '#EAB308', x: 1080, y: 640, portLeft: true, portRight: true,  descricao: 'Projeta a arquitetura técnica completa' },
+  { id: 'coder',      label: 'CoderChief', subtitle: 'Código · Sub-agentes', icone: '💻', cor: '#84CC16', x: 1280, y: 640, portLeft: true, portRight: true, portBottom: true, descricao: 'Gera código e coordena sub-agentes' },
+  { id: 'auditor',    label: 'Auditor',    subtitle: 'Valida · Aprova',      icone: '⚖️',  cor: '#22C55E', x: 1480, y: 640, portLeft: true,                   descricao: 'Testa e aprova o resultado final' },
+  { id: 'sub1',       label: 'Sub-Backend',subtitle: 'APIs · Lógica',        icone: '⚡', cor: '#6366F1', x: 1180, y: 760, portTop: true,                    descricao: 'Sub-agente: backend e integrações' },
+  { id: 'sub2',       label: 'Sub-Frontend',subtitle:'React · UI',           icone: '⚡', cor: '#6366F1', x: 1350, y: 760, portTop: true,                    descricao: 'Sub-agente: interface e componentes' },
+  { id: 'sub3',       label: 'Sub-Infra',  subtitle: 'DB · Docker · Deploy', icone: '⚡', cor: '#6366F1', x: 1520, y: 760, portTop: true,                    descricao: 'Sub-agente: infraestrutura e deploy' },
+
+  // ─── PROJETOS ───
+  { id: 'qgia',      label: 'QG IA Nexus', subtitle: 'Plataforma central',    icone: '🏰', cor: '#1EE0E0', x: 1180, y: 130, portLeft: true, descricao: 'Chat + Fábrica + Memória + WhatsApp' },
+  { id: 'agromacro', label: 'AgroMacro',   subtitle: 'PWA 27 módulos',        icone: '🐄', cor: '#4ADE80', x: 1180, y: 240, portLeft: true, descricao: 'Gestão de fazenda completa' },
+  { id: 'gestcort',  label: 'GestCort',    subtitle: 'Gado de corte',         icone: '🌾', cor: '#86EFAC', x: 1180, y: 350, portLeft: true, descricao: 'App gestão pecuária + financeiro' },
+  { id: 'frigogest', label: 'FrigoGest',   subtitle: '16 agentes · 5 tiers',  icone: '🥩', cor: '#FCA5A5', x: 1180, y: 460, portLeft: true, descricao: 'Automação de frigorífico com IA' },
+]
+
+// ── Conexões ───────────────────────────────────────────────────────────────
+const CONNS: Conn[] = [
+  // Entradas → Nexus
+  { de: 'chat', para: 'nexus', label: 'prompt' },
+  { de: 'zap',  para: 'nexus', label: 'zap' },
+  // Nexus → Resposta
+  { de: 'nexus', para: 'resp', label: 'stream' },
+  // Nexus → Model* (providers)
+  { de: 'nexus', para: 'gem',  label: 'Model*', dashed: true, saida: 'bottom', entrada: 'top' },
+  { de: 'nexus', para: 'groq', label: 'Model*', dashed: true, saida: 'bottom', entrada: 'top' },
+  { de: 'nexus', para: 'crbr', label: 'Model',  dashed: true, saida: 'bottom', entrada: 'top' },
+  { de: 'nexus', para: 'sbvn', label: 'Model',  dashed: true, saida: 'bottom', entrada: 'top' },
+  // Nexus → Memory
+  { de: 'nexus', para: 'supa',  label: 'Memory', dashed: true, saida: 'bottom', entrada: 'top' },
+  { de: 'nexus', para: 'mysql', label: 'Memory', dashed: true, saida: 'bottom', entrada: 'top' },
+  // Nexus → Tools
+  { de: 'nexus', para: 'scout',    label: 'Tool', dashed: true },
+  { de: 'nexus', para: 'research', label: 'Tool', dashed: true },
+  { de: 'nexus', para: 'autocorr', label: 'Tool', dashed: true },
+  { de: 'nexus', para: 'fabrica',  label: 'Tool', dashed: true },
+  // Nexus → Projetos
+  { de: 'nexus', para: 'qgia',      dashed: true },
+  { de: 'nexus', para: 'agromacro', dashed: true },
+  { de: 'nexus', para: 'gestcort',  dashed: true },
+  { de: 'nexus', para: 'frigogest', dashed: true },
+  // Research → Supabase
+  { de: 'research', para: 'supa', label: 'salva', dashed: true, saida: 'bottom', entrada: 'left' },
+  // Fábrica → Pipeline
+  { de: 'fabrica',  para: 'analista',   saida: 'bottom', entrada: 'top' },
+  { de: 'analista', para: 'comandante' },
+  { de: 'comandante', para: 'arquiteto' },
+  { de: 'arquiteto',  para: 'coder' },
+  { de: 'coder',      para: 'auditor' },
+  // Coder → Sub-agentes
+  { de: 'coder', para: 'sub1', saida: 'bottom', entrada: 'top' },
+  { de: 'coder', para: 'sub2', saida: 'bottom', entrada: 'top' },
+  { de: 'coder', para: 'sub3', saida: 'bottom', entrada: 'top' },
+]
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function cardCenter(c: CardNode, porta: 'right' | 'left' | 'bottom' | 'top') {
+  const w = c.w ?? W, h = c.h ?? H
+  if (porta === 'right')  return [c.x + w, c.y + h / 2]
+  if (porta === 'left')   return [c.x,     c.y + h / 2]
+  if (porta === 'bottom') return [c.x + w / 2, c.y + h]
+  if (porta === 'top')    return [c.x + w / 2, c.y]
+  return [c.x + w / 2, c.y + h / 2]
+}
+
+function bezierPath(x1: number, y1: number, x2: number, y2: number, saida: string, entrada: string): string {
+  if (saida === 'bottom' || entrada === 'top') {
+    const cy1 = y1 + Math.abs(y2 - y1) * 0.5
+    const cy2 = y2 - Math.abs(y2 - y1) * 0.5
+    return `M ${x1} ${y1} C ${x1} ${cy1}, ${x2} ${cy2}, ${x2} ${y2}`
+  }
+  const cx = (x1 + x2) / 2
+  return `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`
+}
+
+// ── Componente Card ────────────────────────────────────────────────────────
+function NCard({ node, ativo, selecionado, onClick }: {
+  node: CardNode; ativo: boolean; selecionado: boolean; onClick: () => void
+}) {
+  const w = node.w ?? W, h = node.h ?? H
+  const iconSize = h - 20
+  return (
+    <g onClick={onClick} style={{ cursor: 'pointer' }}>
+      {/* Glow ativo */}
+      {ativo && (
+        <rect x={node.x - 4} y={node.y - 4} width={w + 8} height={h + 8} rx="14"
+          fill={node.cor + '20'} stroke={node.cor + '60'} strokeWidth="1.5" />
+      )}
+      {/* Card body */}
+      <rect x={node.x} y={node.y} width={w} height={h} rx="10"
+        fill={selecionado ? '#1a2035' : '#111827'}
+        stroke={ativo ? node.cor : selecionado ? node.cor + '99' : '#1f2937'}
+        strokeWidth={ativo || selecionado ? 2 : 1}
+        style={{ transition: 'stroke 0.3s' }}
+      />
+      {/* Icon box */}
+      <rect x={node.x + 8} y={node.y + 10} width={iconSize} height={iconSize} rx="7"
+        fill={node.cor + (ativo ? 'EE' : '99')} />
+      <text x={node.x + 8 + iconSize / 2} y={node.y + 10 + iconSize / 2 + 6}
+        textAnchor="middle" fontSize={iconSize * 0.55}>
+        {node.icone}
+      </text>
+      {/* Label */}
+      <text x={node.x + iconSize + 18} y={node.y + h / 2 - (node.subtitle ? 4 : -1)}
+        fontSize="11.5" fontWeight="700"
+        fill={ativo ? '#fff' : '#e2e8f0'}>
+        {node.label}
+      </text>
+      {/* Subtitle */}
+      {node.subtitle && (
+        <text x={node.x + iconSize + 18} y={node.y + h / 2 + 11}
+          fontSize="9" fill={ativo ? node.cor + 'CC' : '#64748b'}>
+          {node.subtitle}
+        </text>
+      )}
+      {/* Porta esquerda */}
+      {node.portLeft && (
+        <circle cx={node.x} cy={node.y + h / 2} r="5"
+          fill="#0f172a" stroke={ativo ? node.cor : '#374151'} strokeWidth="1.5" />
+      )}
+      {/* Porta direita */}
+      {node.portRight && (
+        <circle cx={node.x + w} cy={node.y + h / 2} r="5"
+          fill="#0f172a" stroke={ativo ? node.cor : '#374151'} strokeWidth="1.5" />
+      )}
+      {/* Porta baixo */}
+      {node.portBottom && (
+        <circle cx={node.x + w / 2} cy={node.y + h} r="5"
+          fill="#0f172a" stroke={ativo ? node.cor : '#374151'} strokeWidth="1.5" />
+      )}
+      {/* Porta cima */}
+      {node.portTop && (
+        <circle cx={node.x + w / 2} cy={node.y} r="5"
+          fill="#0f172a" stroke={ativo ? node.cor : '#374151'} strokeWidth="1.5" />
+      )}
+      {/* Indicador de status */}
+      {ativo && (
+        <circle cx={node.x + w - 8} cy={node.y + 8} r="4"
+          fill="#F59E0B">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite" />
+        </circle>
+      )}
+    </g>
+  )
+}
+
+// ── Componente principal ───────────────────────────────────────────────────
+export function AgentNetwork() {
+  const [selecionado, setSelecionado] = useState<CardNode | null>(null)
+  const [simulando, setSimulando] = useState(false)
+  const [etapasAtivas, setEtapasAtivas] = useState<Set<string>>(new Set())
   const [atividadesReais, setAtividadesReais] = useState<AtividadeAPI[]>([])
   const [ativosReais, setAtivosReais] = useState<Set<string>>(new Set())
-  const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null)
+  const [ultimaAt, setUltimaAt] = useState<Date | null>(null)
 
+  // Polling da atividade real
   useEffect(() => {
     const token = localStorage.getItem('qg_auth_token') || ''
-    async function fetchActivity() {
+    async function fetch3s() {
       try {
-        const res = await fetch('/api/agents/activity', {
-          headers: { 'X-QG-Token': token }
-        })
+        const res = await fetch('/api/agents/activity', { headers: { 'X-QG-Token': token } })
         if (!res.ok) return
         const data = await res.json()
         setAtividadesReais(data.detalhes || [])
         setAtivosReais(new Set(data.ativos || []))
-        setUltimaAtualizacao(new Date())
-      } catch { /* ignora erros de rede */ }
+        setUltimaAt(new Date())
+      } catch { /* ignora */ }
     }
-    fetchActivity()
-    const timer = setInterval(fetchActivity, 3000)
-    return () => clearInterval(timer)
+    fetch3s()
+    const t = setInterval(fetch3s, 3000)
+    return () => clearInterval(t)
   }, [])
 
-  // Pulsação: usa dados reais se disponíveis, senão rotaciona os padrão
-  useEffect(() => {
-    if (simulando) return
-    if (ativosReais.size > 0) {
-      setPulsando(new Set([...ativosReais, 'nexus']))
-      return
-    }
-    const nos_ativos = NOS.filter(n => n.status === 'ativo' || n.status === 'trabalhando').map(n => n.id)
-    let idx = 0
-    const timer = setInterval(() => {
-      const grupo = new Set([
-        'nexus',
-        nos_ativos[idx % nos_ativos.length],
-        nos_ativos[(idx + 1) % nos_ativos.length],
-      ])
-      setPulsando(grupo)
-      idx++
-    }, 1200)
-    return () => clearInterval(timer)
-  }, [ativosReais, simulando])
+  const ativos = simulando ? etapasAtivas : ativosReais
 
   const simularPipeline = useCallback(() => {
     if (simulando) return
     setSimulando(true)
-    const pipeline = ['nexus', 'analista', 'comandante', 'arquiteto', 'coder', 'sub1', 'sub2', 'sub3', 'auditor', 'gestcort']
-    pipeline.forEach((id, i) => {
-      setTimeout(() => {
-        setEtapaAtiva(id)
-        setPulsando(new Set([id, 'nexus']))
-      }, i * 700)
-    })
-    setTimeout(() => {
-      setEtapaAtiva(null)
-      setSimulando(false)
-      setPulsando(new Set(['nexus', 'gem', 'groq', 'evolution']))
-    }, pipeline.length * 700 + 500)
+    const seq = ['nexus', 'fabrica', 'analista', 'comandante', 'arquiteto', 'coder', 'sub1', 'sub2', 'sub3', 'auditor']
+    seq.forEach((id, i) => setTimeout(() => setEtapasAtivas(new Set([id, 'nexus'])), i * 700))
+    setTimeout(() => { setSimulando(false); setEtapasAtivas(new Set()) }, seq.length * 700 + 500)
   }, [simulando])
 
-  const simularAprendizado = useCallback(() => {
+  const simularChat = useCallback(() => {
     if (simulando) return
     setSimulando(true)
-    const fluxo = ['nexus', 'research', 'evolution', 'supabase', 'nexus']
-    fluxo.forEach((id, i) => {
-      setTimeout(() => {
-        setEtapaAtiva(id)
-        setPulsando(new Set([id, 'supabase']))
-      }, i * 800)
-    })
-    setTimeout(() => {
-      setEtapaAtiva(null)
-      setSimulando(false)
-      setPulsando(new Set(['nexus', 'gem', 'groq', 'evolution']))
-    }, fluxo.length * 800 + 500)
+    const seq = ['chat', 'nexus', 'gem', 'groq', 'supa', 'resp']
+    seq.forEach((id, i) => setTimeout(() => setEtapasAtivas(new Set([id])), i * 600))
+    setTimeout(() => { setSimulando(false); setEtapasAtivas(new Set()) }, seq.length * 600 + 400)
   }, [simulando])
 
   return (
-    <div style={{ position: 'relative', userSelect: 'none' }}>
-      {/* CSS keyframes */}
+    <div style={{ userSelect: 'none' }}>
       <style>{`
-        @keyframes pulse-ring {
-          0%   { r: 4; opacity: 0.9; }
-          50%  { r: 8; opacity: 0.4; }
-          100% { r: 12; opacity: 0; }
-        }
-        @keyframes blink-dot {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.2; }
-        }
-        @keyframes flow-dash {
-          from { stroke-dashoffset: 40; }
-          to   { stroke-dashoffset: 0; }
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: scale(0.95); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        .agent-ativo circle.anel  { animation: pulse-ring 1.4s ease-out infinite; }
-        .aresta-fluxo              { animation: flow-dash 1.2s linear infinite; }
-        .status-blink              { animation: blink-dot 1.2s ease-in-out infinite; }
-        .info-card                 { animation: fade-in 0.2s ease; }
+        @keyframes flowDash { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+        .conn-flow { animation: flowDash 0.8s linear infinite; }
       `}</style>
 
-      {/* Barra de controles */}
-      <div style={{
-        display: 'flex', gap: 10, marginBottom: 14,
-        alignItems: 'center', flexWrap: 'wrap',
-      }}>
-        <button
-          onClick={simularPipeline} disabled={simulando}
-          style={{
-            padding: '7px 16px', background: simulando ? '#1F2937' : '#F59E0B',
-            border: 'none', borderRadius: 7, color: simulando ? '#6B7280' : '#000',
-            fontWeight: 700, fontSize: 12, cursor: simulando ? 'not-allowed' : 'pointer',
-          }}
-        >▶ Simular Pipeline</button>
-
-        <button
-          onClick={simularAprendizado} disabled={simulando}
-          style={{
-            padding: '7px 16px', background: simulando ? '#1F2937' : '#22C55E',
-            border: 'none', borderRadius: 7, color: simulando ? '#6B7280' : '#000',
-            fontWeight: 700, fontSize: 12, cursor: simulando ? 'not-allowed' : 'pointer',
-          }}
-        >📚 Simular Aprendizado</button>
-
+      {/* Controles */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button onClick={simularChat} disabled={simulando} style={{
+          padding: '7px 14px', background: simulando ? '#1f2937' : '#6366F1',
+          border: 'none', borderRadius: 7, color: simulando ? '#6b7280' : '#fff',
+          fontWeight: 700, fontSize: 11, cursor: simulando ? 'not-allowed' : 'pointer',
+        }}>💬 Simular Chat</button>
+        <button onClick={simularPipeline} disabled={simulando} style={{
+          padding: '7px 14px', background: simulando ? '#1f2937' : '#EF4444',
+          border: 'none', borderRadius: 7, color: simulando ? '#6b7280' : '#fff',
+          fontWeight: 700, fontSize: 11, cursor: simulando ? 'not-allowed' : 'pointer',
+        }}>🏭 Simular Pipeline</button>
         {/* Legenda */}
-        <div style={{ display: 'flex', gap: 14, fontSize: 11, color: '#9CA3AF', marginLeft: 8, flexWrap: 'wrap' }}>
-          {[
-            { cor: '#4285F4', label: 'Providers' },
-            { cor: '#1EE0E0', label: 'Orquestrador' },
-            { cor: '#F59E0B', label: 'Fábrica' },
-            { cor: '#8B5CF6', label: 'Projetos' },
-            { cor: '#22C55E', label: 'Infra/Learn' },
-          ].map(({ cor, label }) => (
-            <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: cor, display: 'inline-block' }} />
-              {label}
+        <div style={{ display: 'flex', gap: 12, fontSize: 10, color: '#64748b', marginLeft: 8, flexWrap: 'wrap' }}>
+          {[['#1EE0E0','Orquestrador'],['#4285F4','Providers'],['#EF4444','Fábrica'],['#3ECF8E','Memória'],['#4ADE80','Projetos']].map(([c,l]) => (
+            <span key={l} style={{ display:'flex',alignItems:'center',gap:4 }}>
+              <span style={{ width:10,height:10,borderRadius:3,background:c,display:'inline-block' }} />{l}
             </span>
           ))}
-          <span style={{ color: '#6B7280' }}>● Clique num nó para detalhes</span>
         </div>
+        {ativosReais.size > 0 && (
+          <span style={{ marginLeft:'auto',fontSize:10,color:'#22C55E',fontWeight:700,display:'flex',alignItems:'center',gap:5 }}>
+            <span style={{ width:6,height:6,borderRadius:'50%',background:'#22C55E',display:'inline-block', animation:'flowDash 1s linear infinite' }} />
+            {ativosReais.size} ativo(s) agora
+          </span>
+        )}
       </div>
 
-      {/* Canvas do grafo */}
-      <div style={{
-        background: '#070B0F',
-        border: '1px solid #1F2937',
-        borderRadius: 12,
-        overflow: 'auto',
-      }}>
-        <svg
-          viewBox="0 0 1500 760"
-          style={{ width: '100%', minHeight: 380, display: 'block' }}
-          onClick={() => setSelecionado(null)}
-        >
+      {/* Canvas */}
+      <div style={{ background: '#080d14', border: '1px solid #1e2433', borderRadius: 12, overflow: 'auto' }}>
+        <svg viewBox="0 0 1720 860" style={{ width: '100%', minHeight: 400, display: 'block' }}
+          onClick={() => setSelecionado(null)}>
           <defs>
-            {/* Gradiente de fundo */}
-            <radialGradient id="bg-glow" cx="50%" cy="30%" r="60%">
-              <stop offset="0%" stopColor="#0F1A2A" />
-              <stop offset="100%" stopColor="#070B0F" />
-            </radialGradient>
-            {/* Marcadores de seta */}
-            {Object.entries(ARESTA_COR).map(([tipo, cor]) => (
-              <marker key={tipo} id={`arr-${tipo}`} markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto">
-                <path d="M0,0 L0,5 L7,2.5 z" fill={cor} opacity="0.9" />
-              </marker>
-            ))}
-            {/* Filtro de glow */}
-            <filter id="glow-sm">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id="glow-lg">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
+            {/* Marcador de seta */}
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#374151" />
+            </marker>
+            <marker id="arr-ativo" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#1EE0E0" />
+            </marker>
+            {/* Grid de pontos */}
+            <pattern id="n8n-dots" width="28" height="28" patternUnits="userSpaceOnUse">
+              <circle cx="14" cy="14" r="0.7" fill="rgba(255,255,255,0.06)" />
+            </pattern>
           </defs>
 
           {/* Fundo */}
-          <rect width="1500" height="760" fill="url(#bg-glow)" />
+          <rect width="1720" height="860" fill="#080d14" />
+          <rect width="1720" height="860" fill="url(#n8n-dots)" />
 
-          {/* Grade sutil */}
-          <defs>
-            <pattern id="grid-dots" width="40" height="40" patternUnits="userSpaceOnUse">
-              <circle cx="20" cy="20" r="0.6" fill="rgba(255,255,255,0.04)" />
-            </pattern>
-          </defs>
-          <rect width="1500" height="760" fill="url(#grid-dots)" />
+          {/* Labels de zona */}
+          <text x="42" y="140" fill="#374151" fontSize="9" fontWeight="700" letterSpacing="1.5">ENTRADA</text>
+          <text x="310" y="170" fill="#374151" fontSize="9" fontWeight="700" letterSpacing="1.5">ORQUESTRADOR</text>
+          <text x="80" y="390" fill="#374151" fontSize="9" fontWeight="700" letterSpacing="1.5">MODEL*</text>
+          <text x="380" y="540" fill="#374151" fontSize="9" fontWeight="700" letterSpacing="1.5">MEMORY</text>
+          <text x="840" y="100" fill="#374151" fontSize="9" fontWeight="700" letterSpacing="1.5">TOOLS</text>
+          <text x="1180" y="100" fill="#374151" fontSize="9" fontWeight="700" letterSpacing="1.5">PROJETOS</text>
+          <text x="680" y="610" fill="#374151" fontSize="9" fontWeight="700" letterSpacing="1.5">FÁBRICA — PIPELINE MULTI-AGENTE</text>
 
-          {/* ── Zonas de fundo ────────────────────────────────────── */}
-          {/* Providers */}
-          <rect x="40" y="90" width="120" height="530" rx="10"
-            fill="rgba(66,133,244,0.04)" stroke="rgba(66,133,244,0.12)" strokeWidth="1" strokeDasharray="5,4" />
-          <text x="100" y="82" textAnchor="middle" fill="#4285F4" fontSize="9" fontWeight="700" opacity="0.7">PROVIDERS DE IA</text>
-
-          {/* Fábrica */}
-          <rect x="150" y="450" width="750" height="200" rx="10"
-            fill="rgba(245,158,11,0.04)" stroke="rgba(245,158,11,0.14)" strokeWidth="1" strokeDasharray="6,4" />
-          <text x="170" y="470" fill="#F59E0B" fontSize="9" fontWeight="700" opacity="0.7">FÁBRICA DE IA — PIPELINE MULTI-AGENTE</text>
-
-          {/* Aprendizado */}
-          <rect x="960" y="80" width="170" height="320" rx="10"
-            fill="rgba(34,197,94,0.04)" stroke="rgba(34,197,94,0.12)" strokeWidth="1" strokeDasharray="5,4" />
-          <text x="1045" y="73" textAnchor="middle" fill="#22C55E" fontSize="9" fontWeight="700" opacity="0.7">APRENDIZADO</text>
-
-          {/* Projetos */}
-          <rect x="1130" y="60" width="340" height="470" rx="10"
-            fill="rgba(139,92,246,0.04)" stroke="rgba(139,92,246,0.14)" strokeWidth="1" strokeDasharray="6,4" />
-          <text x="1300" y="52" textAnchor="middle" fill="#8B5CF6" fontSize="9" fontWeight="700" opacity="0.7">PROJETOS ATIVOS</text>
-
-          {/* Infra */}
-          <rect x="270" y="650" width="680" height="90" rx="10"
-            fill="rgba(34,197,94,0.03)" stroke="rgba(34,197,94,0.1)" strokeWidth="1" strokeDasharray="5,4" />
-          <text x="290" y="643" fill="#22C55E" fontSize="9" fontWeight="700" opacity="0.6">INFRAESTRUTURA</text>
-
-          {/* ── Arestas ───────────────────────────────────────────── */}
-          {ARESTAS.map((a, i) => {
-            const noA = NOS.find(n => n.id === a.de)
-            const noB = NOS.find(n => n.id === a.para)
-            if (!noA || !noB) return null
-            const raioA = raioNo(noA.tipo), raioB = raioNo(noB.tipo)
-            const [x1, y1, x2, y2] = pontoNoBordo(noA, noB, (raioA + raioB) / 2 + 2)
-            const cor = ARESTA_COR[a.tipo || 'suporte']
-            const ativo = etapaAtiva === a.de || etapaAtiva === a.para || pulsando.has(a.de)
+          {/* ── Conexões ──────────────────────────────────── */}
+          {CONNS.map((conn, i) => {
+            const a = CARDS.find(c => c.id === conn.de)
+            const b = CARDS.find(c => c.id === conn.para)
+            if (!a || !b) return null
+            const saida  = conn.saida  || 'right'
+            const entrada = conn.entrada || 'left'
+            const [x1, y1] = cardCenter(a, saida)
+            const [x2, y2] = cardCenter(b, entrada)
+            const path = bezierPath(x1, y1, x2, y2, saida, entrada)
+            const ativoConn = ativos.has(conn.de) || ativos.has(conn.para)
+            const cor = ativoConn ? '#1EE0E0' : '#1e2433'
             const midX = (x1 + x2) / 2, midY = (y1 + y2) / 2
-
             return (
               <g key={i}>
-                {/* Linha base (sempre visível, opaca) */}
-                <line
-                  x1={x1} y1={y1} x2={x2} y2={y2}
-                  stroke={cor + (ativo ? 'CC' : '30')}
-                  strokeWidth={ativo ? 1.8 : 0.8}
-                  strokeDasharray={a.dashed ? '6,4' : undefined}
-                  markerEnd={`url(#arr-${a.tipo || 'suporte'})`}
-                  style={{ transition: 'stroke 0.4s, stroke-width 0.4s' }}
+                {/* Linha base */}
+                <path d={path} fill="none"
+                  stroke={cor} strokeWidth={ativoConn ? 2 : 1.2}
+                  strokeDasharray={conn.dashed ? '6,4' : undefined}
+                  markerEnd={`url(#arr${ativoConn ? '-ativo' : ''})`}
+                  style={{ transition: 'stroke 0.3s' }}
                 />
                 {/* Linha animada quando ativo */}
-                {ativo && !a.dashed && (
-                  <line
-                    x1={x1} y1={y1} x2={x2} y2={y2}
-                    stroke={cor}
-                    strokeWidth={2}
+                {ativoConn && !conn.dashed && (
+                  <path d={path} fill="none"
+                    stroke="#1EE0E0" strokeWidth="2.5"
                     strokeDasharray="8,16"
-                    className="aresta-fluxo"
-                    opacity="0.7"
+                    opacity="0.5"
+                    className="conn-flow"
                   />
                 )}
-                {/* Label da aresta */}
-                {a.label && (
+                {/* Label da conexão */}
+                {conn.label && (
                   <g>
-                    <rect
-                      x={midX - a.label.length * 3 - 3} y={midY - 9}
-                      width={a.label.length * 6 + 6} height={12}
-                      rx="3" fill="#070B0F" opacity="0.85"
-                    />
-                    <text x={midX} y={midY} textAnchor="middle"
-                      fill={cor} fontSize="8.5" fontWeight="600" opacity="0.9">
-                      {a.label}
+                    <rect x={midX - conn.label.length * 3.5 - 5} y={midY - 9}
+                      width={conn.label.length * 7 + 10} height={14} rx="5"
+                      fill="#080d14" stroke="#1e2433" strokeWidth="1" />
+                    <text x={midX} y={midY + 1} textAnchor="middle"
+                      fill={ativoConn ? '#1EE0E0' : '#4b5563'}
+                      fontSize="9" fontWeight="700">
+                      {conn.label}
                     </text>
                   </g>
                 )}
@@ -456,204 +379,52 @@ export function AgentNetwork() {
             )
           })}
 
-          {/* ── Nós ──────────────────────────────────────────────── */}
-          {NOS.map(no => {
-            const ativo = etapaAtiva === no.id
-            const pulsaAqui = pulsando.has(no.id)
-            const sel = selecionado?.id === no.id
-            const r = raioNo(no.tipo)
-            const isOffline = no.status === 'offline'
-
-            return (
-              <g
-                key={no.id}
-                className={pulsaAqui || ativo ? 'agent-ativo' : ''}
-                onClick={e => { e.stopPropagation(); setSelecionado(sel ? null : no) }}
-                style={{ cursor: 'pointer' }}
-              >
-                {/* Anel de glow externo (ativo/selecionado) */}
-                {(ativo || sel) && (
-                  <circle cx={no.x} cy={no.y} r={r + 16}
-                    fill={no.cor + '18'} stroke={no.cor + '44'} strokeWidth="1"
-                    filter="url(#glow-lg)" />
-                )}
-                {/* Anel pulsante */}
-                {pulsaAqui && !ativo && (
-                  <circle cx={no.x} cy={no.y} r={r + 8}
-                    fill="none" stroke={no.cor + '55'} strokeWidth="1"
-                    className="anel" />
-                )}
-
-                {/* Círculo principal */}
-                <circle
-                  cx={no.x} cy={no.y} r={r}
-                  fill={isOffline ? '#111' : sel ? no.cor + '25' : ativo ? no.cor + '20' : '#0D1117'}
-                  stroke={isOffline ? '#374151' : (sel || ativo) ? no.cor : no.cor + '70'}
-                  strokeWidth={sel ? 2.5 : ativo ? 2 : 1.5}
-                  filter={ativo ? 'url(#glow-sm)' : undefined}
-                  style={{ transition: 'all 0.25s' }}
-                />
-
-                {/* Ícone */}
-                <text
-                  x={no.x} y={no.y - (r > 30 ? 6 : 3)}
-                  textAnchor="middle"
-                  fontSize={no.tipo === 'orquestrador' ? 20 : r > 28 ? 15 : 13}
-                  opacity={isOffline ? 0.35 : 1}
-                >
-                  {no.icone}
-                </text>
-
-                {/* Label */}
-                <text
-                  x={no.x} y={no.y + (no.tipo === 'orquestrador' ? 18 : r > 28 ? 16 : 13)}
-                  textAnchor="middle"
-                  fill={isOffline ? '#6B7280' : no.cor}
-                  fontSize={no.tipo === 'orquestrador' ? 10 : no.tipo === 'provider' ? 8 : 8.5}
-                  fontWeight="700"
-                  opacity={isOffline ? 0.4 : 1}
-                >
-                  {no.label}
-                </text>
-
-                {/* Indicador de status (dot) */}
-                {no.status && (
-                  <circle
-                    cx={no.x + r - 5} cy={no.y - r + 5} r="4"
-                    fill={STATUS_COR[no.status]}
-                    stroke="#070B0F" strokeWidth="1.5"
-                    className={no.status === 'ativo' || no.status === 'trabalhando' ? 'status-blink' : ''}
-                  />
-                )}
-
-                {/* Projeto badge (para nós de projeto) */}
-                {no.tipo === 'projeto' && (
-                  <rect
-                    x={no.x - r} y={no.y + r + 2}
-                    width={r * 2} height={13}
-                    rx="4" fill={no.cor + '22'} stroke={no.cor + '55'} strokeWidth="0.8"
-                  />
-                )}
-              </g>
-            )
-          })}
-
-          {/* Título do grafo */}
-          <text x="560" y="30" textAnchor="middle" fill="#1EE0E0" fontSize="13" fontWeight="800" opacity="0.8" letterSpacing="3">
-            QG IA — MAPA DE AGENTES
-          </text>
-          <text x="560" y="44" textAnchor="middle" fill="#4B5563" fontSize="8.5" letterSpacing="2">
-            NEXUS CLAW · FÁBRICA · PROJETOS · INFRAESTRUTURA
-          </text>
-
-          {/* ── Labels de atividade em tempo real ─── */}
-          {atividadesReais.map((atv) => {
-            const no = NOS.find(n => n.id === atv.agenteId)
-            if (!no) return null
-            const r = raioNo(no.tipo)
-            const labelY = no.y - r - 16
-            const txt = atv.iaUsada ? `⚡ ${atv.iaUsada}` : atv.descricao.slice(0, 28)
-            const w = txt.length * 5.5 + 12
-            return (
-              <g key={`lbl-${atv.agenteId}`}>
-                {/* Linha de ligação label → nó */}
-                <line
-                  x1={no.x} y1={labelY + 10}
-                  x2={no.x} y2={no.y - r}
-                  stroke={no.cor + '88'} strokeWidth="1"
-                  strokeDasharray="3,2"
-                />
-                {/* Badge da atividade */}
-                <rect
-                  x={no.x - w / 2} y={labelY - 10}
-                  width={w} height={16}
-                  rx="6"
-                  fill={no.cor + '22'}
-                  stroke={no.cor + '99'}
-                  strokeWidth="1"
-                />
-                <text
-                  x={no.x} y={labelY + 1}
-                  textAnchor="middle"
-                  fill={no.cor}
-                  fontSize="8" fontWeight="700"
-                >
-                  {txt}
-                </text>
-              </g>
-            )
-          })}
+          {/* ── Cards ─────────────────────────────────────── */}
+          {CARDS.map(node => (
+            <NCard key={node.id} node={node}
+              ativo={ativos.has(node.id)}
+              selecionado={selecionado?.id === node.id}
+              onClick={(e?: React.MouseEvent) => { e?.stopPropagation?.(); setSelecionado(selecionado?.id === node.id ? null : node) }}
+            />
+          ))}
         </svg>
       </div>
 
-      {/* ── Feed de atividade em tempo real ────────────────────── */}
-      <div style={{
-        marginTop: 10,
-        background: '#0A0D12',
-        border: '1px solid #1F2937',
-        borderRadius: 10,
-        padding: '10px 14px',
-      }}>
+      {/* ── Feed de atividade ─────────────────────────── */}
+      <div style={{ marginTop: 10, background: '#0a0f18', border: '1px solid #1e2433', borderRadius: 10, padding: '10px 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', letterSpacing: 1 }}>
-            ATIVIDADE EM TEMPO REAL
-          </span>
-          {ultimaAtualizacao && (
-            <span style={{ fontSize: 10, color: '#374151' }}>
-              ↻ {ultimaAtualizacao.toLocaleTimeString('pt-BR')}
-            </span>
-          )}
-          <span style={{
-            marginLeft: 'auto', fontSize: 10,
-            color: ativosReais.size > 0 ? '#22C55E' : '#4B5563',
-            fontWeight: 700,
-          }}>
-            {ativosReais.size > 0 ? `${ativosReais.size} agente(s) ativos` : 'Aguardando atividade...'}
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#475569', letterSpacing: 1 }}>ATIVIDADE EM TEMPO REAL</span>
+          {ultimaAt && <span style={{ fontSize: 9, color: '#1e2433' }}>↻ {ultimaAt.toLocaleTimeString('pt-BR')}</span>}
+          <span style={{ marginLeft:'auto', fontSize:10, color: ativosReais.size > 0 ? '#22C55E' : '#374151', fontWeight:700 }}>
+            {ativosReais.size > 0 ? `${ativosReais.size} agente(s) trabalhando` : 'Aguardando...'}
           </span>
         </div>
-
         {atividadesReais.length === 0 ? (
-          <div style={{ fontSize: 11, color: '#4B5563', fontStyle: 'italic', padding: '4px 0' }}>
-            Nenhum agente processando agora. O sistema responde a cada mensagem.
-          </div>
+          <p style={{ fontSize: 11, color: '#374151', fontStyle: 'italic', margin: 0 }}>
+            Nenhum agente ativo agora. Mande uma mensagem no chat para ver a atividade aqui.
+          </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {atividadesReais.map((atv) => {
-              const no = NOS.find(n => n.id === atv.agenteId)
-              const cor = no?.cor || '#6B7280'
-              const icone = no?.icone || '●'
-              const segs = Math.round((Date.now() - atv.desde) / 1000)
+            {atividadesReais.map(atv => {
+              const no = CARDS.find(n => n.id === atv.agenteId)
+              const cor = no?.cor || '#6b7280'
               return (
                 <div key={atv.agenteId} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  background: cor + '0D',
-                  border: `1px solid ${cor}33`,
-                  borderRadius: 7, padding: '6px 10px',
+                  display:'flex', alignItems:'center', gap:10,
+                  background: cor+'0D', border:`1px solid ${cor}33`, borderRadius:7, padding:'6px 10px',
                 }}>
-                  <span style={{ fontSize: 16 }}>{icone}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: cor }}>{no?.label || atv.agenteId}</span>
-                      {atv.projeto && (
-                        <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 4, background: cor + '18', color: cor, border: `1px solid ${cor}44` }}>
-                          {atv.projeto}
-                        </span>
-                      )}
-                      {atv.iaUsada && (
-                        <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 4, background: '#F59E0B18', color: '#F59E0B', border: '1px solid #F59E0B44' }}>
-                          ⚡ {atv.iaUsada}
-                        </span>
-                      )}
+                  <span style={{ fontSize:18 }}>{no?.icone || '●'}</span>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ fontSize:11, fontWeight:700, color:cor }}>{no?.label || atv.agenteId}</span>
+                      {atv.projeto && <span style={{ fontSize:9, padding:'1px 6px', borderRadius:4, background:cor+'18', color:cor, border:`1px solid ${cor}44` }}>{atv.projeto}</span>}
+                      {atv.iaUsada && <span style={{ fontSize:9, padding:'1px 6px', borderRadius:4, background:'#F59E0B18', color:'#F59E0B', border:'1px solid #F59E0B44' }}>⚡ {atv.iaUsada}</span>}
                     </div>
-                    <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{atv.descricao}</div>
+                    <div style={{ fontSize:10, color:'#64748b', marginTop:2 }}>{atv.descricao}</div>
                   </div>
-                  <span style={{ fontSize: 10, color: '#4B5563', whiteSpace: 'nowrap' }}>{segs}s atrás</span>
-                  <span style={{
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: atv.status === 'trabalhando' ? '#F59E0B' : '#22C55E',
-                    animation: 'blink-dot 1s ease-in-out infinite',
-                    flexShrink: 0,
-                  }} />
+                  <span style={{ fontSize:9, color:'#374151' }}>{Math.round((Date.now()-atv.desde)/1000)}s</span>
+                  <span style={{ width:6, height:6, borderRadius:'50%', background: atv.status==='trabalhando' ? '#F59E0B' : '#22C55E', flexShrink:0 }}>
+                  </span>
                 </div>
               )
             })}
@@ -661,56 +432,21 @@ export function AgentNetwork() {
         )}
       </div>
 
-      {/* ── Painel de detalhes ──────────────────────────────────── */}
+      {/* ── Detalhes do card clicado ───────────────────── */}
       {selecionado && (
-        <div className="info-card" style={{
-          marginTop: 12,
-          background: selecionado.cor + '0E',
-          border: `1px solid ${selecionado.cor}40`,
-          borderRadius: 10, padding: '14px 18px',
-          display: 'flex', alignItems: 'flex-start', gap: 14,
+        <div style={{
+          marginTop:10, background: selecionado.cor+'0D',
+          border:`1px solid ${selecionado.cor}44`, borderRadius:10, padding:'14px 18px',
+          display:'flex', alignItems:'flex-start', gap:14,
+          animation:'fadeIn 0.15s ease',
         }}>
-          <span style={{ fontSize: 36, lineHeight: 1 }}>{selecionado.icone}</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 800, color: selecionado.cor, fontSize: 15 }}>{selecionado.label}</span>
-              <span style={{
-                fontSize: 10, padding: '2px 8px', borderRadius: 12,
-                background: selecionado.cor + '18',
-                border: `1px solid ${selecionado.cor}44`,
-                color: selecionado.cor, fontWeight: 600, letterSpacing: 0.5,
-              }}>{selecionado.tipo.toUpperCase()}</span>
-              {selecionado.status && (
-                <span style={{
-                  fontSize: 10, padding: '2px 8px', borderRadius: 12,
-                  background: STATUS_COR[selecionado.status] + '20',
-                  border: `1px solid ${STATUS_COR[selecionado.status]}50`,
-                  color: STATUS_COR[selecionado.status], fontWeight: 700,
-                }}>
-                  {STATUS_LABEL[selecionado.status]}
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 5, lineHeight: 1.5 }}>
-              {selecionado.descricao}
-            </div>
-            {selecionado.providers && selecionado.providers.length > 0 && (
-              <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 10, color: '#6B7280' }}>Providers:</span>
-                {selecionado.providers.map(p => (
-                  <span key={p} style={{
-                    fontSize: 10, padding: '2px 8px',
-                    background: '#1EE0E011', border: '1px solid #1EE0E033',
-                    borderRadius: 4, color: '#1EE0E0',
-                  }}>{p}</span>
-                ))}
-              </div>
-            )}
+          <span style={{ fontSize:36 }}>{selecionado.icone}</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontWeight:800, color:selecionado.cor, fontSize:15 }}>{selecionado.label}</div>
+            {selecionado.subtitle && <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>{selecionado.subtitle}</div>}
+            <div style={{ fontSize:12, color:'#9ca3af', marginTop:6, lineHeight:1.5 }}>{selecionado.descricao}</div>
           </div>
-          <button
-            onClick={() => setSelecionado(null)}
-            style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: 18, padding: 0 }}
-          >✕</button>
+          <button onClick={()=>setSelecionado(null)} style={{ background:'none',border:'none',color:'#374151',cursor:'pointer',fontSize:18,padding:0 }}>✕</button>
         </div>
       )}
     </div>
