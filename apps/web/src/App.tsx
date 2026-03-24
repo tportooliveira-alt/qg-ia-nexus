@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from './store/authStore'
 import { AppShell } from './components/layout/AppShell'
 import { LoginPage } from './pages/LoginPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { ChatPage } from './pages/ChatPage'
 import { AgentsPage } from './pages/AgentsPage'
 import { FabricaPage } from './pages/FabricaPage'
@@ -25,14 +26,15 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<RequireAuth><AppShell /></RequireAuth>}>
-            <Route index element={<Navigate to="/chat" replace />} />
-            <Route path="chat"     element={<ChatPage />} />
-            <Route path="agents"   element={<AgentsPage />} />
-            <Route path="fabrica"  element={<FabricaPage />} />
-            <Route path="terminal" element={<TerminalPage />} />
-            <Route path="memory"   element={<MemoryPage />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="chat"      element={<ChatPage />} />
+            <Route path="agents"    element={<AgentsPage />} />
+            <Route path="fabrica"   element={<FabricaPage />} />
+            <Route path="terminal"  element={<TerminalPage />} />
+            <Route path="memory"    element={<MemoryPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/chat" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
