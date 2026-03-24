@@ -63,7 +63,7 @@ const AIService = {
     const res = await fetch("https://api.cerebras.ai/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.CEREBRAS_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "llama3.1-70b", max_tokens: getMaxTokens("Cerebras", maxTokens), messages: [{ role: "user", content: prompt }] })
+      body: JSON.stringify({ model: "llama-3.3-70b", max_tokens: getMaxTokens("Cerebras", maxTokens), messages: [{ role: "user", content: prompt }] })
     });
     if (!res.ok) throw new Error(`Cerebras falhou com status: ${res.status}`);
     const data = await res.json();

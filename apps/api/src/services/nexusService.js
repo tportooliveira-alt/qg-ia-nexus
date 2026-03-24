@@ -229,13 +229,13 @@ const NexusService = {
         "IMPORTANTE: NUNCA pule etapas — cada resposta deve aprofundar a ideia com novas perguntas ou sugestoes ate estar realmente completa. Seja generoso no dialogo, explore ao maximo antes de propor o prompt mestre.\n";
 
       const fullPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt;
-      // Cascata stream: Gemini → Groq → Cerebras → DeepSeek → SambaNova (fallback completo)
+      // Cascata stream: Gemini → Groq → Cerebras → SambaNova → xAI (DeepSeek removido: 402)
       const streamCascata = [
         { nome: "Gemini",    fn: () => AIService.callGeminiStream(fullPrompt, null, onChunk) },
         { nome: "Groq",      fn: () => AIService.callGroqStream(fullPrompt, null, onChunk) },
         { nome: "Cerebras",  fn: () => AIService.callCerebrasStream(fullPrompt, null, onChunk) },
-        { nome: "DeepSeek",  fn: () => AIService.callDeepSeekStream(fullPrompt, null, onChunk) },
-        { nome: "SambaNova", fn: () => AIService.chamarIAComCascata(fullPrompt, ["SambaNova", "xAI"]).then(r => onChunk(r.resultado)) },
+        { nome: "SambaNova", fn: () => AIService.chamarIAComCascata(fullPrompt, ["SambaNova"]).then(r => { onChunk(r.resultado); }) },
+        { nome: "xAI",       fn: () => AIService.chamarIAComCascata(fullPrompt, ["xAI"]).then(r => { onChunk(r.resultado); }) },
       ];
       let streamOk = false;
       for (const { nome, fn } of streamCascata) {

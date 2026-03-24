@@ -43,7 +43,13 @@ export function ChatPage() {
       { prompt: promptComContexto },
       (chunk) => appendChunk(msgId, chunk),
       () => finalizeMessage(msgId),
-      (err) => { appendChunk(msgId, `\n\n❌ Erro: ${err}`); finalizeMessage(msgId) }
+      (err) => {
+        const msg = String(err).includes('falharam') || String(err).includes('502') || String(err).includes('503')
+          ? '\n\n⚠️ Todos os provedores de IA estão sobrecarregados. Aguarde alguns segundos e tente novamente.'
+          : `\n\n⚠️ ${err}`
+        appendChunk(msgId, msg)
+        finalizeMessage(msgId)
+      }
     )
   }
 
