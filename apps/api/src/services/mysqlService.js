@@ -47,7 +47,8 @@ const MySQLService = {
 
   async inicializarTabelas() {
     console.log('[MYSQL] Verificando tabelas base...');
-    const sql = `
+
+    await this.query(`
       CREATE TABLE IF NOT EXISTS ideias_logs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         titulo VARCHAR(255) NOT NULL,
@@ -56,8 +57,35 @@ const MySQLService = {
         status VARCHAR(20) DEFAULT 'capturada',
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    `;
-    await this.query(sql);
+    `);
+
+    await this.query(`
+      CREATE TABLE IF NOT EXISTS agent_memories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        agente VARCHAR(100),
+        categoria VARCHAR(100) DEFAULT 'geral',
+        conteudo TEXT,
+        projeto VARCHAR(255),
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_agente (agente),
+        INDEX idx_projeto (projeto)
+      );
+    `);
+
+    await this.query(`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        agente VARCHAR(100) NOT NULL DEFAULT 'sistema',
+        acao TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'ok',
+        detalhe TEXT,
+        origem VARCHAR(100) DEFAULT 'api',
+        alvo VARCHAR(255),
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_audit_agente (agente)
+      );
+    `);
+
     console.log('[MYSQL] Estrutura pronta.');
   },
 

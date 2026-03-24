@@ -14,5 +14,6 @@ router.use(require("./fs.routes"));
 router.use(require("./skills.routes"));
 router.use(require("./config.routes"));
 router.use(require("./mcp.routes"));
+router.use(require("./audit.routes"));
 
 module.exports = router;

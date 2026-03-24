@@ -3,7 +3,6 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const { createClient } = require("@supabase/supabase-js");
 
 const routes = require("./src/routes");
 const bootstrap = require("./src/bootstrap");
@@ -18,20 +17,13 @@ app.use(cors({
     "https://www.ideiatoapp.me",
     "http://localhost:3000",
     "http://localhost:5173",
-    "http://127.0.0.1:3000",
-    "https://qg-ia-nexus.onrender.com"
+    "http://127.0.0.1:3000"
   ],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-QG-Token"],
   credentials: true
 }));
 app.use(express.json({ limit: "50mb" }));
-
-// ─── Supabase ─────────────────────────────────────────────────────────────────
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-  console.error("❌ SUPABASE_URL ou SUPABASE_SERVICE_KEY não definidos no .env!");
-}
-createClient(process.env.SUPABASE_URL || "", process.env.SUPABASE_SERVICE_KEY || "");
 
 // ─── Static (public/) ─────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "public")));

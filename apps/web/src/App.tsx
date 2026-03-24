@@ -9,6 +9,9 @@ import { AgentsPage } from './pages/AgentsPage'
 import { FabricaPage } from './pages/FabricaPage'
 import { TerminalPage } from './pages/TerminalPage'
 import { MemoryPage } from './pages/MemoryPage'
+import { KnowledgePage } from './pages/KnowledgePage'
+import { AuditPage } from './pages/AuditPage'
+import { MCPPage } from './pages/MCPPage'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
@@ -31,8 +34,11 @@ export default function App() {
             <Route path="chat"      element={<ChatPage />} />
             <Route path="agents"    element={<AgentsPage />} />
             <Route path="fabrica"   element={<FabricaPage />} />
-            <Route path="terminal"  element={<TerminalPage />} />
-            <Route path="memory"    element={<MemoryPage />} />
+            <Route path="terminal"   element={<TerminalPage />} />
+            <Route path="memory"     element={<MemoryPage />} />
+            <Route path="knowledge"  element={<KnowledgePage />} />
+            <Route path="audit"      element={<AuditPage />} />
+            <Route path="mcp"        element={<MCPPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
