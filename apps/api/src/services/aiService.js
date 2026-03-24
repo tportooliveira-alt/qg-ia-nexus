@@ -77,7 +77,7 @@ const AIService = {
         "anthropic-version": "2023-06-01",
         "content-type": "application/json"
       },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: getMaxTokens("Anthropic", maxTokens), messages: [{ role: "user", content: prompt }] })
+      body: JSON.stringify({ model: "claude-3-5-sonnet-20241022", max_tokens: getMaxTokens("Anthropic", maxTokens), messages: [{ role: "user", content: prompt }] })
     });
     if (!res.ok) throw new Error(`Anthropic falhou com status: ${res.status}`);
     const data = await res.json();
@@ -94,7 +94,7 @@ const AIService = {
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: getMaxTokens("Anthropic", maxTokens),
         stream: true,
         messages: [{ role: "user", content: prompt }]
