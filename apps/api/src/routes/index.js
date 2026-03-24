@@ -16,5 +16,6 @@ router.use(require("./config.routes"));
 router.use(require("./mcp.routes"));
 router.use(require("./audit.routes"));
 router.use(require("./providers.routes"));
+router.use("/docs", require("./document.routes"));
 
 module.exports = router;
