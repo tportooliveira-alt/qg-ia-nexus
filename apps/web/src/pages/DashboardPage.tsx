@@ -1,5 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { apiFetch } from '../api/client'
+import { useNavigate } from 'react-router-dom'
 
 interface NexusStatus {
   status: string
@@ -10,18 +12,92 @@ interface NexusStatus {
   servicos: Record<string, string>
 }
 
+interface AuditLog {
+  id: string | number
+  created_at?: string
+  criado_em?: string
+  agente: string
+  acao: string
+  status: 'ok' | 'erro' | 'warn' | string
+  detalhe?: string
+  origem?: string
+}
+
+interface FabricaStatus {
+  ativos?: number
+  pipelines?: Array<{ id: string; usuario_id: string }>
+}
+
 function formatUptime(seconds: number) {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
+function timeAgo(iso: string | undefined) {
+  if (!iso) return '—'
+  const diff = Date.now() - new Date(iso).getTime()
+  const s = Math.floor(diff / 1000)
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  return `${h}h`
+}
+
+const STATUS_DOT: Record<string, string> = {
+  ok: '#22C55E',
+  erro: '#EF4444',
+  warn: '#F59E0B',
+}
+
 export function DashboardPage() {
+  const navigate = useNavigate()
+  const [pesquisando, setPesquisando] = useState(false)
+  const [pesquisaMsg, setPesquisaMsg] = useState('')
+
   const { data: nexusStatus } = useQuery({
     queryKey: ['nexus-status'],
     queryFn: () => apiFetch<NexusStatus>('/status'),
     refetchInterval: 30000,
   })
+
+  const { data: auditData, refetch: refetchAudit } = useQuery({
+    queryKey: ['dashboard-audit'],
+    queryFn: () => apiFetch<{ logs: AuditLog[]; count: number }>('/audit?limit=8'),
+    refetchInterval: 15000,
+  })
+
+  const { data: fabricaData } = useQuery({
+    queryKey: ['fabrica-dashboard'],
+    queryFn: () => apiFetch<FabricaStatus>('/fabrica/status').then(r => (r as any)?.fabrica || r).catch(() => ({})),
+    refetchInterval: 20000,
+  })
+
+  const pesquisarMutation = useMutation({
+    mutationFn: () => apiFetch<{ status: string }>('/nexus/pesquisa', { method: 'POST', body: '{}' }),
+    onMutate: () => { setPesquisando(true); setPesquisaMsg('') },
+    onSuccess: () => { setPesquisaMsg('✅ Pesquisa iniciada! Resultados salvos na Memória.'); setPesquisando(false) },
+    onError: (e: Error) => { setPesquisaMsg(`❌ ${e.message}`); setPesquisando(false) },
+  })
+
+  function exportarLogs() {
+    const logs = auditData?.logs || []
+    const csv = [
+      'id,quando,agente,acao,status,origem',
+      ...logs.map(l => `${l.id},"${l.created_at || l.criado_em || ''}","${l.agente}","${l.acao}","${l.status}","${l.origem || ''}"`)
+    ].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `audit_${Date.now()}.csv`
+    a.click()
+  }
+
+  const pipelines = (fabricaData as any)?.pipelines || []
+  const nAtivos = (fabricaData as any)?.ativos ?? pipelines.length ?? 0
+
+  const logs: AuditLog[] = auditData?.logs || []
 
   return (
     <div className="p-6 overflow-y-auto bg-[#050505]">
@@ -37,7 +113,7 @@ export function DashboardPage() {
             Uptime: {nexusStatus ? formatUptime(nexusStatus.uptime) : '...'} · Volume: {nexusStatus?.token_volume || '...'}
           </p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10">
             <div className="w-2 h-2 rounded-full bg-[#22C55E]"></div>
             <span className="font-label text-[10px] text-on-surface uppercase tracking-tighter">
@@ -50,13 +126,25 @@ export function DashboardPage() {
               Multi-IA: {nexusStatus?.servicos?.multiIA || '...'}
             </span>
           </div>
+          <button
+            onClick={() => pesquisarMutation.mutate()}
+            disabled={pesquisando}
+            className="flex items-center gap-1 px-3 py-1 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-label text-[10px] uppercase tracking-tighter transition-all disabled:opacity-50"
+          >
+            🔬 {pesquisando ? 'Pesquisando...' : 'Pesquisa IA'}
+          </button>
         </div>
       </section>
+
+      {pesquisaMsg && (
+        <div className="mb-4 px-4 py-3 border border-white/10 bg-white/5 font-label text-xs text-slate-300">
+          {pesquisaMsg}
+        </div>
+      )}
 
       {/* ── InsightCards Grid ── */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
-        {/* Heap Usado */}
         <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full -mr-8 -mt-8"></div>
           <div>
@@ -71,7 +159,6 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Uptime */}
         <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32">
           <div>
             <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Uptime</span>
@@ -89,7 +176,21 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* WhatsApp */}
+        <div
+          className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32 cursor-pointer hover:border-primary/30 transition-colors"
+          onClick={() => navigate('/fabrica')}
+        >
+          <div>
+            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Fábrica de IA</span>
+            <h2 className="font-headline font-bold text-2xl text-on-surface mt-1">
+              {nAtivos} {nAtivos === 1 ? 'pipeline' : 'pipelines'}
+            </h2>
+          </div>
+          <div className="font-label text-[10px] text-primary uppercase tracking-tighter bg-primary/5 px-2 py-1 self-start">
+            {nAtivos > 0 ? `${nAtivos} ativo(s)` : 'Nenhum ativo'}
+          </div>
+        </div>
+
         <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32">
           <div>
             <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">WhatsApp</span>
@@ -102,188 +203,101 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Multi-IA */}
-        <div className="bg-[#0B0D10] p-4 border border-white/5 flex flex-col justify-between h-32">
-          <div>
-            <span className="font-label text-[10px] text-slate-500 uppercase tracking-widest">Multi-IA</span>
-            <h2 className="font-headline font-bold text-xl text-on-surface mt-1">
-              {nexusStatus?.servicos?.multiIA || '...'}
-            </h2>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] font-label text-[#22C55E] uppercase">
-            <span className="material-symbols-outlined text-xs">auto_awesome</span>
-            <span>AutoHealing: {nexusStatus?.servicos?.autoHealing || '...'}</span>
-          </div>
-        </div>
-
       </section>
 
-      {/* ── Kanban Mini-Board Fábrica ── */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-headline font-bold text-xl uppercase tracking-tighter flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">precision_manufacturing</span>
-            Fábrica Overview
-          </h3>
-          <span className="font-label text-[10px] text-slate-500 uppercase">14 Pipelines Active</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-2 overflow-x-auto">
-
-          {/* Brief */}
-          <div className="bg-[#0B0D10]/50 p-2 border border-white/5 min-w-[200px]">
-            <div className="flex items-center justify-between mb-3 px-1 border-b border-white/5 pb-2">
-              <span className="font-label text-[10px] font-bold text-on-surface">Brief</span>
-              <span className="font-label text-[10px] text-slate-500">03</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="bg-[#0B0D10] p-3 border border-white/5 cursor-pointer hover:border-primary/50 transition-colors">
-                <p className="text-xs font-medium mb-2">Automated SEO Agent</p>
-                <div className="flex gap-2">
-                  <span className="text-[9px] font-label bg-secondary-container/20 text-secondary px-1.5 py-0.5 border border-secondary/20">CLAUDE-3</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Spec */}
-          <div className="bg-[#0B0D10]/50 p-2 border border-white/5 min-w-[200px]">
-            <div className="flex items-center justify-between mb-3 px-1 border-b border-white/5 pb-2">
-              <span className="font-label text-[10px] font-bold text-on-surface">Spec</span>
-              <span className="font-label text-[10px] text-slate-500">02</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="bg-[#0B0D10] p-3 border border-white/5 cursor-pointer hover:border-primary/50 transition-colors">
-                <p className="text-xs font-medium mb-2">Sentiment Analyzer</p>
-                <div className="flex gap-2">
-                  <span className="text-[9px] font-label bg-primary/10 text-primary px-1.5 py-0.5 border border-primary/20">GPT-4O</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Build */}
-          <div className="bg-[#0B0D10]/50 p-2 border border-white/5 min-w-[200px]">
-            <div className="flex items-center justify-between mb-3 px-1 border-b border-white/5 pb-2">
-              <span className="font-label text-[10px] font-bold text-on-surface">Build</span>
-              <span className="font-label text-[10px] text-slate-500">05</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="bg-[#0B0D10] p-3 border border-white/5 border-l-2 border-l-primary animate-pulse">
-                <p className="text-xs font-medium mb-2 text-primary">Nexus-Web-Crawler</p>
-                <div className="flex gap-2">
-                  <span className="text-[9px] font-label bg-tertiary-container/20 text-tertiary px-1.5 py-0.5 border border-tertiary/20">GEMINI-1.5</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* QA */}
-          <div className="bg-[#0B0D10]/50 p-2 border border-white/5 min-w-[200px]">
-            <div className="flex items-center justify-between mb-3 px-1 border-b border-white/5 pb-2">
-              <span className="font-label text-[10px] font-bold text-on-surface">QA</span>
-              <span className="font-label text-[10px] text-slate-500">01</span>
-            </div>
-            <div className="bg-[#0B0D10] p-3 border border-white/5 border-l-2 border-l-secondary-container">
-              <p className="text-xs font-medium mb-2">Social Hub Integrator</p>
-              <span className="text-[9px] font-label bg-white/5 text-slate-400 px-1.5 py-0.5">RUNNING TESTS</span>
-            </div>
-          </div>
-
-          {/* Deploy */}
-          <div className="bg-[#0B0D10]/50 p-2 border border-white/5 min-w-[200px]">
-            <div className="flex items-center justify-between mb-3 px-1 border-b border-white/5 pb-2">
-              <span className="font-label text-[10px] font-bold text-on-surface">Deploy</span>
-              <span className="font-label text-[10px] text-slate-500">03</span>
-            </div>
-            <div className="bg-[#0B0D10] p-3 border border-white/5 flex flex-col gap-2">
-              <div className="h-1 bg-white/5 w-full relative">
-                <div className="absolute inset-0 bg-primary w-[85%]"></div>
-              </div>
-              <p className="text-[10px] font-label uppercase text-slate-500">Pushing to PROD...</p>
-            </div>
-          </div>
-
-        </div>
+      {/* ── Actions rápidas ── */}
+      <section className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: '💬 Chat', path: '/chat', desc: 'Conversar com Nexus Claw' },
+          { label: '🏭 Fábrica', path: '/fabrica', desc: 'Criar app com IA' },
+          { label: '🧠 Memória', path: '/memory', desc: 'Ver conhecimentos' },
+          { label: '📋 Auditoria', path: '/audit', desc: 'Ver todos os logs' },
+        ].map(btn => (
+          <button
+            key={btn.path}
+            onClick={() => navigate(btn.path)}
+            className="bg-[#0B0D10] border border-white/5 p-4 text-left hover:border-primary/30 transition-colors cursor-pointer"
+          >
+            <div className="font-headline font-bold text-sm text-on-surface">{btn.label}</div>
+            <div className="font-label text-[10px] text-slate-500 mt-1">{btn.desc}</div>
+          </button>
+        ))}
       </section>
 
-      {/* ── System Audit Trail ── */}
+      {/* ── System Audit Trail REAL ── */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-headline font-bold text-xl uppercase tracking-tighter flex items-center gap-2">
             <span className="material-symbols-outlined text-primary">security</span>
-            System Audit Trail
+            Audit Trail
           </h3>
           <div className="flex gap-2">
-            <button className="bg-surface-container-high hover:bg-surface-container-highest px-3 py-1 font-label text-[10px] uppercase border border-white/5 transition-colors">
-              Export Logs
+            <button
+              onClick={exportarLogs}
+              className="bg-[#0B0D10] hover:bg-white/5 px-3 py-1 font-label text-[10px] uppercase border border-white/10 transition-colors text-slate-400"
+            >
+              ⬇ Export CSV
             </button>
-            <button className="bg-surface-container-high hover:bg-surface-container-highest px-3 py-1 font-label text-[10px] uppercase border border-white/5 transition-colors">
-              Filter
+            <button
+              onClick={() => refetchAudit()}
+              className="bg-[#0B0D10] hover:bg-white/5 px-3 py-1 font-label text-[10px] uppercase border border-white/10 transition-colors text-slate-400"
+            >
+              ↻ Refresh
+            </button>
+            <button
+              onClick={() => navigate('/audit')}
+              className="bg-primary/10 hover:bg-primary/20 px-3 py-1 font-label text-[10px] uppercase border border-primary/30 transition-colors text-primary"
+            >
+              Ver Todos
             </button>
           </div>
         </div>
 
         <div className="bg-[#0B0D10] border border-white/5 divide-y divide-white/5">
-
-          <div className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-white/5 transition-colors">
-            <div className="col-span-2 font-label text-[10px] text-slate-500">14:02:44.921</div>
-            <div className="col-span-4 flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></div>
-              <span className="text-xs font-medium">Pipeline: Nexus-Crawler successfull</span>
+          {logs.length === 0 && (
+            <div className="px-4 py-8 text-center text-slate-600 font-label text-xs">
+              {auditData === undefined ? 'Carregando...' : 'Nenhum log ainda. Use o chat ou a fábrica!'}
             </div>
-            <div className="col-span-2">
-              <span className="text-[9px] font-label bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">GPT-4O</span>
-            </div>
-            <div className="col-span-2 text-[10px] font-label text-slate-400">MARKETING_DOM</div>
-            <div className="col-span-2 text-right font-label text-[11px] text-[#22C55E]">-$0.0012</div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-white/5 transition-colors">
-            <div className="col-span-2 font-label text-[10px] text-slate-500">14:02:40.118</div>
-            <div className="col-span-4 flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-error"></div>
-              <span className="text-xs font-medium">Token limit warning: Node-9</span>
-            </div>
-            <div className="col-span-2">
-              <span className="text-[9px] font-label bg-secondary-container/20 text-secondary px-2 py-0.5 rounded-full border border-secondary/20">CLAUDE-3</span>
-            </div>
-            <div className="col-span-2 text-[10px] font-label text-slate-400">ANALYTICS_DOM</div>
-            <div className="col-span-2 text-right font-label text-[11px] text-on-surface">-$0.0410</div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-white/5 transition-colors">
-            <div className="col-span-2 font-label text-[10px] text-slate-500">14:02:35.002</div>
-            <div className="col-span-4 flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-              <span className="text-xs font-medium">Memory Sync Initialized</span>
-            </div>
-            <div className="col-span-2">
-              <span className="text-[9px] font-label bg-tertiary-container/20 text-tertiary px-2 py-0.5 rounded-full border border-tertiary/20">GEMINI-1.5</span>
-            </div>
-            <div className="col-span-2 text-[10px] font-label text-slate-400">CORE_DOM</div>
-            <div className="col-span-2 text-right font-label text-[11px] text-on-surface">-$0.0001</div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-white/5 transition-colors">
-            <div className="col-span-2 font-label text-[10px] text-slate-500">14:02:31.990</div>
-            <div className="col-span-4 flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></div>
-              <span className="text-xs font-medium">Knowledge Base Update Complete</span>
-            </div>
-            <div className="col-span-2">
-              <span className="text-[9px] font-label bg-white/5 text-slate-400 px-2 py-0.5 rounded-full border border-white/10">LOCAL_Llama3</span>
-            </div>
-            <div className="col-span-2 text-[10px] font-label text-slate-400">RESEARCH_DOM</div>
-            <div className="col-span-2 text-right font-label text-[11px] text-[#22C55E]">-$0.0000</div>
-          </div>
-
+          )}
+          {logs.map((log) => {
+            const quando = log.created_at || log.criado_em
+            const dotCor = STATUS_DOT[log.status] || '#6B7280'
+            return (
+              <div key={log.id} className="grid grid-cols-12 gap-4 items-center p-3 hover:bg-white/5 transition-colors">
+                <div className="col-span-2 font-label text-[10px] text-slate-500">
+                  {timeAgo(quando)} atrás
+                </div>
+                <div className="col-span-5 flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dotCor }}></div>
+                  <span className="text-xs font-medium truncate">{log.acao}</span>
+                </div>
+                <div className="col-span-2">
+                  <span
+                    className="text-[9px] font-label px-2 py-0.5 rounded-full border"
+                    style={{ color: dotCor, borderColor: dotCor + '44', background: dotCor + '11' }}
+                  >
+                    {log.agente}
+                  </span>
+                </div>
+                <div className="col-span-2 text-[10px] font-label text-slate-400">{log.origem || '—'}</div>
+                <div
+                  className="col-span-1 text-right font-label text-[11px]"
+                  style={{ color: log.status === 'ok' ? '#22C55E' : '#EF4444' }}
+                >
+                  {log.status}
+                </div>
+              </div>
+            )
+          })}
         </div>
 
         <div className="mt-4 flex justify-center">
-          <button className="font-label text-[10px] text-primary uppercase flex items-center gap-1 hover:underline">
+          <button
+            onClick={() => navigate('/audit')}
+            className="font-label text-[10px] text-primary uppercase flex items-center gap-1 hover:underline"
+          >
             <span className="material-symbols-outlined text-sm">keyboard_arrow_down</span>
-            Load More Events
+            Ver histórico completo
           </button>
         </div>
       </section>

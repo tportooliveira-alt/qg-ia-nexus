@@ -229,7 +229,7 @@ const NexusService = {
         "IMPORTANTE: NUNCA pule etapas — cada resposta deve aprofundar a ideia com novas perguntas ou sugestoes ate estar realmente completa. Seja generoso no dialogo, explore ao maximo antes de propor o prompt mestre.\n";
 
       const fullPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt;
-      // Tenta Gemini (gratis) → Groq (gratis) → Anthropic (fallback pago)
+      // Cascata: Gemini → Groq → Cerebras → DeepSeek (todos gratuitos/baratos)
       try {
         await AIService.callGeminiStream(fullPrompt, null, onChunk);
       } catch (e) {
@@ -237,8 +237,13 @@ const NexusService = {
         try {
           await AIService.callGroqStream(fullPrompt, null, onChunk);
         } catch (e2) {
-          console.warn("[STREAM] Groq falhou, usando Anthropic:", e2.message);
-          await AIService.callAnthropicStream(fullPrompt, null, onChunk);
+          console.warn("[STREAM] Groq falhou, tentando Cerebras:", e2.message);
+          try {
+            await AIService.callCerebrasStream(fullPrompt, null, onChunk);
+          } catch (e3) {
+            console.warn("[STREAM] Cerebras falhou, tentando DeepSeek:", e3.message);
+            await AIService.callDeepSeekStream(fullPrompt, null, onChunk);
+          }
         }
       }
     }

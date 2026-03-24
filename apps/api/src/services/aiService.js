@@ -7,12 +7,14 @@ function envInt(name, fallback) {
 }
 
 const MAX_TOKENS_DEFAULT = {
-  Gemini: envInt("MAX_TOKENS_GEMINI", 1024),
-  DeepSeek: envInt("MAX_TOKENS_DEEPSEEK", 1024),
-  Cerebras: envInt("MAX_TOKENS_CEREBRAS", 1024),
-  Anthropic: envInt("MAX_TOKENS_ANTHROPIC", 1024),
-  OpenAI: envInt("MAX_TOKENS_OPENAI", 1024),
-  Groq: envInt("MAX_TOKENS_GROQ", 1024)
+  Gemini: envInt("MAX_TOKENS_GEMINI", 8192),
+  DeepSeek: envInt("MAX_TOKENS_DEEPSEEK", 4096),
+  Cerebras: envInt("MAX_TOKENS_CEREBRAS", 8192),
+  Anthropic: envInt("MAX_TOKENS_ANTHROPIC", 4096),
+  OpenAI: envInt("MAX_TOKENS_OPENAI", 4096),
+  Groq: envInt("MAX_TOKENS_GROQ", 8192),
+  SambaNova: envInt("MAX_TOKENS_SAMBANOVA", 4096),
+  xAI: envInt("MAX_TOKENS_XAI", 4096)
 };
 
 function getVolumeMultiplier() {
@@ -174,13 +176,93 @@ const AIService = {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         max_tokens: getMaxTokens("Groq", maxTokens),
         stream: true,
         messages: [{ role: "user", content: prompt }]
       })
     });
     if (!res.ok) throw new Error(`Groq stream falhou com status: ${res.status}`);
+
+    return new Promise((resolve, reject) => {
+      let fullText = "";
+      let buffer = "";
+      res.body.on("data", (chunk) => {
+        buffer += chunk.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(raw);
+            const text = parsed.choices?.[0]?.delta?.content;
+            if (text) { fullText += text; onChunk(text); }
+          } catch { /* linha incompleta */ }
+        }
+      });
+      res.body.on("end", () => resolve(fullText));
+      res.body.on("error", reject);
+    });
+  },
+
+  async callCerebrasStream(prompt, maxTokens = null, onChunk) {
+    if (!process.env.CEREBRAS_API_KEY) throw new Error("CEREBRAS_API_KEY ausente");
+    const res = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.CEREBRAS_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b",
+        max_tokens: getMaxTokens("Cerebras", maxTokens),
+        stream: true,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error(`Cerebras stream falhou com status: ${res.status}`);
+
+    return new Promise((resolve, reject) => {
+      let fullText = "";
+      let buffer = "";
+      res.body.on("data", (chunk) => {
+        buffer += chunk.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(raw);
+            const text = parsed.choices?.[0]?.delta?.content;
+            if (text) { fullText += text; onChunk(text); }
+          } catch { /* linha incompleta */ }
+        }
+      });
+      res.body.on("end", () => resolve(fullText));
+      res.body.on("error", reject);
+    });
+  },
+
+  async callDeepSeekStream(prompt, maxTokens = null, onChunk) {
+    if (!process.env.DEEPSEEK_API_KEY) throw new Error("DEEPSEEK_API_KEY ausente");
+    const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        max_tokens: getMaxTokens("DeepSeek", maxTokens),
+        stream: true,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error(`DeepSeek stream falhou com status: ${res.status}`);
 
     return new Promise((resolve, reject) => {
       let fullText = "";
@@ -217,6 +299,30 @@ const AIService = {
     return data.choices[0].message.content;
   },
 
+  async callSambaNova(prompt, maxTokens = null) {
+    if (!process.env.SAMBANOVA_API_KEY) throw new Error("SAMBANOVA_API_KEY ausente");
+    const res = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.SAMBANOVA_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "Meta-Llama-3.3-70B-Instruct", max_tokens: getMaxTokens("SambaNova", maxTokens), messages: [{ role: "user", content: prompt }] })
+    });
+    if (!res.ok) throw new Error(`SambaNova falhou com status: ${res.status}`);
+    const data = await res.json();
+    return data.choices[0].message.content;
+  },
+
+  async callxAI(prompt, maxTokens = null) {
+    if (!process.env.XAI_API_KEY) throw new Error("XAI_API_KEY ausente");
+    const res = await fetch("https://api.x.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.XAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "grok-3-mini", max_tokens: getMaxTokens("xAI", maxTokens), messages: [{ role: "user", content: prompt }] })
+    });
+    if (!res.ok) throw new Error(`xAI falhou com status: ${res.status}`);
+    const data = await res.json();
+    return data.choices[0].message.content;
+  },
+
   async callGroq(prompt, maxTokens = null) {
     if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY ausente");
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -244,14 +350,16 @@ const AIService = {
       Cerebras: this.callCerebras,
       Anthropic: this.callAnthropic,
       OpenAI: this.callOpenAI,
-      Groq: this.callGroq
+      Groq: this.callGroq,
+      SambaNova: this.callSambaNova,
+      xAI: this.callxAI
     };
 
     if (!prioridadeDeIAs) {
       if (routing) {
         // Guardrail: com baixa confianca, evita roteamento especializado prematuro.
         if (routing.needsClarification) {
-          prioridadeDeIAs = ["Gemini", "DeepSeek", "Anthropic", "Groq", "Cerebras", "OpenAI"];
+          prioridadeDeIAs = ["Gemini", "Groq", "Cerebras", "DeepSeek", "SambaNova", "xAI", "Anthropic", "OpenAI"];
         } else {
           prioridadeDeIAs = routing.allProviders;
         }
@@ -261,13 +369,13 @@ const AIService = {
       } else {
         const p = String(prompt || "").toLowerCase();
         if (p.includes("codigo") || p.includes("programacao") || p.includes("script")) {
-          prioridadeDeIAs = ["DeepSeek", "Gemini", "Anthropic", "Groq", "Cerebras", "OpenAI"];
+          prioridadeDeIAs = ["DeepSeek", "Gemini", "Groq", "Cerebras", "SambaNova", "xAI", "Anthropic", "OpenAI"];
         } else if (p.includes("rapido") || p.includes("status") || p.includes("zap")) {
-          prioridadeDeIAs = ["Groq", "Cerebras", "Gemini"];
+          prioridadeDeIAs = ["Groq", "Cerebras", "Gemini", "SambaNova"];
         } else if (p.includes("analise") || p.includes("compare") || p.includes("arquitetura")) {
-          prioridadeDeIAs = ["Gemini", "Groq", "Cerebras", "DeepSeek", "Anthropic", "OpenAI"];
+          prioridadeDeIAs = ["Gemini", "Groq", "Cerebras", "DeepSeek", "SambaNova", "xAI", "Anthropic", "OpenAI"];
         } else {
-          prioridadeDeIAs = ["Groq", "Gemini", "Cerebras", "DeepSeek", "Anthropic", "OpenAI"];
+          prioridadeDeIAs = ["Gemini", "Groq", "Cerebras", "DeepSeek", "SambaNova", "xAI", "Anthropic", "OpenAI"];
         }
       }
     }
