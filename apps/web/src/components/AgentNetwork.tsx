@@ -4,7 +4,7 @@
  * Com animações contínuas, pulsação e fluxo de dados em tempo real
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 type TipoNo = 'orquestrador' | 'fabrica' | 'especialista' | 'suporte' | 'provider' | 'infra' | 'projeto'
@@ -175,8 +175,6 @@ export function AgentNetwork() {
   const [pulsando, setPulsando] = useState<Set<string>>(new Set(['nexus', 'gem', 'groq', 'evolution']))
   const [simulando, setSimulando] = useState(false)
   const [etapaAtiva, setEtapaAtiva] = useState<string | null>(null)
-  const animRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
   // Pulsação contínua — rotaciona entre nós ativos
   useEffect(() => {
     const nos_ativos = NOS.filter(n => n.status === 'ativo' || n.status === 'trabalhando').map(n => n.id)
