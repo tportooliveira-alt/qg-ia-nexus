@@ -1,0 +1,17 @@
+const { Router } = require("express");
+
+const router = Router();
+
+router.use(require("./status.routes"));
+router.use(require("./nexus.routes"));
+router.use(require("./agent.routes"));
+router.use(require("./memory.routes"));
+router.use(require("./approval.routes"));
+router.use(require("./fabrica.routes"));
+router.use(require("./knowledge.routes"));
+router.use(require("./terminal.routes"));
+router.use(require("./fs.routes"));
+router.use(require("./skills.routes"));
+router.use(require("./config.routes"));
+
+module.exports = router;
