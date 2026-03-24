@@ -1,0 +1,83 @@
+{
+  "software": [
+    "software",
+    "api",
+    "backend",
+    "frontend",
+    "mobile",
+    "app",
+    "algoritmo",
+    "codigo",
+    "programacao",
+    "sistema"
+  ],
+  "mechanical": [
+    "mecanico",
+    "mecanica",
+    "maquina",
+    "motor",
+    "engrenagem",
+    "torque",
+    "forca",
+    "manufatura",
+    "usinagem",
+    "cad"
+  ],
+  "civil": [
+    "civil",
+    "construcao",
+    "edificio",
+    "predio",
+    "fundacao",
+    "concreto",
+    "estrutura",
+    "ponte",
+    "infraestrutura",
+    "obra"
+  ],
+  "electrical": [
+    "eletrico",
+    "eletrica",
+    "eletronica",
+    "circuito",
+    "potencia",
+    "tensao",
+    "corrente",
+    "automacao",
+    "sensor",
+    "iot"
+  ],
+  "chemical": [
+    "quimica",
+    "quimico",
+    "reacao",
+    "reator",
+    "processo industrial",
+    "catalisador",
+    "solvente",
+    "separacao",
+    "efluente",
+    "corrosao"
+  ],
+  "product": [
+    "produto",
+    "design",
+    "ux",
+    "ui",
+    "usabilidade",
+    "ergonomia",
+    "prototipo",
+    "interface",
+    "jornada",
+    "experiencia"
+  ],
+  "integration": [
+    "integracao",
+    "multidominio",
+    "orquestracao",
+    "sistema complexo",
+    "interdisciplinar",
+    "tradeoff",
+    "sinergia"
+  ]
+}

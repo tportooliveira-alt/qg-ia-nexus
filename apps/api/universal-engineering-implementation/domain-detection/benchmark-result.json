@@ -1,0 +1,196 @@
+{
+  "total": 210,
+  "correct": 197,
+  "accuracy": 0.938,
+  "domainAccuracy": {
+    "software": 1,
+    "mechanical": 0.933,
+    "civil": 0.967,
+    "electrical": 1,
+    "chemical": 0.8,
+    "product": 0.867,
+    "integration": 1
+  },
+  "precisionRecallF1": {
+    "software": {
+      "precision": 0.857,
+      "recall": 1,
+      "f1": 0.923
+    },
+    "mechanical": {
+      "precision": 1,
+      "recall": 0.933,
+      "f1": 0.966
+    },
+    "civil": {
+      "precision": 0.935,
+      "recall": 0.967,
+      "f1": 0.951
+    },
+    "electrical": {
+      "precision": 0.833,
+      "recall": 1,
+      "f1": 0.909
+    },
+    "chemical": {
+      "precision": 1,
+      "recall": 0.8,
+      "f1": 0.889
+    },
+    "product": {
+      "precision": 1,
+      "recall": 0.867,
+      "f1": 0.929
+    },
+    "integration": {
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    }
+  },
+  "confusionMatrix": {
+    "software": {
+      "software": 30,
+      "mechanical": 0,
+      "civil": 0,
+      "electrical": 0,
+      "chemical": 0,
+      "product": 0,
+      "integration": 0
+    },
+    "mechanical": {
+      "software": 2,
+      "mechanical": 28,
+      "civil": 0,
+      "electrical": 0,
+      "chemical": 0,
+      "product": 0,
+      "integration": 0
+    },
+    "civil": {
+      "software": 1,
+      "mechanical": 0,
+      "civil": 29,
+      "electrical": 0,
+      "chemical": 0,
+      "product": 0,
+      "integration": 0
+    },
+    "electrical": {
+      "software": 0,
+      "mechanical": 0,
+      "civil": 0,
+      "electrical": 30,
+      "chemical": 0,
+      "product": 0,
+      "integration": 0
+    },
+    "chemical": {
+      "software": 0,
+      "mechanical": 0,
+      "civil": 0,
+      "electrical": 6,
+      "chemical": 24,
+      "product": 0,
+      "integration": 0
+    },
+    "product": {
+      "software": 2,
+      "mechanical": 0,
+      "civil": 2,
+      "electrical": 0,
+      "chemical": 0,
+      "product": 26,
+      "integration": 0
+    },
+    "integration": {
+      "software": 0,
+      "mechanical": 0,
+      "civil": 0,
+      "electrical": 0,
+      "chemical": 0,
+      "product": 0,
+      "integration": 30
+    }
+  },
+  "mistakes": [
+    {
+      "id": "me-0052",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0.5
+    },
+    {
+      "id": "me-0058",
+      "expected": "mechanical",
+      "predicted": "software",
+      "confidence": 0.5
+    },
+    {
+      "id": "ci-0070",
+      "expected": "civil",
+      "predicted": "software",
+      "confidence": 0.5
+    },
+    {
+      "id": "ch-0123",
+      "expected": "chemical",
+      "predicted": "electrical",
+      "confidence": 0.4
+    },
+    {
+      "id": "ch-0128",
+      "expected": "chemical",
+      "predicted": "electrical",
+      "confidence": 0.4
+    },
+    {
+      "id": "ch-0133",
+      "expected": "chemical",
+      "predicted": "electrical",
+      "confidence": 0.4
+    },
+    {
+      "id": "ch-0138",
+      "expected": "chemical",
+      "predicted": "electrical",
+      "confidence": 0.4
+    },
+    {
+      "id": "ch-0143",
+      "expected": "chemical",
+      "predicted": "electrical",
+      "confidence": 0.333
+    },
+    {
+      "id": "ch-0148",
+      "expected": "chemical",
+      "predicted": "electrical",
+      "confidence": 0.333
+    },
+    {
+      "id": "pr-0155",
+      "expected": "product",
+      "predicted": "civil",
+      "confidence": 0.5
+    },
+    {
+      "id": "pr-0160",
+      "expected": "product",
+      "predicted": "software",
+      "confidence": 0.5
+    },
+    {
+      "id": "pr-0173",
+      "expected": "product",
+      "predicted": "civil",
+      "confidence": 0.5
+    },
+    {
+      "id": "pr-0178",
+      "expected": "product",
+      "predicted": "software",
+      "confidence": 0.5
+    }
+  ]
+}

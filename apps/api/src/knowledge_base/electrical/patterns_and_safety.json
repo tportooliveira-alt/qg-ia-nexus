@@ -1,0 +1,17 @@
+﻿{
+  "design_patterns": {
+    "power": ["segmented buses", "redundant supply", "selective coordination"],
+    "controls": ["state machine control", "watchdog supervision", "safe state fallback"],
+    "embedded": ["hardware abstraction", "interrupt prioritization", "event queue isolation"]
+  },
+  "safety_checks": [
+    "grounding continuity",
+    "short-circuit withstand",
+    "overvoltage/overcurrent protection",
+    "EMI test strategy"
+  ],
+  "interfaces": {
+    "fieldbus": ["CAN", "Modbus", "EtherCAT"],
+    "iot": ["MQTT", "HTTPS", "OTA update policy"]
+  }
+}

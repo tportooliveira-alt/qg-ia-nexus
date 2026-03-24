@@ -1,0 +1,18 @@
+﻿{
+  "standards": {
+    "structural": ["ABNT NBR 6118", "ABNT NBR 8800", "ABNT NBR 6120"],
+    "foundations": ["ABNT NBR 6122"],
+    "accessibility": ["ABNT NBR 9050"],
+    "fire_safety": ["local fire code", "project-specific fire strategy"]
+  },
+  "design_inputs": {
+    "loads": ["dead", "live", "wind", "seismic when applicable"],
+    "soil": ["SPT profile", "groundwater level", "bearing capacity"],
+    "constraints": ["budget", "execution method", "construction sequence"]
+  },
+  "risk_controls": [
+    "peer review for critical spans",
+    "construction stage checks",
+    "material test traceability"
+  ]
+}

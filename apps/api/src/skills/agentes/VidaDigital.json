@@ -1,0 +1,22 @@
+{
+  "usuario": "Priscila",
+  "estilo_de_codigo": "Moderno, Clean Code, Prioriza Performance e UX estilo n8n.",
+  "projetos_ativos": [
+    "QG-IA-NOVO (Centro de Comando)",
+    "AgroMacro (Gestão de Pecuária)",
+    "GESTAO-DA-FAZENDA-ANTARES"
+  ],
+  "preferencias_pessoais": {
+    "interesses": ["IA Generativa", "Agrotech", "Automação", "Software Livre"],
+    "canais_de_contato": ["WhatsApp", "Terminal", "Navegador"],
+    "modo_de_trabalho": "Autônomo com relatórios de progresso em tempo real."
+  },
+  "historico_de_conquistas": [
+    "Migração bem-sucedida para Hostinger com Efeito Cascata.",
+    "Criação do Visual n8n com Grafo de Fluxo."
+  ],
+  "aprendizados_do_thiago_claw": [
+    "A Priscila gosta de ter o controle total Root.",
+    "Segurança (RLS) deve ser tratada no backend, não no frontend."
+  ]
+}

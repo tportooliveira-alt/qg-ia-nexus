@@ -1,0 +1,20 @@
+﻿{
+  "unit_operations": [
+    "reaction",
+    "distillation",
+    "filtration",
+    "heat exchange",
+    "absorption/stripping"
+  ],
+  "safety_framework": {
+    "analyses": ["HAZID", "HAZOP", "LOPA"],
+    "controls": ["interlocks", "pressure relief", "containment"],
+    "monitoring": ["critical alarms", "deviation response", "incident logging"]
+  },
+  "process_metrics": {
+    "yield": "target by product route",
+    "selectivity": "critical for side reactions",
+    "specific_energy": "kWh per unit product",
+    "emissions": "kg pollutant per unit product"
+  }
+}

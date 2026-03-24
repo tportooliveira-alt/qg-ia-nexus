@@ -3,8 +3,8 @@ services:
     name: qg-ia-nexus
     env: node
     plan: free
-    buildCommand: npm install
-    startCommand: node server.js
+    buildCommand: cd apps/api && npm install
+    startCommand: node apps/api/server.js
     healthCheckPath: /api/status
     envVars:
       - key: NODE_ENV

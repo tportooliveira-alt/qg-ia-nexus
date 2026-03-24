@@ -1,0 +1,201 @@
+{
+  "materials": {
+    "metals": {
+      "steel": {
+        "types": {
+          "carbon_steel": {
+            "properties": {
+              "tensile_strength": "400-2000 MPa",
+              "yield_strength": "250-1500 MPa",
+              "density": "7850 kg/m³",
+              "thermal_conductivity": "50 W/m·K",
+              "cost_factor": "low"
+            },
+            "applications": ["structural", "machinery", "automotive"],
+            "grades": ["A36", "1045", "4140"]
+          },
+          "stainless_steel": {
+            "properties": {
+              "tensile_strength": "500-1300 MPa",
+              "yield_strength": "200-1000 MPa",
+              "density": "8000 kg/m³",
+              "thermal_conductivity": "16 W/m·K",
+              "corrosion_resistance": "excellent"
+            },
+            "applications": ["chemical processing", "food industry", "medical"],
+            "grades": ["304", "316", "410"]
+          }
+        }
+      },
+      "aluminum": {
+        "alloys": {
+          "6061": {
+            "properties": {
+              "tensile_strength": "310 MPa",
+              "yield_strength": "275 MPa",
+              "density": "2700 kg/m³",
+              "thermal_conductivity": "167 W/m·K",
+              "machinability": "excellent"
+            },
+            "applications": ["aerospace", "marine", "bicycle frames"]
+          },
+          "7075": {
+            "properties": {
+              "tensile_strength": "570 MPa",
+              "yield_strength": "500 MPa",
+              "density": "2810 kg/m³",
+              "thermal_conductivity": "130 W/m·K",
+              "strength_to_weight": "high"
+            },
+            "applications": ["aircraft structures", "rock climbing gear"]
+          }
+        }
+      },
+      "titanium": {
+        "grades": {
+          "grade_2": {
+            "properties": {
+              "tensile_strength": "345 MPa",
+              "yield_strength": "275 MPa",
+              "density": "4510 kg/m³",
+              "thermal_conductivity": "21.9 W/m·K",
+              "biocompatibility": "excellent"
+            },
+            "applications": ["medical implants", "chemical processing", "aerospace"]
+          },
+          "grade_5": {
+            "properties": {
+              "tensile_strength": "950 MPa",
+              "yield_strength": "880 MPa",
+              "density": "4430 kg/m³",
+              "thermal_conductivity": "7.1 W/m·K",
+              "strength_to_weight": "very_high"
+            },
+            "applications": ["aircraft engines", "racing motorcycles", "spacecraft"]
+          }
+        }
+      }
+    },
+    "polymers": {
+      "thermoplastics": {
+        "abs": {
+          "properties": {
+            "tensile_strength": "40 MPa",
+            "density": "1050 kg/m³",
+            "thermal_resistance": "100°C",
+            "impact_resistance": "high"
+          },
+          "applications": ["3D printing", "automotive parts", "electronics housings"],
+          "processing": ["injection molding", "extrusion"]
+        },
+        "nylon": {
+          "properties": {
+            "tensile_strength": "80 MPa",
+            "density": "1130 kg/m³",
+            "thermal_resistance": "120°C",
+            "wear_resistance": "excellent"
+          },
+          "applications": ["gears", "bearings", "automotive components"],
+          "processing": ["injection molding", "machining"]
+        }
+      },
+      "thermosets": {
+        "epoxy": {
+          "properties": {
+            "tensile_strength": "70 MPa",
+            "thermal_resistance": "150°C",
+            "chemical_resistance": "excellent",
+            "adhesion": "very_high"
+          },
+          "applications": ["composite materials", "adhesives", "coatings"],
+          "processing": ["resin transfer molding", "filament winding"]
+        }
+      }
+    },
+    "composites": {
+      "fiber_reinforced": {
+        "carbon_fiber": {
+          "properties": {
+            "tensile_strength": "3500 MPa",
+            "density": "1600 kg/m³",
+            "thermal_conductivity": "10-50 W/m·K",
+            "cost": "very_high"
+          },
+          "applications": ["aerospace", "racing", "high-performance sports equipment"],
+          "matrices": ["epoxy", "phenolic", "thermoplastic"]
+        },
+        "glass_fiber": {
+          "properties": {
+            "tensile_strength": "2000 MPa",
+            "density": "1900 kg/m³",
+            "thermal_conductivity": "1.3 W/m·K",
+            "cost": "medium"
+          },
+          "applications": ["marine", "automotive", "construction"],
+          "matrices": ["polyester", "vinylester", "epoxy"]
+        }
+      }
+    }
+  },
+  "manufacturing_processes": {
+    "machining": {
+      "turning": {
+        "description": "Rotação da peça contra ferramenta fixa",
+        "applications": ["shafts", "pins", "cylinders"],
+        "tolerances": "±0.05mm",
+        "surface_finish": "0.8-3.2 μm Ra"
+      },
+      "milling": {
+        "description": "Rotação da ferramenta contra peça fixa",
+        "applications": ["pockets", "slots", "complex shapes"],
+        "tolerances": "±0.05mm",
+        "surface_finish": "0.8-6.3 μm Ra"
+      },
+      "drilling": {
+        "description": "Remoção de material com broca helicoidal",
+        "applications": ["holes", "tapping", "reaming"],
+        "tolerances": "±0.1mm",
+        "surface_finish": "1.6-6.3 μm Ra"
+      }
+    },
+    "forming": {
+      "casting": {
+        "sand_casting": {
+          "description": "Molde de areia para peças complexas",
+          "applications": ["engine blocks", "pump housings"],
+          "tolerances": "±0.5mm",
+          "surface_finish": "6.3-12.5 μm Ra"
+        },
+        "die_casting": {
+          "description": "Injeção em molde metálico sob pressão",
+          "applications": ["automotive parts", "electronics"],
+          "tolerances": "±0.1mm",
+          "surface_finish": "1.6-3.2 μm Ra"
+        }
+      },
+      "forging": {
+        "description": "Formação plástica a quente ou frio",
+        "applications": ["crankshafts", "connecting rods"],
+        "tolerances": "±0.25mm",
+        "surface_finish": "3.2-6.3 μm Ra"
+      }
+    }
+  },
+  "design_standards": {
+    "ansi": {
+      "geometric_tolerancing": "ASME Y14.5",
+      "surface_texture": "ASME B46.1",
+      "limits_and_fits": "ANSI B4.2"
+    },
+    "iso": {
+      "tolerances": "ISO 286",
+      "surface_quality": "ISO 4287",
+      "geometrical_product_specs": "ISO 1101"
+    },
+    "safety": {
+      "machinery_directive": "2006/42/EC",
+      "risk_assessment": "ISO 12100",
+      "ergonomics": "ISO 6385"
+    }
+  }
+}

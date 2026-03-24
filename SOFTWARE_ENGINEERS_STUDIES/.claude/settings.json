@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Priscila/IdeaOrganizer//**)",
+      "Read(//c/Users/Priscila/fabrica-ia-api//**)",
+      "Read(//c/Users/Priscila/tmp-repos/**)",
+      "Read(//c/Users/Priscila/**)",
+      "Bash(find /c/Users/Priscila/fabrica-ia-api/server -type f \\\\\\(-name *.js -o -name *.ts \\\\\\))",
+      "Read(//C:UsersPriscilaAppDataLocalTempclaudec--Users-Priscila-qg-ia-nexus-SOFTWARE-ENGINEERS-STUDIES/6cb2cef4-5918-43a9-989d-b9fa0d424925/tasks/**)",
+      "Bash(find /c/Users/Priscila/qg-ia-nexus/src/knowledge_base -type f -name *.md)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "Bash(grep -E \"^-.*\\\\.md$\")",
+      "Bash(grep -E \"\\\\.js$\")"
+    ]
+  }
+}

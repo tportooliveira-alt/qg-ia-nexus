@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>âï¸ NEXUS CLAW â QG IA</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+    body{background:#050510;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column}
+
+    /* ââ LOGIN ââ */
+    #loginScreen{position:fixed;inset:0;background:#050510;display:flex;align-items:center;justify-content:center;z-index:200}
+    .lcard{background:#0d0d1f;border:1px solid #2d2b5a;border-radius:16px;padding:40px;width:340px;text-align:center}
+    .lcard h2{font-size:1.5rem;color:#a78bfa;margin:12px 0 6px}
+    .lcard p{font-size:.85rem;color:#6b7280;margin-bottom:24px}
+    .lcard input{width:100%;background:#070714;border:1px solid #2d2b5a;color:#e2e8f0;padding:12px 16px;border-radius:8px;font-size:.9rem;outline:none;margin-bottom:14px}
+    .lcard input:focus{border-color:#7c3aed}
+    #loginError{color:#f87171;font-size:.8rem;margin-top:8px}
+
+    /* ââ HEADER ââ */
+    .header{background:linear-gradient(135deg,#0f0f2e,#1a0533);border-bottom:1px solid #7c3aed44;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .header-left{display:flex;align-items:center;gap:10px}
+    .header h1{font-size:1.1rem;font-weight:700;color:#a78bfa}
+    .dot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .badge{font-size:.72rem;background:#1e1b4b;border:1px solid #4338ca44;padding:3px 9px;border-radius:20px;color:#818cf8}
+
+    /* ââ TABS ââ */
+    .tabs{display:flex;gap:2px;background:#0a0a1e;border-bottom:1px solid #1e1b4b;flex-shrink:0}
+    .tab{padding:10px 18px;border:none;background:none;color:#6b7280;font-size:.82rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+    .tab:hover{color:#a78bfa;background:#0d0d1f}
+    .tab.active{color:#a78bfa;border-bottom-color:#7c3aed;background:#0d0d1f}
+
+    /* ââ PAGES ââ */
+    .page{display:none;flex:1;overflow-y:auto;padding:20px}
+    .page.active{display:flex;flex-direction:column}
+
+    /* ââ CHAT PAGE ââ */
+    #pagChat{padding:0;display:none;flex-direction:column}
+    #pagChat.active{display:flex}
+    .chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+    .msg{display:flex;gap:10px;max-width:80%;animation:fadeIn .2s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .msg.user{align-self:flex-end;flex-direction:row-reverse}
+    .msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    .msg.nexus .msg-avatar{background:#1e1b4b}
+    .msg.user .msg-avatar{background:#2d1b4b}
+    .msg-bubble{padding:10px 14px;border-radius:12px;font-size:.85rem;line-height:1.6;max-width:100%;word-break:break-word;white-space:pre-wrap}
+    .msg.nexus .msg-bubble{background:#0d0d1f;border:1px solid #1e1b4b;color:#c4b5fd}
+    .msg.user .msg-bubble{background:#2d1b4b;border:1px solid #4c1d95;color:#e2e8f0}
+    .msg-time{font-size:.65rem;color:#4b5563;margin-top:4px;text-align:right}
+    .msg.nexus .msg-time{text-align:left}
+    .typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#a78bfa;margin:0 2px;animation:bounce .8s infinite}
+    .typing-dots span:nth-child(2){animation-delay:.15s}
+    .typing-dots span:nth-child(3){animation-delay:.3s}
+    @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+    .chat-input-area{border-top:1px solid #1e1b4b;padding:14px 20px;background:#0a0a1e;display:flex;gap:10px;align-items:flex-end}
+    .chat-input{flex:1;background:#070714;border:1px solid #2d2b5a;color:#e2e8f0;padding:10px 14px;border-radius:10px;font-size:.88rem;outline:none;resize:none;max-height:120px;line-height:1.5;font-family:inherit}
+    .chat-input:focus{border-color:#7c3aed}
+    .chat-input::placeholder{color:#374151}
+    .send-btn{width:40px;height:40px;border-radius:10px;border:none;background:#7c3aed;color:white;font-size:1.1rem;cursor:pointer;transition:background .2s;flex-shrink:0}
+    .send-btn:hover{background:#6d28d9}
+    .send-btn:disabled{background:#3b2b6e;cursor:not-allowed}
+    .chat-hint{font-size:.7rem;color:#374151;padding:0 20px 8px;background:#0a0a1e}
+
+    /* ââ GRID / CARDS ââ */
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .grid-full{grid-column:1/-1}
+    @media(max-width:768px){.grid{grid-template-columns:1fr}.grid-full{grid-column:1}.msg{max-width:95%}}
+    .card{background:#0d0d1f;border:1px solid #1e1b4b;border-radius:12px;padding:18px}
+    .card-title{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#6366f1;margin-bottom:14px}
+
+    /* ââ STATS ââ */
+    .stats-row{display:flex;gap:10px;flex-wrap:wrap}
+    .stat-box{flex:1;min-width:110px;background:#0a0a1e;border:1px solid #1e1b4b;border-radius:8px;padding:10px 14px}
+    .stat-label{font-size:.68rem;color:#6b7280;margin-bottom:3px}
+    .stat-value{font-size:1.2rem;font-weight:700;color:#a78bfa}
+
+    /* ââ BUTTONS ââ */
+    .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .2s}
+    .btn-primary{background:#7c3aed;color:#fff}.btn-primary:hover{background:#6d28d9}
+    .btn-primary:disabled{background:#3b2b6e;color:#6b7280;cursor:not-allowed}
+    .btn-ghost{background:#1e1b4b;color:#818cf8;border:1px solid #312e81}.btn-ghost:hover{background:#312e81}
+    .btn-success{background:#065f46;color:#34d399;border:1px solid #059669}.btn-success:hover{background:#047857}
+    .btn-danger{background:#7f1d1d;color:#f87171;border:1px solid #991b1b}.btn-danger:hover{background:#991b1b}
+    .btn-sm{padding:5px 10px;font-size:.73rem}
+    .btn-eco{background:#1e3a2f;color:#4ade80;border:1px solid #166534}
+    .btn-normal{background:#1e1b4b;color:#818cf8;border:1px solid #312e81}
+    .btn-power{background:#4a1d1d;color:#f87171;border:1px solid #7f1d1d}
+    .btn-active{outline:2px solid #a78bfa;outline-offset:2px}
+
+    /* ââ FORMS ââ */
+    .inp{width:100%;background:#070714;border:1px solid #2d2b5a;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:.82rem;outline:none}
+    .inp:focus{border-color:#7c3aed}
+    .inp::placeholder{color:#374151}
+    textarea.inp{resize:vertical;font-family:inherit;line-height:1.5}
+
+    /* ââ LIST ITEMS ââ */
+    .list-item{background:#070714;border:1px solid #1e1b4b;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:8px}
+    .li-content{flex:1}
+    .li-title{font-size:.82rem;font-weight:600;color:#e2e8f0}
+    .li-sub{font-size:.72rem;color:#6b7280;margin-top:2px}
+    .li-actions{display:flex;gap:5px;flex-shrink:0}
+    .pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:.65rem;font-weight:600}
+    .pill-purple{background:#130726;color:#c084fc;border:1px solid #7c3aed}
+    .pill-green{background:#052e16;color:#4ade80;border:1px solid #166534}
+    .pill-yellow{background:#1c1007;color:#fbbf24;border:1px solid #b45309}
+    .pill-red{background:#1f0707;color:#f87171;border:1px solid #7f1d1d}
+
+    /* ââ RESPONSE BOX ââ */
+    .rbox{background:#070714;border:1px solid #1e1b4b;border-radius:8px;padding:12px;font-size:.8rem;line-height:1.6;color:#a5f3fc;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+    .empty-txt{color:#374151;font-style:italic}
+
+    /* ââ MEM / LOG ITEMS ââ */
+    .mem-item{font-size:.76rem;padding:8px 10px;border-radius:6px;margin-bottom:5px;background:#070714;border:1px solid #1e1b4b}
+    .log-line{font-size:.73rem;padding:5px 8px;border-radius:5px;margin-bottom:3px;background:#070714;border-left:3px solid}
+    .log-ok{border-color:#22c55e}.log-err{border-color:#ef4444}.log-info{border-color:#6366f1}
+
+    /* ââ FERRAMENTAS CARDS ââ */
+    .tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .tool-card{background:#0d0d1f;border:1px solid #1e1b4b;border-radius:14px;padding:20px;cursor:pointer;transition:all .2s;text-decoration:none;display:flex;flex-direction:column;gap:10px}
+    .tool-card:hover{border-color:#7c3aed;background:#130726;transform:translateY(-2px);box-shadow:0 8px 24px #7c3aed22}
+    .tool-icon{font-size:2rem;line-height:1}
+    .tool-name{font-size:.92rem;font-weight:700;color:#e2e8f0}
+    .tool-desc{font-size:.75rem;color:#6b7280;line-height:1.5;flex:1}
+    .tool-tag{display:inline-block;font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:10px;background:#1e1b4b;color:#818cf8;border:1px solid #312e81;align-self:flex-start}
+    .tool-tag.green{background:#052e16;color:#4ade80;border-color:#166534}
+    .tool-tag.yellow{background:#1c1007;color:#fbbf24;border-color:#b45309}
+    .tool-tag.red{background:#1f0707;color:#f87171;border-color:#7f1d1d}
+    .section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#4b5563;margin-bottom:12px;margin-top:4px}
+
+    /* ââ SCROLL ââ */
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:#0a0a1e}
+    ::-webkit-scrollbar-thumb{background:#2d2b5a;border-radius:4px}
+
+    /* ââ SPINNER ââ */
+    .sp{display:inline-block;width:14px;height:14px;border:2px solid #4338ca;border-top-color:#a78bfa;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+   .msg-bubble p{margin-bottom:6px} .msg-bubble ul,.msg-bubble ol{margin:6px 0 6px 18px} .msg-bubble li{margin-bottom:2px} .msg-bubble code{background:#0d0b2b;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.8rem} .msg-bubble pre{background:#0d0b2b;padding:10px;border-radius:8px;overflow-x:auto;margin:8px 0} .msg-bubble h1,.msg-bubble h2,.msg-bubble h3{color:#a78bfa;margin:8px 0 4px;font-size:1rem} .msg-bubble blockquote{border-left:3px solid #7c3aed;padding-left:10px;color:#94a3b8;margin:6px 0}
+  /* === MOBILE RESPONSIVENESS === */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0 !important; padding: 8px !important; }
+    .card { padding: 12px !important; margin-bottom: 12px !important; }
+    .chat-box { height: 55vh !important; }
+    .input-row { flex-direction: column !important; gap: 8px !important; }
+    .tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+    .tab { white-space: nowrap; font-size: 12px !important; padding: 6px 10px !important; }
+    .top-bar { padding: 8px 12px !important; }
+    .top-bar h1 { font-size: 16px !important; }
+    .grid-2 { grid-template-columns: 1fr !important; }
+    .tools-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .btn { font-size: 13px !important; padding: 8px 12px !important; }
+    .rbox { font-size: 12px !important; }
+  }
+  @media (max-width: 480px) {
+    .tools-grid { grid-template-columns: 1fr !important; }
+    .top-bar h1 { font-size: 14px !important; }
+    .chat-box { height: 50vh !important; }
+  }
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+// ── FÁBRICA DE IA ─────────────────────────────────────────────
+let _fabricaStream = null;
+
+async function fabricaOrquestrar() {
+  const ideia = document.getElementById('fabricaIdeia').value.trim();
+  const el = document.getElementById('fabricaStatus');
+  if (!ideia) { el.textContent = '⚠️ Escreva a ideia do app antes de criar.'; return; }
+  el.innerHTML = '<span class="sp"></span>Enviando para a Fábrica de IA...';
+  try {
+    const d = await api('/api/fabrica/orquestrar', 'POST', { ideia });
+    if (d.error) { el.textContent = '❌ ' + d.error; return; }
+    const pid = d.pipelineId || d.id || '(aguardando)';
+    el.innerHTML = '🏭 Pipeline iniciado! ID: <strong style="color:#4ade80">' + pid + '</strong><br><span style="font-size:.75rem;color:#6b7280">Acompanhe abaixo ou no Chat.</span>';
+    document.getElementById('fabricaPipelineId').value = pid;
+    setTimeout(() => fabricaConectarStream(), 300);
+  } catch(e) { el.textContent = '❌ Erro: ' + e.message; }
+}
+
+async function fabricaToggle() {
+  const btn = document.getElementById('btnFabricaToggle');
+  btn.disabled = true;
+  try {
+    const d = await api('/api/fabrica/toggle', 'POST');
+    atualizarBotaoToggle(d.fabricaAtiva);
+  } catch(e) {
+    alert('Erro ao alternar Fábrica: ' + e.message);
+  }
+  btn.disabled = false;
+}
+
+function atualizarBotaoToggle(ativa) {
+  const btn = document.getElementById('btnFabricaToggle');
+  if (!btn) return;
+  if (ativa) {
+    btn.textContent = '🟢 Ligada';
+    btn.className = 'btn btn-success btn-sm';
+  } else {
+    btn.textContent = '🔴 Desligada';
+    btn.className = 'btn btn-danger btn-sm';
+  }
+}
+
+async function carregarStatusFabrica() {
+  const el = document.getElementById('fabricaHealthStatus');
+  try {
+    const d = await api('/api/fabrica/status');
+    const fab = d.fabrica || {};
+    const online = fab.status || fab.message || 'Online';
+    el.innerHTML = '<span style="color:#4ade80">✔ Fábrica Online</span> — ' + escHtml(String(online));
+    const t = await api('/api/fabrica/toggle');
+    atualizarBotaoToggle(t.fabricaAtiva);
+  } catch(e) { el.innerHTML = '<span style="color:#f87171">✘ Fábrica Offline</span> — ' + escHtml(e.message); }
+}
+
+function fabricaConectarStream() {
+  const pid = document.getElementById('fabricaPipelineId').value.trim();
+  const log = document.getElementById('fabricaStreamLog');
+  if (!pid) { log.textContent = '⚠️ Informe o Pipeline ID.'; return; }
+  if (_fabricaStream) { _fabricaStream.close(); _fabricaStream = null; }
+  log.innerHTML = '<span style="color:#7ecfff">📡 Conectando ao pipeline ' + escHtml(pid) + '...</span>\n';
+  const url = window.location.origin + '/api/fabrica/pipeline/' + encodeURIComponent(pid) + '/stream?token=' + encodeURIComponent(TOKEN);
+  const es = new EventSource(url);
+  _fabricaStream = es;
+  es.onmessage = (e) => {
+    try {
+      const ev = JSON.parse(e.data);
+      const tipo = ev.tipo || 'evento';
+      const agente = ev.agente || '';
+      const msg = ev.mensagem || ev.status || ev.resultado || '';
+      const cor = tipo === 'erro' ? '#f87171' : (tipo.includes('concluido') || tipo === 'pipeline_concluido') ? '#4ade80' : '#a5f3fc';
+      log.innerHTML += '<span style="color:' + cor + '">[' + escHtml(tipo) + ']</span>'
+        + (agente ? ' <span style="color:#818cf8">' + escHtml(agente) + '</span>' : '')
+        + (msg ? ' ' + escHtml(String(msg).substring(0, 120)) : '') + '\n';
+      log.scrollTop = log.scrollHeight;
+      if (tipo === 'pipeline_concluido' || tipo === 'stream_encerrado') {
+        es.close(); _fabricaStream = null;
+        log.innerHTML += '<span style="color:#4ade80">✔ Pipeline concluído.</span>\n';
+        carregarProjetosFabrica();
+      }
+    } catch {}
+  };
+  es.onerror = () => {
+    log.innerHTML += '<span style="color:#f87171">❌ Conexão SSE encerrada.</span>\n';
+    es.close(); _fabricaStream = null;
+  };
+}
+
+async function fabricaCancelarPipeline() {
+  const pid = document.getElementById('fabricaPipelineId').value.trim();
+  const log = document.getElementById('fabricaStreamLog');
+  if (!pid) { log.textContent = '⚠️ Informe o Pipeline ID.'; return; }
+  if (_fabricaStream) { _fabricaStream.close(); _fabricaStream = null; }
+  try {
+    await api('/api/fabrica/pipeline/' + encodeURIComponent(pid) + '/cancelar', 'POST');
+    log.innerHTML += '<span style="color:#fbbf24">⏹ Pipeline cancelado.</span>\n';
+  } catch(e) { log.innerHTML += '<span style="color:#f87171">❌ ' + escHtml(e.message) + '</span>\n'; }
+}
+
+async function carregarProjetosFabrica() {
+  const el = document.getElementById('fabricaProjetos');
+  el.innerHTML = '<div class="empty-txt" style="font-size:.78rem">Carregando...</div>';
+  try {
+    const d = await api('/api/fabrica/projetos');
+    const projetos = d.projetos || d.data || [];
+    if (!projetos.length) {
+      el.innerHTML = '<div class="empty-txt" style="font-size:.78rem">Nenhum projeto gerado ainda.</div>';
+      return;
+    }
+    el.innerHTML = projetos.slice(0, 20).map(p => {
+      const nome = escHtml(p.nome || p.name || p.id || 'Projeto');
+      const id = escHtml(p.id || '-');
+      const tipo = escHtml(p.tipo || p.type || '');
+      const dt = p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '';
+      const status = p.status || 'gerado';
+      const pillClass = (status === 'concluido' || status === 'aprovado') ? 'pill-green' : 'pill-yellow';
+      return '<div class="list-item">'
+        + '<div class="li-content">'
+        + '<div class="li-title">' + nome + '</div>'
+        + '<div class="li-sub">ID: ' + id + (tipo ? ' &bull; ' + tipo : '') + (dt ? ' &bull; ' + dt : '') + '</div>'
+        + '</div>'
+        + '<span class="pill ' + pillClass + '">' + escHtml(status) + '</span>'
+        + '</div>';
+    }).join('');
+  } catch(e) { el.textContent = '❌ ' + e.message; }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+</script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="lcard">
+    <div style="font-size:2.5rem">âï¸</div>
+    <h2>NEXUS CLAW</h2>
+    <p>QG IA â Painel de Controle</p>
+    <input type="password" id="tokenInput" placeholder="Cole seu QG_AUTH_TOKEN" value="4ddd7e8d65d766c2e353f00e16325ec8e4a6ff9252e46517ea11b8cc691855b1" />
+    <button class="btn btn-primary" style="width:100%;padding:12px" onclick="entrar()">Entrar no QG</button>
+    <p style="font-size:.7rem;color:#4b5563;margin-top:8px;cursor:pointer" onclick="document.getElementById('tokenInput').type=document.getElementById('tokenInput').type==='password'?'text':'password'">👁 Clique para ver/ocultar o token</p>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="mainApp" style="display:none;flex-direction:column;flex:1;height:100vh">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="dot" id="statusDot"></div>
+      <h1>âï¸ NEXUS CLAW</h1>
+      <span style="font-size:.75rem;color:#6b7280" id="serverStatus">verificando...</span>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="badge" id="uptimeBadge">uptime: â</span>
+      <span class="badge" id="memBadge">mem: â</span>
+      <button class="btn btn-ghost btn-sm" onclick="atualizarTudo()">â»</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="trocarTab('ferramentas')" id="tab-ferramentas">ð  Ferramentas</button>
+    <button class="tab" onclick="trocarTab('chat')" id="tab-chat">ð¬ Chat</button>
+    <button class="tab" onclick="trocarTab('status')" id="tab-status">ð Status</button>
+    <button class="tab" onclick="trocarTab('approvals')" id="tab-approvals">â AprovaÃ§Ãµes <span id="pendCount" style="background:#b45309;color:#fbbf24;border-radius:10px;padding:1px 6px;font-size:.68rem;margin-left:4px">0</span></button>
+    <button class="tab" onclick="trocarTab('memoria')" id="tab-memoria">ð§¬ MemÃ³rias</button>
+    <button class="tab" onclick="trocarTab('pesquisa')" id="tab-pesquisa">ð¬ Pesquisas</button>
+    <button class="tab" onclick="trocarTab('terminal')" id="tab-terminal">ð¥ï¸ Terminal</button>
+    <button class="tab" onclick="trocarTab('ideias')" id="tab-ideias">ð¡ IdeaOrganizer</button>
+    <button class="tab" onclick="trocarTab('fabrica')" id="tab-fabrica">&#x1F3ED; F&aacute;brica de IA</button>
+  </div>
+
+  <!-- âââââââââââââââ TAB: FERRAMENTAS âââââââââââââââ -->
+  <div id="pagFerramentas" class="page active" style="gap:20px">
+
+    <div>
+      <div class="section-title">ð¤ InteligÃªncia Artificial â Ferramentas do QG IA</div>
+      <div class="tool-grid">
+        <div class="tool-card" onclick="trocarTab('chat')">
+          <div class="tool-icon">âï¸</div>
+          <div class="tool-name">Nexus Claw â Chat</div>
+          <div class="tool-desc">Converse diretamente com o agente central. Ele usa 6 IAs em cascata (Gemini, Claude, DeepSeek, Groq, Cerebras, OpenAI).</div>
+          <span class="tool-tag green">Online</span>
+        </div>
+        <a class="tool-card" href="https://ideiatoapp.me" target="_blank">
+          <div class="tool-icon">ð¡</div>
+          <div class="tool-name">IdeaOrganizer â FÃ¡brica de IAs</div>
+          <div class="tool-desc">Transforme ideias em PRDs, arquiteturas e cÃ³digo. 13 agentes especializados trabalham em paralelo para desenvolver seus projetos.</div>
+          <span class="tool-tag yellow">ideiatoapp.me</span>
+        </a>
+        <div class="tool-card" onclick="trocarTab('pesquisa')">
+          <div class="tool-icon">ð¬</div>
+          <div class="tool-name">Pesquisa AutÃ´noma</div>
+          <div class="tool-desc">Nexus estuda IA, SaaS, tendÃªncias e negÃ³cios automaticamente a cada 6 horas. Resultados salvos no Supabase.</div>
+          <span class="tool-tag">A cada 6h</span>
+        </div>
+        <div class="tool-card" onclick="trocarTab('memoria')">
+          <div class="tool-icon">ð§¬</div>
+          <div class="tool-name">MemÃ³rias dos Agentes</div>
+          <div class="tool-desc">O que o Nexus aprendeu e lembrou. Cada ciclo de pesquisa salva conhecimento acumulado no Supabase.</div>
+          <span class="tool-tag">Supabase</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">ðï¸ Projetos em Desenvolvimento</div>
+      <div class="tool-grid">
+        <div class="tool-card" onclick="abrirProjeto('agromacro')">
+          <div class="tool-icon">ð¾</div>
+          <div class="tool-name">AgroMacro</div>
+          <div class="tool-desc">PWA para gestÃ£o de fazenda. 27 mÃ³dulos: rebanho, lotes, pastos, financeiro, rastreabilidade, IA consultor, KPIs e muito mais.</div>
+          <span class="tool-tag green">27 mÃ³dulos</span>
+        </div>
+        <div class="tool-card" onclick="abrirProjeto('frigogest')">
+          <div class="tool-icon">ð¥©</div>
+          <div class="tool-name">FrigoGest</div>
+          <div class="tool-desc">Sistema completo para frigorÃ­ficos. React + Supabase, 16 agentes IA em 5 tiers para automaÃ§Ã£o total do processo.</div>
+          <span class="tool-tag yellow">React + Supabase</span>
+        </div>
+        <div class="tool-card" onclick="abrirProjeto('fazendacerebro')">
+          <div class="tool-icon">ð§ </div>
+          <div class="tool-name">Fazenda CÃ©rebro</div>
+          <div class="tool-desc">App React Native com mÃºltiplos agentes IA. Voz, texto e foto â orquestrador â agentes paralelos â Firebase.</div>
+          <span class="tool-tag">React Native</span>
+        </div>
+        <div class="tool-card" onclick="trocarTab('chat')" style="border-color:#312e81">
+          <div class="tool-icon">â</div>
+          <div class="tool-name">Novo Projeto</div>
+          <div class="tool-desc">PeÃ§a ao Nexus para criar um novo projeto. Use o Chat ou o IdeaOrganizer para comeÃ§ar do zero com IA.</div>
+          <span class="tool-tag">Via Chat ou FÃ¡brica</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">âï¸ Infraestrutura & Controle</div>
+      <div class="tool-grid">
+        <div class="tool-card" onclick="trocarTab('approvals')">
+          <div class="tool-icon">â</div>
+          <div class="tool-name">AprovaÃ§Ãµes Pendentes</div>
+          <div class="tool-desc">AÃ§Ãµes dos agentes que precisam da sua aprovaÃ§Ã£o antes de executar. GovernanÃ§a total sobre o que o sistema faz.</div>
+          <span class="tool-tag red" id="cardPendCount">0 pendentes</span>
+        </div>
+        <div class="tool-card" onclick="trocarTab('terminal')">
+          <div class="tool-icon">ð¥ï¸</div>
+          <div class="tool-name">Terminal Root</div>
+          <div class="tool-desc">Execute comandos direto no servidor. Auto-Healing ativo â se o comando falhar, a IA corrige e tenta novamente.</div>
+          <span class="tool-tag green">Auto-Healing</span>
+        </div>
+        <div class="tool-card" onclick="trocarTab('status')">
+          <div class="tool-icon">ð</div>
+          <div class="tool-name">Status & ConfiguraÃ§Ã£o</div>
+          <div class="tool-desc">Monitore todos os serviÃ§os, ajuste o volume de tokens (Eco/Normal/Power) e dispare pesquisas manuais.</div>
+          <span class="tool-tag" id="cardStatus">verificando...</span>
+        </div>
+        <div class="tool-card" onclick="abrirWhatsApp()">
+          <div class="tool-icon">ð±</div>
+          <div class="tool-name">WhatsApp Bot</div>
+          <div class="tool-desc">Nexus conectado ao seu WhatsApp. Envie "pendencias", "aprovar ID" ou "negar ID" direto pelo celular.</div>
+          <span class="tool-tag green" id="cardWA">verificando...</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- âââââââââââââââ TAB: CHAT âââââââââââââââ -->
+  <div id="pagChat" class="page" style="padding:0">
+    <div class="chat-messages" id="chatMessages">
+      <!-- Mensagem de boas-vindas -->
+      <div class="msg nexus">
+        <div class="msg-avatar">âï¸</div>
+        <div>
+          <div class="msg-bubble">OlÃ¡, Priscila! Sou o **Nexus Claw**, seu CEO e Engenheiro Supremo. Estou online e pronto para qualquer comando. O que vamos construir hoje?</div>
+          <div class="msg-time">Nexus Claw</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-hint">Ctrl+Enter para enviar â¢ Nexus usa 6 IAs em cascata</div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chatInput" rows="1" placeholder="Fale com o Nexus... Ex: Analise o projeto QG-IA e me diga o que falta" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="enviarChat()" title="Enviar (Ctrl+Enter)">â¤</button>
+    </div>
+  </div>
+
+  <!-- âââââââââââââââ TAB: STATUS âââââââââââââââ -->
+  <div id="pagStatus" class="page" style="gap:16px">
+    <div class="grid">
+
+      <div class="card grid-full">
+        <div class="card-title">ð Status dos ServiÃ§os</div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-label">Servidor</div><div class="stat-value" id="stServidor">â</div></div>
+          <div class="stat-box"><div class="stat-label">WhatsApp</div><div class="stat-value" id="stWA">â</div></div>
+          <div class="stat-box"><div class="stat-label">Auto-Healing</div><div class="stat-value" id="stHeal">â</div></div>
+          <div class="stat-box"><div class="stat-label">Multi-IA</div><div class="stat-value" id="stIA">â</div></div>
+          <div class="stat-box"><div class="stat-label">Cron Pesquisa</div><div class="stat-value" id="stCron">â</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">â¡ Volume de Tokens</div>
+        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Controla o custo das chamadas Ã s IAs</p>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-eco" id="btnEco" onclick="setVolume('eco')">ð¿ Eco</button>
+          <button class="btn btn-normal" id="btnNormal" onclick="setVolume('normal')">â¡ Normal</button>
+          <button class="btn btn-power" id="btnPower" onclick="setVolume('power')">ð¥ Power</button>
+        </div>
+        <div id="volStatus" style="font-size:.75rem;color:#6b7280;margin-top:8px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ð¬ Pesquisa AutÃ´noma</div>
+        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Nexus estuda tendÃªncias de IA, mercado e negÃ³cios automaticamente a cada 6 horas</p>
+        <button class="btn btn-ghost" onclick="ativarPesquisa()" id="btnPesquisa">ð¬ Pesquisar Agora</button>
+        <div id="researchStatus" style="font-size:.75rem;color:#6b7280;margin-top:8px"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- âââââââââââââââ TAB: APROVAÃÃES âââââââââââââââ -->
+  <div id="pagApprovals" class="page" style="gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.85rem;color:#6b7280">AÃ§Ãµes aguardando sua decisÃ£o</span>
+      <button class="btn btn-ghost btn-sm" onclick="carregarApprovals()">â» Recarregar</button>
+    </div>
+    <div id="approvalList">
+      <div class="empty-txt" style="font-size:.82rem">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- âââââââââââââââ TAB: MEMÃRIAS âââââââââââââââ -->
+  <div id="pagMemoria" class="page" style="gap:12px">
+    <div style="display:flex;gap:8px">
+      <input type="text" class="inp" id="memFilter" placeholder="Filtrar por agente (ex: NexusClaw)" style="flex:1" />
+      <button class="btn btn-ghost btn-sm" onclick="carregarMemory()">Buscar</button>
+    </div>
+    <div id="memoryList" style="display:flex;flex-direction:column;gap:0">
+      <div class="empty-txt" style="font-size:.82rem">Carregando...</div>
+    </div>
+  </div>
+
+  <!-- âââââââââââââââ TAB: PESQUISAS âââââââââââââââ -->
+  <div id="pagPesquisa" class="page" style="gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.85rem;color:#6b7280">Conhecimentos adquiridos pelo Nexus</span>
+      <button class="btn btn-ghost btn-sm" onclick="carregarResearch()">â» Recarregar</button>
+    </div>
+    <div id="researchLog" style="display:flex;flex-direction:column;gap:8px">
+      <div class="empty-txt" style="font-size:.82rem">Nenhum aprendizado ainda. Use "Pesquisar Agora" no Status.</div>
+    </div>
+  </div>
+
+  <!-- âââââââââââââââ TAB: TERMINAL âââââââââââââââ -->
+  <div id="pagTerminal" class="page" style="gap:12px">
+    <div class="card">
+      <div class="card-title">ð¥ï¸ Terminal Root â Auto-Healing ativo</div>
+      <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Se o comando falhar, a IA corrige e tenta automaticamente. Comandos destrutivos sÃ£o bloqueados.</p>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" class="inp" id="termInput" placeholder="Ex: ls -la src/services" style="flex:1" />
+        <button class="btn btn-primary btn-sm" onclick="executarTerminal()">â¶ Executar</button>
+      </div>
+      <div style="font-size:.72rem;color:#6b7280;margin-bottom:8px">SaÃ­da:</div>
+      <div class="rbox" id="termResponse" style="min-height:200px;max-height:400px"><span class="empty-txt">SaÃ­da aparece aqui...</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">ð Log de Auditoria Recente</div>
+      <div id="auditLog" style="max-height:300px;overflow-y:auto">
+        <div class="empty-txt" style="font-size:.78rem">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- âââââââââââââââ TAB: IDEAORGANIZER âââââââââââââââ -->
+  <div id="pagIdeias" class="page" style="padding:0;flex:1">
+    <iframe
+      id="iframeIdeias"
+      src=""
+      style="width:100%;height:100%;border:none;flex:1;min-height:calc(100vh - 100px)"
+      allow="clipboard-read; clipboard-write; microphone"
+      title="IdeaOrganizer"
+    ></iframe>
+  </div>
+
+
+  <!-- ─────────────── TAB: FÁBRICA DE IA ─────────────── -->
+  <div id="pagFabrica" class="page" style="gap:16px">
+
+    <div class="grid">
+      <!-- Enviar ideia -->
+      <div class="card grid-full">
+        <div class="card-title">&#x1F3ED; F&aacute;brica de IA &mdash; Gerenciador de Pipelines</div>
+        <p style="font-size:.78rem;color:#6b7280;margin-bottom:12px">Descreva um app ou sistema e a F&aacute;brica de IA ir&aacute; gerar SQL + Backend + Frontend com 6 agentes especializados.</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <textarea class="inp" id="fabricaIdeia" rows="3" placeholder="Ex: app de gest&atilde;o de estoque com cadastro de produtos, movimenta&ccedil;&atilde;o e relat&oacute;rios..." style="flex:1;resize:vertical"></textarea>
+          <button class="btn btn-primary" style="align-self:flex-start;padding:10px 18px" onclick="fabricaOrquestrar()">&#x25B6; Criar App</button>
+        </div>
+        <div id="fabricaStatus" class="rbox" style="min-height:60px"><span class="empty-txt">Resultado aparece aqui...</span></div>
+      </div>
+
+      <!-- Status da Fabrica -->
+      <div class="card">
+        <div class="card-title">&#x2665; Status da F&aacute;brica</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div id="fabricaHealthStatus" style="font-size:.82rem;color:#6b7280;flex:1">Verificando...</div><button id="btnFabricaToggle" class="btn btn-sm" style="min-width:80px" onclick="fabricaToggle()">...</button></div><button class="btn btn-ghost btn-sm" onclick="carregarStatusFabrica()">&#x21BB; Atualizar</button>
+      </div>
+
+      <!-- Pipeline ativo -->
+      <div class="card">
+        <div class="card-title">&#x26A1; Acompanhar Pipeline</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" class="inp" id="fabricaPipelineId" placeholder="Pipeline ID" style="flex:1" />
+          <button class="btn btn-ghost btn-sm" onclick="fabricaConectarStream()">&#x1F4E1; Stream</button>
+          <button class="btn btn-danger btn-sm" onclick="fabricaCancelarPipeline()">&#x23F9;</button>
+        </div>
+        <div id="fabricaStreamLog" style="background:#070714;border:1px solid #1e1b4b;border-radius:8px;padding:10px;min-height:120px;max-height:260px;overflow-y:auto;font-size:.73rem;line-height:1.6;color:#a5f3fc"><span class="empty-txt">Conecte a um pipeline para ver eventos...</span></div>
+      </div>
+    </div>
+
+    <!-- Projetos gerados -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0">&#x1F4C1; Projetos Gerados</div>
+        <button class="btn btn-ghost btn-sm" onclick="carregarProjetosFabrica()">&#x21BB; Atualizar</button>
+      </div>
+      <div id="fabricaProjetos"><div class="empty-txt" style="font-size:.78rem">Carregando projetos...</div></div>
+    </div>
+
+  </div>
+
+</div><!-- fim mainApp -->
+
+<script>
+const BASE = window.location.origin;
+let TOKEN = '';
+
+// ââ LOGIN ââââââââââââââââââââââââââââââââââââââââââââââ
+function entrar() {
+  TOKEN = document.getElementById('tokenInput').value.trim();
+  if (!TOKEN) { document.getElementById('loginError').textContent = 'Cole o token.'; return; }
+  fetch(`${BASE}/api/auth/verify`, { headers: { 'X-QG-Token': TOKEN } })
+    .then(r => {
+      if (r.ok) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'flex';
+        localStorage.setItem('qg_token', TOKEN);
+        atualizarTudo();
+      } else {
+        document.getElementById('loginError').textContent = 'â Token invÃ¡lido.';
+      }
+    }).catch(() => { document.getElementById('loginError').textContent = 'â Servidor offline.'; });
+}
+
+window.onload = () => {
+  const saved = localStorage.getItem('qg_token');
+  if (saved) {
+    TOKEN = saved;
+    document.getElementById('tokenInput').value = saved;
+    fetch(`${BASE}/api/auth/verify`, { headers: { 'X-QG-Token': TOKEN } })
+      .then(r => {
+        if (r.ok) {
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'flex';
+          atualizarTudo();
+        }
+      }).catch(() => {});
+  }
+  document.getElementById('tokenInput').addEventListener('keydown', e => { if(e.key==='Enter') entrar(); });
+  // Ctrl+Enter no chat
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') enviarChat();
+  });
+};
+
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'X-QG-Token': TOKEN } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(BASE + path, opts);
+  return r.json();
+}
+
+// ââ TABS ââââââââââââââââââââââââââââââââââââââââââââââ
+function trocarTab(nome) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + nome).classList.add('active');
+  document.getElementById('pag' + nome.charAt(0).toUpperCase() + nome.slice(1)).classList.add('active');
+  if (nome === 'approvals') carregarApprovals();
+  if (nome === 'memoria') carregarMemory();
+  if (nome === 'pesquisa') carregarResearch();
+  if (nome === 'terminal') carregarAudit();
+  if (nome === 'status') carregarStatus();
+  // Carrega o iframe do IdeaOrganizer sÃ³ quando entrar na aba (lazy load)
+  if (nome === 'fabrica') { carregarStatusFabrica(); carregarProjetosFabrica(); }
+  if (nome === 'ideias') {
+    const fr = document.getElementById('iframeIdeias');
+    if (!fr.src || fr.src === window.location.href) {
+      fr.src = BASE + '/index.html';
+    }
+  }
+}
+
+// ââ FERRAMENTAS CARDS ââââââââââââââââââââââââââââââââ
+function abrirProjeto(proj) {
+  const msgs = {
+    agromacro: 'Me fale sobre o projeto AgroMacro: status atual, prÃ³ximas funcionalidades e o que falta implementar.',
+    frigogest: 'Me fale sobre o projeto FrigoGest: status atual, os 16 agentes IA implementados e prÃ³ximas melhorias.',
+    fazendacerebro: 'Me fale sobre o projeto Fazenda CÃ©rebro: status atual, pipeline de agentes e o que falta para MVP.',
+  };
+  trocarTab('chat');
+  setTimeout(() => {
+    document.getElementById('chatInput').value = msgs[proj] || '';
+    enviarChat();
+  }, 300);
+}
+
+function abrirWhatsApp() {
+  trocarTab('chat');
+  setTimeout(() => {
+    document.getElementById('chatInput').value = 'Qual Ã© o status do WhatsApp Bot? O nÃºmero conectado estÃ¡ correto?';
+    enviarChat();
+  }, 300);
+}
+
+function atualizarCardsFerramentas(d) {
+  const pend = document.getElementById('cardPendCount');
+  const wa = document.getElementById('cardWA');
+  const st = document.getElementById('cardStatus');
+  // pend jÃ¡ atualizado pelo carregarApprovals
+  if (wa) wa.textContent = d.servicos?.whatsapp === 'Ativado' ? 'â Conectado' : 'â¸ï¸ Desligado';
+  if (st) st.textContent = d.status === 'Operacional' ? 'â Online' : 'â Offline';
+}
+
+// ââ CHAT ââââââââââââââââââââââââââââââââââââââââââââââ
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function addMsg(role, texto, iaUsada) {
+  const box = document.getElementById('chatMessages');
+  const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'nexus');
+  const avatar = role === 'user' ? 'ð¤' : 'âï¸';
+  const label = role === 'user' ? 'VocÃª' : ('Nexus' + (iaUsada ? ` [${iaUsada}]` : ''));
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div>
+      <div class="msg-bubble">${escHtml(texto)}</div>
+      <div class="msg-time">${hora} Â· ${label}</div>
+    </div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg nexus';
+  div.id = 'typing';
+  div.innerHTML = `<div class="msg-avatar">âï¸</div><div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function escHtml(t) {
+  if (typeof marked !== 'undefined') {
+    try { return marked.parse(t, { breaks: true, gfm: true }); } catch(e) {}
+  }
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+}
+
+let chatHistory = [];
+
+async function enviarChat() {
+  const input = document.getElementById('chatInput');
+  const texto = input.value.trim();
+  if (!texto) return;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+  addMsg('user', texto);
+  const typing = addTyping();
+  try {
+    const d = await api('/api/nexus/comando', 'POST', { prompt: texto, historico: chatHistory.slice(-8) });
+    typing.remove();
+    const resposta = d.resposta || d.error || JSON.stringify(d);
+    // extrai o nome da IA se vier no formato "â NEXUS [Gemini]:..."
+    const iaMatch = resposta.match(/NEXUS \[([^\]]+)\]/);
+    const iaUsada = iaMatch ? iaMatch[1] : null;
+    addMsg('nexus', resposta, iaUsada);
+    chatHistory.push({role:'user',content:texto},{role:'assistant',content:resposta});
+    if(chatHistory.length>20) chatHistory=chatHistory.slice(-20);
+  } catch(e) {
+    typing.remove();
+    addMsg('nexus', 'â Erro ao conectar: ' + e.message);
+  }
+  btn.disabled = false;
+  input.focus();
+}
+
+// ââ STATUS ââââââââââââââââââââââââââââââââââââââââââââ
+async function carregarStatus() {
+  try {
+    const d = await fetch(`${BASE}/api/status`).then(r=>r.json());
+    document.getElementById('serverStatus').textContent = d.status;
+    document.getElementById('stServidor').textContent = 'â Online';
+    document.getElementById('stWA').textContent = d.servicos?.whatsapp === 'Ativado' ? 'â' : 'â¸ï¸';
+    document.getElementById('stHeal').textContent = d.servicos?.autoHealing === 'Ativado' ? 'â' : 'â';
+    document.getElementById('stIA').textContent = d.servicos?.multiIA === 'Ativado' ? 'â' : 'â';
+    document.getElementById('stCron').textContent = d.servicos?.cron_pesquisa || 'A cada 6h';
+    const up = d.uptime ? Math.floor(d.uptime/3600)+'h '+Math.floor((d.uptime%3600)/60)+'m' : 'â';
+    document.getElementById('uptimeBadge').textContent = 'uptime: ' + up;
+    document.getElementById('memBadge').textContent = 'mem: ' + (d.memoria?.heapUsed || 'â');
+    document.getElementById('statusDot').style.background = '#22c55e';
+    highlightVolBtn(d.token_volume || 'normal');
+    atualizarCardsFerramentas(d);
+  } catch {
+    document.getElementById('stServidor').textContent = 'â Offline';
+    document.getElementById('statusDot').style.background = '#ef4444';
+  }
+}
+
+function highlightVolBtn(vol) {
+  ['eco','normal','power'].forEach(v => {
+    const b = document.getElementById('btn'+v.charAt(0).toUpperCase()+v.slice(1));
+    if(b) b.classList.toggle('btn-active', v === vol);
+  });
+}
+
+async function setVolume(v) {
+  const el = document.getElementById('volStatus');
+  el.innerHTML = '<span class="sp"></span>Alterando...';
+  try {
+    const d = await api('/api/config/token-volume', 'POST', { volume: v });
+    el.textContent = 'â Volume: ' + (d.token_volume || v).toUpperCase();
+    highlightVolBtn(v);
+  } catch(e) { el.textContent = 'â ' + e.message; }
+}
+
+async function ativarPesquisa() {
+  const el = document.getElementById('researchStatus');
+  const btn = document.getElementById('btnPesquisa');
+  btn.disabled = true;
+  el.innerHTML = '<span class="sp"></span>Pesquisa em andamento (1-2 min)...';
+  try {
+    await api('/api/nexus/pesquisa', 'POST', {});
+    el.textContent = 'â Pesquisa iniciada! Resultados salvos no Supabase.';
+  } catch(e) { el.textContent = 'â ' + e.message; }
+  btn.disabled = false;
+}
+
+// ââ APPROVALS ââââââââââââââââââââââââââââââââââââââââ
+async function carregarApprovals() {
+  try {
+    const d = await api('/api/approvals/pending?limit=30');
+    const list = d.approvals || [];
+    document.getElementById('pendCount').textContent = list.length;
+    const cp = document.getElementById('cardPendCount');
+    if (cp) cp.textContent = list.length + ' pendentes';
+    const el = document.getElementById('approvalList');
+    if (!list.length) { el.innerHTML = '<div style="color:#374151;font-size:.82rem;font-style:italic">Nenhuma pendÃªncia. â</div>'; return; }
+    el.innerHTML = list.map(a => {
+      let det = {};
+      try { det = JSON.parse(a.detalhes || '{}'); } catch {}
+      const cmd = det.comando || a.detalhes || '';
+      return `<div class="list-item">
+        <div class="li-content">
+          <div class="li-title">${a.acao} <span class="pill pill-purple">${a.agente}</span></div>
+          <div class="li-sub">${cmd.substring(0,80)}${cmd.length>80?'...':''}</div>
+          <div class="li-sub">${new Date(a.criado_em||Date.now()).toLocaleString('pt-BR')}</div>
+        </div>
+        <div class="li-actions">
+          <button class="btn btn-success btn-sm" onclick="decidir('${a.id}','APROVADO')">â Aprovar</button>
+          <button class="btn btn-danger btn-sm" onclick="decidir('${a.id}','NEGADO')">â Negar</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { document.getElementById('approvalList').textContent = 'â ' + e.message; }
+}
+
+async function decidir(id, status) {
+  try {
+    await api('/api/approvals/decide', 'POST', { id, status, decisor: 'Priscila (Dashboard)' });
+    carregarApprovals();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ââ MEMORY âââââââââââââââââââââââââââââââââââââââââââ
+async function carregarMemory() {
+  const agente = document.getElementById('memFilter').value.trim();
+  try {
+    const params = agente ? `?agente=${encodeURIComponent(agente)}&limit=40` : '?limit=40';
+    const d = await api('/api/agent/memory' + params);
+    const list = d.memorias || [];
+    const el = document.getElementById('memoryList');
+    if (!list.length) { el.innerHTML = '<div class="empty-txt" style="font-size:.8rem">Sem memÃ³rias registradas.</div>'; return; }
+    el.innerHTML = list.map(m => `
+      <div class="mem-item">
+        <div style="display:flex;gap:6px;margin-bottom:4px;align-items:center">
+          <span class="pill pill-purple">${m.agente||'?'}</span>
+          <span class="pill pill-green">${m.categoria||'geral'}</span>
+          <span style="color:#374151;font-size:.65rem;margin-left:auto">${new Date(m.criado_em||Date.now()).toLocaleString('pt-BR')}</span>
+        </div>
+        <div style="color:#94a3b8;line-height:1.5">${(m.conteudo||'').substring(0,200)}${(m.conteudo||'').length>200?'...':''}</div>
+      </div>`).join('');
+  } catch(e) { document.getElementById('memoryList').textContent = 'â ' + e.message; }
+}
+
+// ââ RESEARCH âââââââââââââââââââââââââââââââââââââââââ
+async function carregarResearch() {
+  const el = document.getElementById('researchLog');
+  const renderList = (list, isLocal) => {
+    if (!list.length) { el.innerHTML = '<div class="empty-txt" style="font-size:.8rem">Nenhum aprendizado. Vá em Status → Pesquisar Agora.</div>'; return; }
+    const badge = isLocal ? '<div style="font-size:.7rem;color:#f59e0b;margin-bottom:10px">⚠️ Exibindo dados locais (Supabase offline)</div>' : '';
+    el.innerHTML = badge + list.map(m => `
+      <div class="card" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-weight:600;color:#a78bfa;font-size:.82rem">📚 ${m.categoria||'Geral'}</span>
+          <span style="color:#4b5563;font-size:.68rem">${new Date(m.criado_em||Date.now()).toLocaleString('pt-BR')}</span>
+        </div>
+        <div style="font-size:.78rem;color:#94a3b8;line-height:1.6">${(m.conteudo||'').substring(0,300)}${(m.conteudo||'').length>300?'...':''}</div>
+      </div>`).join('');
+  };
+  try {
+    const d = await api('/api/agent/memory?agente=NexusClaw&limit=30');
+    const list = (d.memorias||[]).filter(m => m.categoria && m.categoria !== 'geral');
+    if (list.length) { renderList(list, false); return; }
+    throw new Error('sem dados no Supabase');
+  } catch(e) {
+    try {
+      const d2 = await api('/api/research/local');
+      renderList((d2.memorias||[]).filter(m => m.categoria), true);
+    } catch(e2) { el.textContent = '❌ ' + e2.message; }
+  }
+}
+
+async function carregarAudit() {
+  try {
+    const d = await api('/api/agent/memory?limit=20');
+    const list = d.memorias || [];
+    const el = document.getElementById('auditLog');
+    if (!list.length) { el.innerHTML = '<div class="empty-txt" style="font-size:.75rem">Sem registros ainda.</div>'; return; }
+    el.innerHTML = list.map(m => `
+      <div class="log-line log-ok">
+        <span style="color:#4b5563;margin-right:6px">${new Date(m.criado_em||Date.now()).toLocaleTimeString('pt-BR')}</span>
+        <span style="color:#818cf8;margin-right:5px">${m.agente||'?'}</span>
+        <span style="color:#e2e8f0">[${m.categoria||'geral'}] ${(m.conteudo||'').substring(0,70)}</span>
+      </div>`).join('');
+  } catch(e) { document.getElementById('auditLog').textContent = 'â ' + e.message; }
+}
+
+// ââ ATUALIZAR TUDO ââââââââââââââââââââââââââââââââââââ
+async function atualizarTudo() {
+  carregarStatus();
+  carregarApprovals();
+}
+
+// Auto-refresh inteligente com backoff
+let _refreshInterval = 30000;
+let _refreshTimer = null;
+let _lastActivity = Date.now();
+function agendaRefresh() {
+  if (_refreshTimer) clearTimeout(_refreshTimer);
+  const idle = Date.now() - _lastActivity;
+  _refreshInterval = idle < 120000 ? 15000 : 60000;
+  _refreshTimer = setTimeout(async () => {
+    if (TOKEN) { await atualizarTudo(); }
+    agendaRefresh();
+  }, _refreshInterval);
+}
+document.addEventListener('click', () => { _lastActivity = Date.now(); });
+document.addEventListener('keydown', () => { _lastActivity = Date.now(); });
+agendaRefresh();
+
+// ---- Terminal com histórico Up/Down ----
+let termHistory = [];
+let termHistIdx = -1;
+
+document.getElementById('termInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    executarTerminal();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (termHistory.length === 0) return;
+    termHistIdx = Math.min(termHistIdx + 1, termHistory.length - 1);
+    this.value = termHistory[termHistIdx];
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (termHistIdx <= 0) { termHistIdx = -1; this.value = ''; return; }
+    termHistIdx--;
+    this.value = termHistory[termHistIdx];
+  }
+});
+
+async function executarTerminal() {
+  const inp = document.getElementById('termInput');
+  const out = document.getElementById('termResponse');
+  const cmd = inp.value.trim();
+  if (!cmd) return;
+  if (termHistory[0] !== cmd) termHistory.unshift(cmd);
+  if (termHistory.length > 50) termHistory.pop();
+  termHistIdx = -1;
+  out.innerHTML = '<span style="color:#7ecfff">$ ' + escHtml(cmd) + '</span>\n<span style="color:#aaa">Executando...</span>';
+  try {
+    const res = await api('/api/terminal/exec', 'POST', { command: cmd });
+    const output = res.stdout || res.output || res.error || JSON.stringify(res);
+    out.innerHTML = '<span style="color:#7ecfff">$ ' + escHtml(cmd) + '</span>\n' + escHtml(output);
+  } catch(err) {
+    out.innerHTML = '<span style="color:#7ecfff">$ ' + escHtml(cmd) + '</span>\n<span style="color:#ff6b6b">Erro: ' + escHtml(err.message) + '</span>';
+  }
+  inp.value = '';
+  inp.focus();
+  out.scrollTop = out.scrollHeight;
+}
+
+</script>
+</body>
+</html>

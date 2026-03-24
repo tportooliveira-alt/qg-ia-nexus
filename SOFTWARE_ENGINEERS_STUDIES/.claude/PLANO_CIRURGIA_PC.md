@@ -1,4 +1,4 @@
-tudo # CIRURGIA DO PC — PLANO DE AÇÃO PROFISSIONAL
+# CIRURGIA DO PC — PLANO DE AÇÃO PROFISSIONAL
 Data: 2026-03-22
 
 ---
@@ -22,8 +22,7 @@ Data: 2026-03-22
 | IdeaOrganizer | `C:\Users\Priscila\IdeaOrganizer\` | `TUDO_PARA_BACKUP\Projetos\IdeaOrganizer\` |
 
 ### 🟡 PROJETOS SEM GITHUB (risco de perda total)
-- `C:\Users\Priscila\frigogest-2026\` — não está no GitHub
-- `C:\Users\Priscila\tmp-repos\GESTAO-DA-FAZENDA-ANTARES\` — não está no GitHub
+rw- `C:\Users\Priscila\tmp-repos\GESTAO-DA-FAZENDA-ANTARES\` — não está no GitHub
 - `C:\Users\Priscila\tmp-repos\whatsapp-claude-bot\` — não está no GitHub
 - `C:\Users\Priscila\tmp-repos\fazenda-cerebro\` — verificar se está no GitHub
 

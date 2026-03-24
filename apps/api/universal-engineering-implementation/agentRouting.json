@@ -1,0 +1,147 @@
+{
+  "version": "1.0",
+  "description": "Configuração de roteamento inteligente para agentes multi-domínio",
+  "lastUpdated": "2026-03-21",
+
+  "domains": {
+    "software": {
+      "description": "Desenvolvimento de software, aplicações e sistemas",
+      "taskTypes": ["web-app", "api", "mobile", "system", "database", "frontend", "backend", "fullstack"],
+      "preferredProviders": ["Gemini", "DeepSeek", "Anthropic", "Groq"],
+      "fallbackProviders": ["Cerebras", "OpenAI"],
+      "agentChain": ["DomainDetector", "Analista", "Arquiteto", "Coder", "Tester"],
+      "constraints": {
+        "maxTokens": 2048,
+        "timeout": 30000,
+        "costLimit": 0.1
+      }
+    },
+
+    "mechanical": {
+      "description": "Engenharia mecânica, máquinas e manufatura",
+      "taskTypes": ["machine", "vehicle", "tool", "robot", "manufacturing", "cad", "materials"],
+      "preferredProviders": ["DeepSeek", "Gemini", "Anthropic"],
+      "fallbackProviders": ["Groq", "Cerebras", "OpenAI"],
+      "agentChain": ["DomainDetector", "MechanicalEngineer", "SystemsIntegrator"],
+      "constraints": {
+        "maxTokens": 4096,
+        "timeout": 45000,
+        "costLimit": 0.2
+      }
+    },
+
+    "civil": {
+      "description": "Engenharia civil, construções e infraestrutura",
+      "taskTypes": ["building", "structure", "foundation", "infrastructure", "urban", "construction"],
+      "preferredProviders": ["Gemini", "Anthropic", "DeepSeek"],
+      "fallbackProviders": ["Groq", "Cerebras", "OpenAI"],
+      "agentChain": ["DomainDetector", "CivilArchitect", "SystemsIntegrator"],
+      "constraints": {
+        "maxTokens": 4096,
+        "timeout": 45000,
+        "costLimit": 0.2
+      }
+    },
+
+    "electrical": {
+      "description": "Engenharia elétrica e eletrônica",
+      "taskTypes": ["circuit", "power", "automation", "embedded", "iot", "controls"],
+      "preferredProviders": ["DeepSeek", "Gemini", "Anthropic"],
+      "fallbackProviders": ["Groq", "Cerebras", "OpenAI"],
+      "agentChain": ["DomainDetector", "ElectricalEngineer", "SystemsIntegrator"],
+      "constraints": {
+        "maxTokens": 3072,
+        "timeout": 40000,
+        "costLimit": 0.15
+      }
+    },
+
+    "chemical": {
+      "description": "Engenharia química e processos industriais",
+      "taskTypes": ["process", "materials", "reaction", "safety", "environment", "industrial"],
+      "preferredProviders": ["DeepSeek", "Anthropic", "Gemini"],
+      "fallbackProviders": ["Groq", "Cerebras", "OpenAI"],
+      "agentChain": ["DomainDetector", "ChemicalEngineer", "SystemsIntegrator"],
+      "constraints": {
+        "maxTokens": 3072,
+        "timeout": 40000,
+        "costLimit": 0.15
+      }
+    },
+
+    "product": {
+      "description": "Design de produto e experiência do usuário",
+      "taskTypes": ["ux", "ui", "industrial-design", "ergonomics", "usability", "interface"],
+      "preferredProviders": ["Gemini", "Anthropic", "DeepSeek"],
+      "fallbackProviders": ["Groq", "Cerebras", "OpenAI"],
+      "agentChain": ["DomainDetector", "ProductDesigner", "SystemsIntegrator"],
+      "constraints": {
+        "maxTokens": 2048,
+        "timeout": 35000,
+        "costLimit": 0.12
+      }
+    },
+
+    "integration": {
+      "description": "Integração de sistemas multi-domínio",
+      "taskTypes": ["multidomain", "system-integration", "complex-project", "orchestration"],
+      "preferredProviders": ["Anthropic", "Gemini", "DeepSeek"],
+      "fallbackProviders": ["Groq", "Cerebras", "OpenAI"],
+      "agentChain": ["DomainDetector", "SystemsIntegrator"],
+      "constraints": {
+        "maxTokens": 4096,
+        "timeout": 60000,
+        "costLimit": 0.25
+      }
+    }
+  },
+
+  "taskTypeMapping": {
+    "web-app": "software",
+    "api": "software",
+    "mobile": "software",
+    "system": "software",
+    "database": "software",
+    "machine": "mechanical",
+    "vehicle": "mechanical",
+    "tool": "mechanical",
+    "robot": "mechanical",
+    "building": "civil",
+    "structure": "civil",
+    "circuit": "electrical",
+    "power": "electrical",
+    "automation": "electrical",
+    "process": "chemical",
+    "materials": "chemical",
+    "ux": "product",
+    "ui": "product",
+    "multidomain": "integration"
+  },
+
+  "globalSettings": {
+    "enableMetrics": true,
+    "enableCostTracking": true,
+    "enablePerformanceMonitoring": true,
+    "defaultTimeout": 30000,
+    "maxRetries": 3,
+    "circuitBreakerThreshold": 5
+  },
+
+  "performanceProfiles": {
+    "eco": {
+      "description": "Modo econômico - menor custo, menor velocidade",
+      "tokenMultiplier": 0.7,
+      "preferredProviders": ["Groq", "Cerebras", "DeepSeek"]
+    },
+    "balanced": {
+      "description": "Modo balanceado - custo médio, velocidade média",
+      "tokenMultiplier": 1.0,
+      "preferredProviders": ["Gemini", "DeepSeek", "Anthropic"]
+    },
+    "premium": {
+      "description": "Modo premium - maior custo, maior velocidade/qualidade",
+      "tokenMultiplier": 1.3,
+      "preferredProviders": ["Anthropic", "OpenAI", "Gemini"]
+    }
+  }
+}

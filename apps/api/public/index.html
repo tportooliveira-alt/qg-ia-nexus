@@ -13,67 +13,6 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  <style>
-    /* Minimal fallback if Tailwind CDN fails to load */
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:#000;color:#fafafa;}
-    .hidden{display:none;}
-    .flex{display:flex;}
-    .flex-col{flex-direction:column;}
-    .flex-1{flex:1 1 0%;}
-    .shrink-0{flex-shrink:0;}
-    .w-64{width:16rem;}
-    .w-96{width:24rem;}
-    .h-screen{height:100vh;}
-    .overflow-hidden{overflow:hidden;}
-    .overflow-y-auto{overflow-y:auto;}
-    .fixed{position:fixed;}
-    .inset-0{top:0;right:0;bottom:0;left:0;}
-    .items-center{align-items:center;}
-    .justify-center{justify-content:center;}
-    body.flex{display:flex;}
-    .sidebar{display:flex;flex-direction:column;width:16rem;flex-shrink:0;background:#09090b;border-right:1px solid #27272a;}
-    #painel-chat{display:flex;flex-direction:column;width:24rem;flex-shrink:0;border-left:1px solid #27272a;background:#000;}
-    body > .flex-1{flex:1 1 0%;display:flex;flex-direction:column;overflow:hidden;}
-  </style>
-  <style>
-    /* Pro visual layer (keeps structure, upgrades look) */
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-
-    :root{
-      --bg-0:#0b0f14;
-      --bg-1:#0f151c;
-      --bg-2:#131b24;
-      --line:#1f2a37;
-      --text:#e5e7eb;
-      --muted:#9aa4b2;
-      --accent:#5eead4;
-      --accent-2:#60a5fa;
-      --warn:#f59e0b;
-    }
-
-    body{background:linear-gradient(160deg,var(--bg-0),#0a0d12 60%);color:var(--text);font-family:'Plus Jakarta Sans',Inter,system-ui;}
-    .sidebar{background:var(--bg-1);border-right:1px solid var(--line);}
-    .card{background:var(--bg-1);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.25);}
-    .card:hover{border-color:#2c3a4b;background:var(--bg-2);}
-    .proj-btn{border:1px solid transparent;border-radius:12px;}
-    .proj-btn.active{border-color:var(--accent);background:rgba(94,234,212,0.08);}
-    .input-area{background:var(--bg-1);border-color:var(--line);}
-    .chip-tipo{border-color:var(--line);}
-    .chip-tipo#chip-all{background:var(--accent);color:#0b0f14;border-color:transparent;}
-    #painel-chat{background:var(--bg-1);}
-    #painel-chat .border-b{border-color:var(--line);}
-    #painel-chat textarea{color:var(--text);}
-    .badge-tech{background:#0b2a1f;color:#34d399;border-color:#114131;}
-    .badge-negocio{background:#2b1b07;color:#fbbf24;border-color:#5c3b10;}
-    .badge-marketing{background:#2a0f12;color:#f87171;border-color:#5c1a22;}
-    .badge-ux,.badge-feature,.badge-processos,.badge-outro{background:#111827;color:#cbd5e1;border-color:#1f2a37;}
-    #titulo-area{letter-spacing:-.02em;}
-    .topbar-shadow{box-shadow:0 8px 24px rgba(0,0,0,.35);}
-
-    body[data-density="compact"]{font-size:13px;line-height:1.35;}
-    body[data-density="normal"]{font-size:14px;line-height:1.45;}
-    body[data-density="comfort"]{font-size:15px;line-height:1.6;}
-  </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
@@ -245,6 +184,157 @@
         width: 280px;
       }
     }
+
+    /* ─── Nexus Chat Drawer ─────────────────────────── */
+    #nexus-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 90;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.35);
+      transition: all 0.25s ease;
+    }
+    #nexus-fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 32px rgba(99, 102, 241, 0.5);
+    }
+    #nexus-fab .nexus-fab-ping {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.4);
+      animation: nexusPing 2s ease-out infinite;
+    }
+    @keyframes nexusPing {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    #nexus-drawer {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 400px;
+      max-width: 100vw;
+      height: 100vh;
+      z-index: 95;
+      background: rgba(9, 9, 11, 0.97);
+      backdrop-filter: blur(24px);
+      border-left: 1px solid #27272a;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #nexus-drawer.open {
+      right: 0;
+    }
+    #nexus-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 94;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #nexus-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .nx-msg {
+      display: flex;
+      gap: 10px;
+      padding: 10px 16px;
+      animation: slideUp 0.25s ease-out;
+    }
+    .nx-msg.user { flex-direction: row-reverse; }
+    .nx-msg-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .nx-msg.user .nx-msg-avatar { background: #27272a; }
+    .nx-msg.nexus .nx-msg-avatar { background: #312e81; }
+    .nx-msg-bubble {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+    .nx-msg.user .nx-msg-bubble {
+      background: #1e1b4b;
+      color: #c7d2fe;
+      border-bottom-right-radius: 4px;
+    }
+    .nx-msg.nexus .nx-msg-bubble {
+      background: #18181b;
+      color: #d4d4d8;
+      border-bottom-left-radius: 4px;
+    }
+    .nx-msg.nexus .nx-msg-bubble p { margin: 0 0 8px 0; }
+    .nx-msg.nexus .nx-msg-bubble p:last-child { margin-bottom: 0; }
+    .nx-msg.nexus .nx-msg-bubble code {
+      background: #27272a;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .nx-msg.nexus .nx-msg-bubble pre {
+      background: #0a0a0a;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 6px 0;
+      font-size: 11px;
+    }
+    .nx-msg-time {
+      font-size: 10px;
+      color: #52525b;
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+    .nx-msg.user .nx-msg-time { text-align: right; }
+
+    .nx-typing-dots span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6366f1;
+      margin: 0 2px;
+      animation: nxBounce 1.4s infinite both;
+    }
+    .nx-typing-dots span:nth-child(2) { animation-delay: 0.16s; }
+    .nx-typing-dots span:nth-child(3) { animation-delay: 0.32s; }
+    @keyframes nxBounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 640px) {
+      #nexus-drawer { width: 100vw; right: -100vw; }
+      #nexus-fab { bottom: 16px; right: 16px; width: 50px; height: 50px; font-size: 20px; }
+    }
   </style>
 </head>
 
@@ -267,7 +357,12 @@
         class="w-full mt-2 text-sm px-4 py-3 rounded-lg bg-white text-black hover:bg-zinc-200 transition font-bold">
         Entrar
       </button>
+      <button id="btn-cadastro" onclick="fazerCadastro()"
+        class="w-full text-sm px-4 py-2 rounded-lg bg-transparent border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition">
+        Criar conta
+      </button>
       <p id="erro-login" class="text-xs text-red-500 mt-2 hidden">Email ou senha incorretos.</p>
+      <p id="login-ok" class="text-xs text-green-400 mt-2 hidden">Conta criada! Verifique seu email para confirmar.</p>
       <p id="login-loading" class="text-xs text-zinc-400 mt-2 hidden">Verificando acesso...</p>
     </div>
   </div>
@@ -302,6 +397,37 @@
         btn.textContent = 'Entrar';
       } else {
         document.getElementById('login-overlay').style.display = 'none';
+      }
+    }
+
+    async function fazerCadastro() {
+      const email = document.getElementById('login-email').value.trim();
+      const senha = document.getElementById('login-senha').value;
+      const btn = document.getElementById('btn-cadastro');
+      const erro = document.getElementById('erro-login');
+      const ok = document.getElementById('login-ok');
+      const loading = document.getElementById('login-loading');
+
+      if (!email || !senha) { erro.textContent = 'Preencha email e senha.'; erro.classList.remove('hidden'); return; }
+      if (senha.length < 6) { erro.textContent = 'Senha precisa ter ao menos 6 caracteres.'; erro.classList.remove('hidden'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Criando conta...';
+      loading.classList.remove('hidden');
+      erro.classList.add('hidden');
+      ok.classList.add('hidden');
+
+      const { error } = await _supabase.auth.signUp({ email, password: senha });
+
+      btn.disabled = false;
+      btn.textContent = 'Criar conta';
+      loading.classList.add('hidden');
+
+      if (error) {
+        erro.textContent = error.message || 'Erro ao criar conta.';
+        erro.classList.remove('hidden');
+      } else {
+        ok.classList.remove('hidden');
       }
     }
 
@@ -375,42 +501,11 @@
         </button>
       </div>
 
-      <div class="pt-2">
-        <p class="text-xs text-zinc-500 px-1 mb-1">Volume de Tokens</p>
-        <select id="token-volume-select"
-          class="w-full bg-black border border-[#27272a] rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500">
-          <option value="eco">Eco</option>
-          <option value="normal" selected>Normal</option>
-          <option value="power">Power</option>
-        </select>
-        <input id="qg-token-input" type="password" placeholder="QG_AUTH_TOKEN"
-          value="4ddd7e8d65d766c2e353f00e16325ec8e4a6ff9252e46517ea11b8cc691855b1"
-          class="mt-2 w-full bg-black border border-[#27272a] rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500" />
-        <button onclick="salvarTokenVolume()"
-          class="mt-2 w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-300 bg-[#09090b] border border-[#27272a] hover:bg-[#18181b] transition">
-          Aplicar Volume
-        </button>
-      </div>
-
-      <div class="pt-3">
-        <p class="text-xs text-zinc-500 px-1 mb-1">Densidade Visual</p>
-        <select id="density-select" onchange="aplicarDensidade(this.value)"
-          class="w-full bg-black border border-[#27272a] rounded-lg px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-zinc-500">
-          <option value="compact">Compacto</option>
-          <option value="normal" selected>Normal</option>
-          <option value="comfort">Conforto</option>
-        </select>
-      </div>
-
       <div id="api-status" class="hidden text-xs px-1 text-center py-1"></div>
 
       <button onclick="exportarTudo()"
         class="w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-400 hover:bg-[#18181b] flex items-center gap-2 transition">
         ↓ Exportar tudo
-      </button>
-      <button onclick="abrirGovernanca()"
-        class="w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-300 bg-[#0f151c] border border-[#1f2a37] hover:bg-[#18181b] flex items-center gap-2 transition">
-        🛡️ Governança
       </button>
     </div>
   </aside>
@@ -462,7 +557,7 @@
   <div class="flex-1 flex flex-col overflow-hidden bg-[#000000]">
 
     <!-- Top bar -->
-    <div class="border-b border-[#27272a] shrink-0 bg-[#09090b] topbar-shadow">
+    <div class="border-b border-[#27272a] shrink-0 bg-[#09090b]">
       <!-- Linha 1: título + ações principais -->
       <div class="flex items-center gap-3 px-5 py-3">
         <button onclick="toggleSidebar()" class="md:hidden text-zinc-400 text-xl">☰</button>
@@ -551,185 +646,45 @@
         </div>
 
         <!-- CANVAS n8n STYLE -->
-        <div class="relative w-full max-w-2xl aspect-[16/10] bg-[#050505] rounded-3xl border border-zinc-800/50 shadow-inner overflow-hidden flex flex-col">
-          <!-- Header da Fábrica -->
-          <div class="flex items-center justify-between px-6 py-4 bg-zinc-900/30 border-b border-zinc-800/50 z-20">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center border border-violet-500/30">
-                <span class="text-lg">🏭</span>
-              </div>
-              <div>
-                <h2 class="text-sm font-bold text-white uppercase tracking-tighter">Indústria de Agentes</h2>
-                <p class="text-[9px] text-zinc-500 font-mono">Status: Produção Ativa</p>
-              </div>
-            </div>
-            <button onclick="abrirModalFabrica()" class="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)]">
-              + Fabricar Agente
-            </button>
-          </div>
+        <div class="relative w-full max-w-2xl aspect-[16/10] bg-[#050505] rounded-3xl border border-zinc-800/50 shadow-inner overflow-hidden">
+          <!-- Grid Background -->
+          <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#3f3f46 1px, transparent 1px); background-size: 24px 24px;"></div>
+          
+          <svg id="n8n-canvas" viewBox="0 0 600 400" class="w-full h-full relative z-10">
+            <!-- Defs para Gradientes e Setas -->
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#3f3f46" />
+              </marker>
+              <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed" />
+              </marker>
+              <filter id="node-glow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
 
-          <!-- Área de Conteúdo (Grid de Agentes + Grafo) -->
-          <div class="flex-1 relative overflow-hidden flex">
-            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#3f3f46 1px, transparent 1px); background-size: 24px 24px;"></div>
-            
-            <!-- Esquerda: Grafo -->
-            <div class="flex-1 relative">
-              <svg id="n8n-canvas" viewBox="0 0 400 300" class="w-full h-full relative z-10">
-                <!-- ... (conteúdo do SVG) ... -->
-              </svg>
-            </div>
+            <!-- CONEXÕES (Fios) -->
+            <g id="canvas-wires" stroke="#18181b" stroke-width="2" fill="none">
+              <!-- Orq -> Ana -->
+              <path id="w-orq-ana" d="M 300,50 L 300,100" marker-end="url(#arrowhead)" />
+              <!-- Ana -> Fase 2 -->
+              <path id="w-ana-arq" d="M 300,140 C 300,160 100,160 100,180" marker-end="url(#arrowhead)" />
+              <path id="w-ana-sco" d="M 300,140 L 300,180" marker-end="url(#arrowhead)" />
+              <path id="w-ana-eng" d="M 300,140 C 300,160 500,160 500,180" marker-end="url(#arrowhead)" />
+              <!-- Fase 2 -> Ger -->
+              <path id="w-arq-ger" d="M 100,220 C 100,240 300,240 300,260" marker-end="url(#arrowhead)" />
+              <path id="w-sco-ger" d="M 300,220 L 300,260" marker-end="url(#arrowhead)" />
+              <path id="w-eng-ger" d="M 500,220 C 500,240 300,240 300,260" marker-end="url(#arrowhead)" />
+              <!-- Ger -> Fase 4 -->
+              <path id="w-ger-rev" d="M 300,300 C 300,320 100,320 100,340" marker-end="url(#arrowhead)" />
+              <path id="w-ger-psi" d="M 300,300 L 300,340" marker-end="url(#arrowhead)" />
+              <path id="w-ger-dis" d="M 300,300 C 300,320 500,320 500,340" marker-end="url(#arrowhead)" />
+            </g>
 
-            <!-- Direita: Dashboard Financeiro e Insights -->
-            <div class="w-64 bg-zinc-900/50 border-l border-zinc-800/50 z-20 flex flex-col p-4 gap-4 overflow-y-auto">
-              <!-- CFO DASHBOARD -->
-              <div class="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 shadow-xl">
-                <div class="flex items-center gap-2 mb-3">
-                  <span class="text-xs">💰</span>
-                  <h3 class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Nexus CFO</h3>
-                </div>
-                <div class="space-y-2">
-                  <div class="flex justify-between">
-                    <span class="text-[9px] text-zinc-500">Receita</span>
-                    <span class="text-[10px] text-emerald-400 font-mono">R$ 0,00</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-[9px] text-zinc-500">Gasto APIs</span>
-                    <span class="text-[10px] text-red-400 font-mono">R$ 0,00</span>
-                  </div>
-                  <div class="pt-2 border-t border-zinc-800 flex justify-between">
-                    <span class="text-[9px] text-zinc-300 font-bold">Saldo</span>
-                    <span class="text-[10px] text-white font-bold font-mono">R$ 0,00</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- NEXUS CHAT INTERFACE (Substituindo Aprendizado) -->
-              <div class="flex-1 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 shadow-xl flex flex-col overflow-hidden">
-                <div class="flex items-center gap-2 mb-3">
-                  <span class="text-xs">🦂</span>
-                  <h3 class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Falar com Nexus Claw</h3>
-                </div>
-                <div id="nexus-chat-output" class="flex-1 overflow-y-auto space-y-2 text-[10px] text-zinc-400 leading-tight scrollbar-thin p-1">
-                  <div class="p-2 rounded-lg bg-black/30 border border-zinc-800/50">
-                    <span class="text-violet-400 font-bold">Nexus:</span> Olá Priscila! Estou calibrado e pronto. O que vamos construir agora?
-                  </div>
-                </div>
-                <div class="mt-2 flex gap-2">
-                  <input type="text" id="nexus-chat-input" class="flex-1 bg-black/50 border border-zinc-800 rounded-lg px-3 py-2 text-[10px] text-white outline-none focus:border-violet-500" placeholder="Mandar comando..." onkeydown="if(event.key==='Enter') enviarMensagemNexus(this.value)">
-                  <button onclick="enviarMensagemNexus(document.getElementById('nexus-chat-input').value)" class="p-2 bg-violet-600 rounded-lg text-white hover:bg-violet-500 transition">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        <script>
-          async function enviarMensagemNexus(msg) {
-            const out = document.getElementById('nexus-chat-output');
-            const input = document.getElementById('nexus-chat-input');
-            if(!msg) return;
-            
-            input.value = '';
-            const userDiv = document.createElement('div');
-            userDiv.className = 'p-2 rounded-lg bg-zinc-800/50 border border-zinc-700/30 text-right self-end';
-            userDiv.innerHTML = `<span class="text-zinc-300 font-bold">Você:</span> ${msg}`;
-            out.appendChild(userDiv);
-            out.scrollTop = out.scrollHeight;
-
-            try {
-              const qgToken = document.getElementById('qg-token-input')?.value || localStorage.getItem('qg_token') || '';
-              const res = await fetch('/api/nexus/comando', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-QG-Token': qgToken },
-                body: JSON.stringify({ prompt: msg })
-              });
-              const data = await res.json();
-              
-              const nexusDiv = document.createElement('div');
-              nexusDiv.className = 'p-2 rounded-lg bg-black/30 border border-zinc-800/50';
-              nexusDiv.innerHTML = `<span class="text-violet-400 font-bold">Nexus:</span> ${data.resposta}`;
-              out.appendChild(nexusDiv);
-            } catch (e) {
-              const errDiv = document.createElement('div');
-              errDiv.className = 'text-red-500 p-2';
-              errDiv.textContent = 'Erro ao falar com o Nexus.';
-              out.appendChild(errDiv);
-            }
-            out.scrollTop = out.scrollHeight;
-          }
-        </script>
-
-          <!-- 🖥️ TERMINAL DE ACESSO TOTAL -->
-          <div id="terminal-wrapper" class="h-32 bg-black/95 border-t border-zinc-800/50 z-30 font-mono flex flex-col transition-all duration-300">
-            <!-- ... (conteúdo do terminal) ... -->
-          </div>
-        </div>
-
-        <!-- MODAL DA FÁBRICA -->
-        <div id="modal-fabrica" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-[100] p-4">
-          <div class="bg-[#09090b] border border-zinc-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
-            <div class="p-6 border-b border-zinc-800 bg-zinc-900/20">
-              <h3 class="text-lg font-bold text-white">Fabricar Novo Agente de Elite</h3>
-              <p class="text-xs text-zinc-500">Defina a personalidade e as skills MCP do seu novo especialista.</p>
-            </div>
-            <div class="p-6 space-y-4">
-              <div>
-                <label class="text-[10px] text-zinc-500 uppercase font-bold mb-1 block">Nome do Agente</label>
-                <input type="text" id="fab-nome" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-violet-500 transition" placeholder="Ex: Auditor_Seguranca">
-              </div>
-              <div>
-                <label class="text-[10px] text-zinc-500 uppercase font-bold mb-1 block">Papel Principal</label>
-                <input type="text" id="fab-papel" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-violet-500 transition" placeholder="Ex: Especialista em RLS e Supabase">
-              </div>
-              <div>
-                <label class="text-[10px] text-zinc-500 uppercase font-bold mb-1 block">Descrição da Inteligência</label>
-                <textarea id="fab-desc" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-violet-500 transition h-20" placeholder="O que este agente deve saber fazer de melhor?"></textarea>
-              </div>
-            </div>
-            <div class="p-6 bg-zinc-900/20 border-t border-zinc-800 flex gap-3">
-              <button onclick="fecharModalFabrica()" class="flex-1 px-4 py-2 rounded-xl border border-zinc-800 text-zinc-400 text-sm hover:bg-zinc-800 transition">Cancelar</button>
-              <button onclick="executarFabricacao()" class="flex-1 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-500 transition shadow-[0_0_20px_rgba(124,58,237,0.3)]">Iniciar Produção</button>
-            </div>
-          </div>
-        </div>
-
-        <script>
-          function abrirModalFabrica() {
-            document.getElementById('modal-fabrica').classList.remove('hidden');
-            document.getElementById('modal-fabrica').classList.add('flex');
-          }
-          function fecharModalFabrica() {
-            document.getElementById('modal-fabrica').classList.add('hidden');
-            document.getElementById('modal-fabrica').classList.remove('flex');
-          }
-          async function executarFabricacao() {
-            const nome = document.getElementById('fab-nome').value;
-            const papel = document.getElementById('fab-papel').value;
-            const desc = document.getElementById('fab-desc').value;
-            
-            if(!nome || !papel) return alert('Nome e Papel são obrigatórios!');
-            
-            mostrarLoading(`Fabricando Agente: ${nome}...`, 'Acessando moldes industriais...');
-            
-            try {
-              const res = await fetch('/api/skills/factory', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, papel, descricao: desc })
-              });
-              const data = await res.json();
-              fecharModalFabrica();
-              alert(data.message);
-              esconderLoading();
-              // Atualizar lista visual aqui futuramente
-            } catch (e) {
-              alert('Erro na produção!');
-              esconderLoading();
-            }
-          }
-        </script>
-
+            <!-- NODES (Agentes) -->
+            <g id="canvas-nodes">
               <!-- Orquestrador -->
               <g id="node-orq" transform="translate(260,20)" class="cursor-pointer group">
                 <rect width="80" height="40" rx="8" fill="#09090b" stroke="#3f3f46" stroke-width="1.5" />
@@ -1185,29 +1140,33 @@
     function resolverAPIUrl() {
       const customUrl = localStorage.getItem('io_backend_url');
       if (customUrl && customUrl.length > 5) return customUrl.replace(/\/$/, '') + '/api';
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return 'http://localhost:3000/api';
+      if (typeof window.BACKEND_URL === 'string' && window.BACKEND_URL.trim()) return window.BACKEND_URL.replace(/\/$/, '') + '/api';
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return window.location.origin.replace(/\/$/, '') + '/api';
       return '/api';
     }
     const API_URL = resolverAPIUrl();
+    function getApiUrl() {
+      return API_URL.replace(/\/api$/, '');
+    }
 
-    // Fetch autenticado — injeta JWT do Supabase em todas as chamadas ao backend
+    // Fetch autenticado — injeta JWT do Supabase + Token QG em todas as chamadas ao backend
+    const QG_AUTH_TOKEN =
+      (typeof window.QG_AUTH_TOKEN === 'string' && window.QG_AUTH_TOKEN.trim())
+      || localStorage.getItem('io_qg_auth_token')
+      || '';
     async function apiFetch(url, options = {}) {
       const { data: { session } } = await _supabase.auth.getSession();
-      const token = session?.access_token || '';
-      const qgToken = (typeof QG_AUTH_TOKEN !== 'undefined' && QG_AUTH_TOKEN !== 'COLE_AQUI')
-        ? QG_AUTH_TOKEN
-        : (localStorage.getItem('io_qg_token') || '');
+      const supaToken = session?.access_token || '';
       return fetch(url, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
           ...(options.headers || {}),
-          'Authorization': `Bearer ${token}`,
-          ...(qgToken ? { 'X-QG-Token': qgToken } : {})
+          'Authorization': `Bearer ${supaToken}`,
+          'X-QG-Token': QG_AUTH_TOKEN
         }
       });
     }
-
 
     // Logout
     async function fazerLogout() {
@@ -1326,7 +1285,8 @@
 
         projetos = await projRes.json();
         const ideiasRaw = await ideiasRes.json();
-        agentes = await agentRes.json();
+        const agentesRaw = await agentRes.json();
+        agentes = Array.isArray(agentesRaw) ? agentesRaw : (agentesRaw.agentes || []);
         skillsDB = await skillRes.json();
 
         // As ideias precisam ser "des-strigificadas" por conta das Specs
@@ -1474,7 +1434,7 @@ SEU OUTPUT (sempre em JSON):
       try {
         const r = await fetch(`${API_URL}/status`);
         const d = await r.json();
-        if (d.status === 'Online') {
+        if (d.status === 'Online' || d.status === 'Operacional') {
           mostrarToast('🟢 Backend conectado!');
         }
       } catch(e) {
@@ -2748,7 +2708,7 @@ Retorne SOMENTE o JSON válido.`;
         if (modoTeste) throw new Error('MODO_TESTE');
         const r = await fetch(`${getApiUrl()}/api/status`, { signal: AbortSignal.timeout(5000) });
         const d = await r.json();
-        dados.backend = { status: d.status === 'Online' ? 'online' : 'problema', latencia_ms: Date.now() - t0, resposta: d.message };
+        dados.backend = { status: (d.status === 'Online' || d.status === 'Operacional') ? 'online' : 'problema', latencia_ms: Date.now() - t0, resposta: d.message };
       } catch(e) {
         dados.backend = { status: modoTeste ? 'simulado_offline' : 'offline', latencia_ms: Date.now() - t0, erro: e.message };
       }
@@ -3290,16 +3250,6 @@ Crie esta peça seguindo os princípios do Compositor. Retorne SOMENTE o JSON v�
 
     // ROTEADOR INTELIGENTE (SMART CASCATA)
     async function callCascata(system, user, ordemPreferencial = null) {
-      // 1. TENTA VIA BACKEND (ORQUESTRADOR PROFISSIONAL)
-      try {
-        console.log('[Smart Router] Tentando via Orquestrador Backend...');
-        const resultado = await callOrquestradorBackend(_agenteAtualTracker || 'Squad', user, system, ordemPreferencial);
-        if (resultado) return resultado;
-      } catch (e) {
-        console.warn('[Smart Router] Backend offline ou erro de token. Usando Fallback Browser:', e.message);
-      }
-
-      // 2. FALLBACK DIRETO (BROWSER)
       const todosProvedores = {
         'Gemini': { nome: 'Gemini', id: 'gemini', fn: callGemini, key: localStorage.getItem('io_gemini_key') },
         'OpenAI': { nome: 'OpenAI', id: 'openai', fn: callOpenAI, key: localStorage.getItem('io_openai_key') },
@@ -3458,75 +3408,23 @@ Crie esta peça seguindo os princípios do Compositor. Retorne SOMENTE o JSON v�
     }
 
     // ─── Render ideias ─────────────────────────────────────────────────────────
-    function renderizarIdeias() {
-      const grid = document.getElementById('grid-ideias');
-      const areaVazia = document.getElementById('area-vazia');
-      if (!grid) return;
+    const TIPO_LABEL = { feature: 'Feature', ux: 'UX / Tela', tech: 'Tech', negocio: 'Negócio', marketing: 'Marketing', processos: 'Processos', manejo: '🌾 Manejo', obras: '🔧 Obras', seguranca: '🔐 Segurança', teste: '🧪 Teste', outro: 'Outro', 'Fábrica de App': '🚀 Fábrica' };
 
-      const busca = (document.getElementById('campo-busca')?.value || '').toLowerCase();
-      let lista = _ideias.filter(i => {
-        if (busca) return i.titulo.toLowerCase().includes(busca) || i.descricao.toLowerCase().includes(busca);
-        return true;
-      });
-
-      if (lista.length === 0) {
-        grid.classList.add('hidden');
-        areaVazia.classList.remove('hidden');
-        return;
-      }
-
-      grid.classList.remove('hidden');
-      areaVazia.classList.add('hidden');
-
-      grid.innerHTML = lista.map(ideia => `
-        <div onclick="abrirProjeto('${ideia.id}')" class="group relative bg-[#09090b] border border-zinc-800/50 rounded-2xl p-4 hover:border-violet-500/50 transition-all duration-300 cursor-pointer overflow-hidden shadow-sm">
-          <div class="h-0.5 w-full bg-violet-500 absolute top-0 left-0 opacity-20"></div>
-          <div class="flex items-start justify-between mb-3">
-            <div class="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-xl">${ideia.icone || '💡'}</div>
-            <span class="text-[9px] font-bold px-2 py-1 rounded-md bg-zinc-800 text-zinc-500 uppercase">${ideia.tipo || 'Ideia'}</span>
-          </div>
-          <h3 class="text-sm font-bold text-white mb-1">${ideia.titulo}</h3>
-          <p class="text-[11px] text-zinc-500 line-clamp-2">${ideia.descricao}</p>
-          <div class="mt-4 pt-3 border-t border-zinc-800/50 flex items-center justify-between text-[10px] text-zinc-600 font-mono">
-            <span>🤖 Nexus Active</span>
-            <span>${new Date(ideia.criado).toLocaleDateString('pt-BR')}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function enviarMensagemNexus(msg) {
-      if(!msg) return;
-      const out = document.getElementById('nexus-chat-output');
-      const input = document.getElementById('nexus-chat-input');
-      input.value = '';
-      
-      const userDiv = document.createElement('div');
-      userDiv.className = 'p-2 rounded-lg bg-zinc-800/50 border border-zinc-700/30 text-right self-end mb-2';
-      userDiv.innerHTML = `<span class="text-zinc-300 font-bold block mb-1">Priscila</span> ${msg}`;
-      out.appendChild(userDiv);
-      out.scrollTop = out.scrollHeight;
-
-      try {
-        const res = await fetch('/api/nexus/comando', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: msg })
-        });
-        const data = await res.json();
-        
-        const nexusDiv = document.createElement('div');
-        nexusDiv.className = 'p-2 rounded-lg bg-violet-900/20 border border-violet-800/30 mb-2';
-        nexusDiv.innerHTML = `<span class="text-violet-400 font-bold block mb-1">Nexus Claw 🦂</span> ${data.resposta}`;
-        out.appendChild(nexusDiv);
-      } catch (e) {
-        const errDiv = document.createElement('div');
-        errDiv.className = 'text-red-500 p-2 text-[9px]';
-        errDiv.textContent = 'Erro de conexão com o Nexus.';
-        out.appendChild(errDiv);
-      }
-      out.scrollTop = out.scrollHeight;
-    }
+    // Config visual de cada tipo de ideia — ícone grande, cor de acento, descrição da função
+    const TIPO_CONFIG = {
+      'Fábrica de App': { icone: '🏭', cor: 'from-violet-900/40 to-transparent', acento: 'bg-violet-500', texto: 'text-violet-300', borda: 'border-violet-800/50', funcao: 'Spec Completa de App' },
+      'feature':        { icone: '⚡', cor: 'from-blue-900/30 to-transparent',   acento: 'bg-blue-500',   texto: 'text-blue-300',   borda: 'border-blue-800/40',   funcao: 'Nova Funcionalidade' },
+      'ux':             { icone: '🎨', cor: 'from-pink-900/30 to-transparent',    acento: 'bg-pink-500',   texto: 'text-pink-300',   borda: 'border-pink-800/40',   funcao: 'Design / UX / Tela' },
+      'tech':           { icone: '⚙️', cor: 'from-emerald-900/30 to-transparent', acento: 'bg-emerald-500',texto: 'text-emerald-300',borda: 'border-emerald-800/40',funcao: 'Decisão Técnica' },
+      'negocio':        { icone: '💼', cor: 'from-amber-900/30 to-transparent',   acento: 'bg-amber-500',  texto: 'text-amber-300',  borda: 'border-amber-800/40',  funcao: 'Estratégia de Negócio' },
+      'marketing':      { icone: '📢', cor: 'from-red-900/30 to-transparent',     acento: 'bg-red-500',    texto: 'text-red-300',    borda: 'border-red-800/40',    funcao: 'Campanha / Marketing' },
+      'processos':      { icone: '🔄', cor: 'from-orange-900/30 to-transparent',  acento: 'bg-orange-500', texto: 'text-orange-300', borda: 'border-orange-800/40', funcao: 'Melhoria de Processo' },
+      'manejo':         { icone: '🌾', cor: 'from-lime-900/30 to-transparent',    acento: 'bg-lime-500',   texto: 'text-lime-300',   borda: 'border-lime-800/40',   funcao: 'Manejo Agropecuário' },
+      'obras':          { icone: '🔧', cor: 'from-stone-800/40 to-transparent',   acento: 'bg-stone-400',  texto: 'text-stone-300',  borda: 'border-stone-700/40',  funcao: 'Obra / Infraestrutura' },
+      'seguranca':      { icone: '🔐', cor: 'from-cyan-900/30 to-transparent',    acento: 'bg-cyan-500',   texto: 'text-cyan-300',   borda: 'border-cyan-800/40',   funcao: 'Segurança / Acesso' },
+      'teste':          { icone: '🧪', cor: 'from-purple-900/30 to-transparent',  acento: 'bg-purple-500', texto: 'text-purple-300', borda: 'border-purple-800/40', funcao: 'Teste / Validação' },
+      'outro':          { icone: '💡', cor: 'from-zinc-800/30 to-transparent',    acento: 'bg-zinc-500',   texto: 'text-zinc-300',   borda: 'border-zinc-700/40',   funcao: 'Ideia Geral' },
+    };
     const PRIO_LABEL = { alta: '🔴 Alta', media: '🟡 Média', baixa: '🟢 Baixa' };
 
     let _filtroTipoAtivo = '';
@@ -4170,54 +4068,19 @@ ${ideia.descricao || ''}
     function mostrarLoading(msg, sub) {
       const matchAgente = msg.match(/(?:🧠|🏗️|🔍|⚡|📅|🧘|🩺|🚀|⚙️|🎨)\s*([^\.•\n]+)/);
       if (matchAgente) _agenteAtualTracker = matchAgente[1].trim().substring(0, 30);
-      
-      const msgEl = document.getElementById('loading-msg');
-      const subEl = document.getElementById('loading-sub');
-      if(msgEl) msgEl.textContent = msg;
-      if(subEl) subEl.textContent = sub;
-      
+      document.getElementById('loading-msg').textContent = msg;
+      document.getElementById('loading-sub').textContent = sub;
       document.getElementById('loading-global').classList.remove('hidden');
       document.getElementById('loading-global').classList.add('flex');
       document.getElementById('grid-ideias').classList.add('hidden');
       document.getElementById('area-vazia').classList.add('hidden');
 
-      // ─── INTEGRAÇÃO n8n ───
-      if (typeof atualizarGrafoN8N === 'function') {
-        let pct = 0;
-        if(msg.includes('Analista')) pct = 25;
-        else if(msg.includes('paralelo')) pct = 50;
-        else if(msg.includes('Gerente')) pct = 75;
-        else if(msg.includes('Revisor') || msg.includes('Psiquiatra') || msg.includes('Dispatcher')) pct = 90;
-        atualizarGrafoN8N(msg, sub, pct);
-      }
-
-      // ─── PULSOS n8n ───
-      const token = document.getElementById('pulse-token');
-      const anim = document.getElementById('pulse-anim');
-      if (token && anim) {
-        let pathId = '';
-        if (msg.includes('Analista')) pathId = '#w-orq-ana';
-        else if (msg.includes('Arquiteto')) pathId = '#w-ana-arq';
-        else if (msg.includes('Scout')) pathId = '#w-ana-sco';
-        else if (msg.includes('Engenheiro')) pathId = '#w-ana-eng';
-        else if (msg.includes('Gerente')) pathId = '#w-arq-ger';
-        
-        if (pathId && document.querySelector(pathId)) {
-          token.setAttribute('opacity', '1');
-          anim.setAttribute('path', document.querySelector(pathId).getAttribute('d'));
-          anim.beginElement();
-        }
-      }
-
-      // Adiciona no log visual n8n
-      const log = document.getElementById('loading-log');
-      if (log) {
-        const div = document.createElement('div');
-        div.className = msg.includes('✓') ? 'text-emerald-400' : 'text-violet-400';
-        div.textContent = `> ${msg}`;
-        log.appendChild(div);
-        log.scrollTop = log.scrollHeight;
-      }
+      // Detecta fase pelo conteúdo da mensagem e atualiza grafo
+      if (msg.includes('Orquestrador')) atualizarGrafo('orq');
+      else if (msg.includes('Analista')) atualizarGrafo('ana');
+      else if (msg.includes('paralelo') && msg.includes('3 agentes') && !msg.includes('Revisor')) atualizarGrafo('p2');
+      else if (msg.includes('Gerente')) atualizarGrafo('ger');
+      else if (msg.includes('Revisor') || msg.includes('Psiquiatra') || msg.includes('Dispatcher')) atualizarGrafo('p4');
     }
 
     function esconderLoading() {
@@ -5042,28 +4905,6 @@ Gere as telas completas com todos os componentes, estados e navegação.`;
     </div>
   </div>
 
-  <!-- MODAL GOVERNANCA -->
-  <div id="modal-governanca" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[80] items-start justify-center p-4 overflow-y-auto">
-    <div class="bg-[#09090b] border border-[#27272a] rounded-2xl w-full max-w-3xl shadow-2xl my-6">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-        <div>
-          <h3 class="font-bold text-white text-base flex items-center gap-2">🛡️ Governança — Aprovações</h3>
-          <p class="text-xs text-zinc-500 mt-0.5">Ações pendentes que precisam de sua confirmação</p>
-        </div>
-        <button onclick="fecharGovernanca()" class="text-zinc-500 hover:text-white text-xl transition">✕</button>
-      </div>
-      <div class="p-6">
-        <div class="flex items-center gap-2 mb-4">
-          <button onclick="carregarPendencias()"
-            class="text-xs px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition">Recarregar</button>
-        </div>
-        <div id="governanca-lista" class="space-y-3 text-sm text-zinc-300">
-          <p class="text-zinc-500">Nenhuma pendência carregada.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- MODAL COMPOSITOR DE CÓDIGO -->
   <div id="modal-compositor" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-[70] items-start justify-center p-4 overflow-y-auto">
     <div class="bg-[#09090b] border border-[#27272a] rounded-2xl w-full max-w-3xl shadow-2xl my-6">
@@ -5281,78 +5122,185 @@ Retorne APENAS o código HTML completo. Sem markdown, sem explicações, sem \`\
         studioGerarInterface(prompt, novaIdeia.titulo);
       }, 2000); // pequeno delay para não sobrecarregar
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ██  NEXUS CHAT — Drawer flutuante com acesso direto ao backend  ██
+    // ═══════════════════════════════════════════════════════════════════
+    let _nexusOpen = false;
+    let _nexusChatHistory = [];
+
+    function toggleNexusDrawer() {
+      _nexusOpen = !_nexusOpen;
+      document.getElementById('nexus-drawer').classList.toggle('open', _nexusOpen);
+      document.getElementById('nexus-overlay').classList.toggle('open', _nexusOpen);
+      document.getElementById('nexus-fab').style.display = _nexusOpen ? 'none' : 'flex';
+      if (_nexusOpen) {
+        setTimeout(() => document.getElementById('nexus-input').focus(), 350);
+      }
+    }
+
+    function fecharNexusDrawer() {
+      _nexusOpen = false;
+      document.getElementById('nexus-drawer').classList.remove('open');
+      document.getElementById('nexus-overlay').classList.remove('open');
+      document.getElementById('nexus-fab').style.display = 'flex';
+    }
+
+    function _nxEscHtml(t) {
+      // Tenta usar marked para Markdown, senão parse manual
+      if (typeof marked !== 'undefined') {
+        try { return marked.parse(t, { breaks: true, gfm: true }); } catch(e) {}
+      }
+      return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+              .replace(/\n/g,'<br>')
+              .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+              .replace(/`([^`]+)`/g,'<code>$1</code>');
+    }
+
+    function _nxAddMsg(role, texto, iaUsada) {
+      const box = document.getElementById('nexus-messages');
+      const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const div = document.createElement('div');
+      div.className = 'nx-msg ' + (role === 'user' ? 'user' : 'nexus');
+      const avatar = role === 'user' ? '👤' : '⚡';
+      const label = role === 'user' ? 'Você' : ('Nexus' + (iaUsada ? ` [${iaUsada}]` : ''));
+      div.innerHTML = `
+        <div class="nx-msg-avatar">${avatar}</div>
+        <div style="flex:1;min-width:0">
+          <div class="nx-msg-bubble">${role === 'user' ? texto : _nxEscHtml(texto)}</div>
+          <div class="nx-msg-time">${hora} · ${label}</div>
+        </div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    function _nxAddTyping() {
+      const box = document.getElementById('nexus-messages');
+      const div = document.createElement('div');
+      div.className = 'nx-msg nexus';
+      div.id = 'nx-typing';
+      div.innerHTML = '<div class="nx-msg-avatar">⚡</div><div><div class="nx-msg-bubble"><div class="nx-typing-dots"><span></span><span></span><span></span></div></div></div>';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    function _nxAutoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+    }
+
+    async function enviarNexusChat() {
+      const input = document.getElementById('nexus-input');
+      const texto = input.value.trim();
+      if (!texto) return;
+      const btn = document.getElementById('nexus-send-btn');
+      btn.disabled = true;
+      input.value = '';
+      input.style.height = 'auto';
+
+      _nxAddMsg('user', texto);
+      const typing = _nxAddTyping();
+
+      try {
+        const resp = await apiFetch(`${API_URL}/nexus/comando`, {
+          method: 'POST',
+          body: JSON.stringify({ prompt: texto, historico: _nexusChatHistory.slice(-8) })
+        });
+        typing.remove();
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${resp.status}`);
+        }
+
+        const d = await resp.json();
+        const resposta = d.resposta || d.error || JSON.stringify(d);
+        // Extrai nome da IA: "⚡ NEXUS [Gemini]:..."
+        const iaMatch = resposta.match(/NEXUS \[([^\]]+)\]/);
+        const iaUsada = iaMatch ? iaMatch[1] : null;
+
+        _nxAddMsg('nexus', resposta, iaUsada);
+        _nexusChatHistory.push({ role: 'user', content: texto }, { role: 'assistant', content: resposta });
+        if (_nexusChatHistory.length > 20) _nexusChatHistory = _nexusChatHistory.slice(-20);
+      } catch(e) {
+        typing.remove();
+        _nxAddMsg('nexus', '❌ Erro ao conectar com o Nexus: ' + e.message);
+      }
+
+      btn.disabled = false;
+      input.focus();
+    }
+
+    function _nxHandleKeydown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        enviarNexusChat();
+      }
+    }
+
+    // Atalho global: Ctrl+Shift+N
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        toggleNexusDrawer();
+      }
+      if (e.key === 'Escape' && _nexusOpen) fecharNexusDrawer();
+    });
   </script>
 
-  <script src="vidente.js"></script>
-  <script src="explorer.js"></script>
-  <script src="ui_settings.js"></script>
-  <script src="governance.js"></script>
+  <!-- ═══ Nexus Chat FAB + Drawer ═══ -->
+  <div id="nexus-overlay" onclick="fecharNexusDrawer()"></div>
+
+  <button id="nexus-fab" onclick="toggleNexusDrawer()" title="Chat Nexus (Ctrl+Shift+N)">
+    <span class="nexus-fab-ping"></span>
+    ⚡
+  </button>
+
+  <div id="nexus-drawer">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #27272a;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:16px">⚡</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#e4e4e7">Nexus Chat</div>
+          <div style="font-size:10px;color:#6366f1">6 IAs · Backend Render</div>
+        </div>
+      </div>
+      <button onclick="fecharNexusDrawer()" style="background:none;border:none;color:#71717a;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .15s" onmouseover="this.style.background='#27272a';this.style.color='#fafafa'" onmouseout="this.style.background='none';this.style.color='#71717a'">✕</button>
+    </div>
+
+    <!-- Messages -->
+    <div id="nexus-messages" style="flex:1;overflow-y:auto;padding:8px 0">
+      <div class="nx-msg nexus">
+        <div class="nx-msg-avatar">⚡</div>
+        <div style="flex:1;min-width:0">
+          <div class="nx-msg-bubble">Olá! Sou o <strong>Nexus</strong> — seu assistente com 6 IAs. Pergunte qualquer coisa sobre seus projetos, peça análises ou dê comandos diretos.</div>
+          <div class="nx-msg-time">Agora · Nexus</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div style="padding:12px 16px;border-top:1px solid #27272a;flex-shrink:0;display:flex;gap:8px;align-items:flex-end">
+      <textarea id="nexus-input" rows="1" placeholder="Fale com o Nexus..."
+        oninput="_nxAutoResize(this)"
+        onkeydown="_nxHandleKeydown(event)"
+        style="flex:1;resize:none;background:#18181b;border:1px solid #27272a;border-radius:12px;padding:10px 14px;color:#d4d4d8;font-size:13px;line-height:1.4;outline:none;transition:border-color .2s;max-height:100px"
+        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#27272a'"></textarea>
+      <button id="nexus-send-btn" onclick="enviarNexusChat()"
+        style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s"
+        onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">➤</button>
+    </div>
+  </div>
 
   <!-- PWA Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
-
-    // ═══════════════════════════════════════════════════════
-    // 🤖 INTEGRAÇÃO COM ORQUESTRADOR BACKEND
-    // ═══════════════════════════════════════════════════════
-    
-    async function callOrquestradorBackend(agente, prompt, contexto = "", ordemPreferencial = null) {
-      const token = document.getElementById('qg-token-input')?.value || localStorage.getItem('qg_auth_token');
-      if (!token) throw new Error('TOKEN_AUSENTE');
-
-      const resp = await fetch('/api/agentes/executar', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-QG-Token': token
-        },
-        body: JSON.stringify({ agente, prompt, contexto, ordemPreferencial })
-      });
-
-      if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.error || `Erro HTTP ${resp.status}`);
-      }
-
-      const data = await resp.json();
-      return data.resultado;
-    }
   </script>
-<script>
-    function atualizarGrafoN8N(fase, subfase, pct) {
-      const msg = document.getElementById(\"loading-msg\");
-      const sub = document.getElementById(\"loading-sub\");
-      const bar = document.getElementById(\"node-info-bar\");
-      const pText = document.getElementById(\"node-info-pct\");
-      const overlay = document.getElementById(\"node-info-overlay\");
-      
-      if(msg) msg.textContent = fase;
-      if(sub) sub.textContent = subfase;
-      if(bar) bar.style.width = pct + \"%\";
-      if(pText) pText.textContent = pct + \"%\";
-      
-      // Mostrar overlay se tiver progresso
-      if(overlay) {
-        overlay.classList.remove(\"translate-y-20\", \"opacity-0\");
-        overlay.classList.add(\"translate-y-0\", \"opacity-100\");
-      }
-
-      // Ativar brilho no node correspondente
-      document.querySelectorAll(\".cursor-pointer rect\").forEach(r => r.setAttribute(\"stroke\", \"#3f3f46\"));
-      const nodeMap = {
-        \"Analista\": \"node-ana\", \"Arquiteto\": \"node-arq\", \"Scout\": \"node-sco\",
-        \"Engenheiro\": \"node-eng\", \"Gerente\": \"node-ger\", \"Revisor\": \"node-rev\",
-        \"Psiquiatra\": \"node-psi\", \"Dispatcher\": \"node-dis\"
-      };
-      for(let key in nodeMap) {
-        if(fase.includes(key)) {
-          const el = document.getElementById(nodeMap[key]);
-          if(el) el.querySelector(\"rect\").setAttribute(\"stroke\", \"#7c3aed\");
-        }
-      }
-    }
-</script></body>
+</body>
 
 </html>

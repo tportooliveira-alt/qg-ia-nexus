@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fundo preto -->
+  <rect width="512" height="512" rx="80" fill="#000000"/>
+
+  <!-- Brilho violeta de fundo -->
+  <radialGradient id="glow" cx="50%" cy="45%" r="50%">
+    <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.4"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="80" fill="url(#glow)"/>
+
+  <!-- Linhas de circuito decorativas -->
+  <g stroke="#7c3aed" stroke-width="2" opacity="0.3" fill="none">
+    <line x1="60" y1="120" x2="130" y2="120"/>
+    <line x1="130" y1="120" x2="130" y2="80"/>
+    <line x1="382" y1="120" x2="452" y2="120"/>
+    <line x1="382" y1="120" x2="382" y2="80"/>
+    <line x1="60" y1="392" x2="130" y2="392"/>
+    <line x1="130" y1="392" x2="130" y2="432"/>
+    <line x1="382" y1="392" x2="452" y2="392"/>
+    <line x1="382" y1="392" x2="382" y2="432"/>
+    <circle cx="130" cy="80" r="5" fill="#7c3aed"/>
+    <circle cx="382" cy="80" r="5" fill="#7c3aed"/>
+    <circle cx="130" cy="432" r="5" fill="#7c3aed"/>
+    <circle cx="382" cy="432" r="5" fill="#7c3aed"/>
+  </g>
+
+  <!-- Lâmpada central -->
+  <!-- Corpo da lâmpada -->
+  <path d="M256 130 C200 130 165 165 165 215 C165 250 185 278 210 295 L210 330 L302 330 L302 295 C327 278 347 250 347 215 C347 165 312 130 256 130 Z"
+    fill="none" stroke="#a78bfa" stroke-width="12" stroke-linejoin="round"/>
+
+  <!-- Brilho interno da lâmpada -->
+  <path d="M256 148 C208 148 183 180 183 215 C183 244 199 268 220 283 L220 312 L292 312 L292 283 C313 268 329 244 329 215 C329 180 304 148 256 148 Z"
+    fill="#7c3aed" opacity="0.15"/>
+
+  <!-- Base da lâmpada (listras) -->
+  <rect x="210" y="335" width="92" height="14" rx="4" fill="#a78bfa" opacity="0.8"/>
+  <rect x="218" y="355" width="76" height="14" rx="4" fill="#a78bfa" opacity="0.6"/>
+  <rect x="228" y="375" width="56" height="14" rx="7" fill="#a78bfa" opacity="0.4"/>
+
+  <!-- Raios de luz -->
+  <g stroke="#c4b5fd" stroke-width="3" opacity="0.6">
+    <line x1="256" y1="100" x2="256" y2="75"/>
+    <line x1="310" y1="115" x2="328" y2="97"/>
+    <line x1="202" y1="115" x2="184" y2="97"/>
+    <line x1="340" y1="168" x2="365" y2="158"/>
+    <line x1="172" y1="168" x2="147" y2="158"/>
+  </g>
+
+  <!-- Texto QG -->
+  <text x="256" y="470" text-anchor="middle" font-family="Arial Black, sans-serif"
+    font-size="52" font-weight="900" fill="white" letter-spacing="6">QG IA</text>
+
+  <!-- Ponto violeta decorativo -->
+  <circle cx="256" cy="215" r="18" fill="#7c3aed" opacity="0.9"/>
+  <circle cx="256" cy="215" r="10" fill="#c4b5fd"/>
+</svg>

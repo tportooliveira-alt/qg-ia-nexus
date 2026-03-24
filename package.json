@@ -1,34 +1,15 @@
 {
-  "name": "qg-ia-novo-hostinger",
+  "name": "qg-ia-nexus-monorepo",
   "version": "1.0.0",
-  "description": "Quartel General IA com Thiago Claw (WhatsApp) e Efeito Cascata na Hostinger.",
-  "main": "server.js",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "evolve": "node auto_evolve.js",
-    "hostinger": "node server_hostinger_entry.js",
-    "test": "node tests/run-tests.js",
-    "war-room": "node tests/war-room-loop.js",
-    "benchmark:domain": "node tests/domain-benchmark.js",
-    "benchmark:gen": "node tests/generate-benchmark-dataset.js",
-    "scan:errors": "node tests/error-path-scan.js",
-    "fuzz:domain": "node tests/fuzz-domain-detector.js",
-    "quality:gate": "node tests/quality-gate.js",
-    "quality:trend": "node tests/quality-gate-trend.js",
-    "scan:error-surface": "node tests/error-surface-scan.js"
-  },
-  "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.81",
-    "@supabase/supabase-js": "^2.39.0",
-    "@whiskeysockets/baileys": "^6.5.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "mysql2": "^3.19.1",
-    "node-cron": "^4.2.1",
-    "node-fetch": "^2.7.0",
-    "qrcode-terminal": "^0.12.0"
+    "start": "npm start --workspace=apps/api",
+    "dev": "npm run dev --workspace=apps/api",
+    "test": "npm test --workspace=apps/api",
+    "build": "turbo run build"
   },
   "engines": {
     "node": ">=18.0.0"
