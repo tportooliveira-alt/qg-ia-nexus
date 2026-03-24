@@ -127,6 +127,46 @@ const AIService = {
     });
   },
 
+  async callGroqStream(prompt, maxTokens = null, onChunk) {
+    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY ausente");
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "llama3-70b-8192",
+        max_tokens: getMaxTokens("Groq", maxTokens),
+        stream: true,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error(`Groq stream falhou com status: ${res.status}`);
+
+    return new Promise((resolve, reject) => {
+      let fullText = "";
+      let buffer = "";
+      res.body.on("data", (chunk) => {
+        buffer += chunk.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(raw);
+            const text = parsed.choices?.[0]?.delta?.content;
+            if (text) { fullText += text; onChunk(text); }
+          } catch { /* linha incompleta */ }
+        }
+      });
+      res.body.on("end", () => resolve(fullText));
+      res.body.on("error", reject);
+    });
+  },
+
   async callOpenAI(prompt, maxTokens = null) {
     if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY ausente");
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -187,9 +227,9 @@ const AIService = {
         } else if (p.includes("rapido") || p.includes("status") || p.includes("zap")) {
           prioridadeDeIAs = ["Groq", "Cerebras", "Gemini"];
         } else if (p.includes("analise") || p.includes("compare") || p.includes("arquitetura")) {
-          prioridadeDeIAs = ["Anthropic", "Gemini", "DeepSeek", "Groq", "Cerebras", "OpenAI"];
+          prioridadeDeIAs = ["Gemini", "Groq", "Cerebras", "DeepSeek", "Anthropic", "OpenAI"];
         } else {
-          prioridadeDeIAs = ["Gemini", "DeepSeek", "Anthropic", "Groq", "Cerebras", "OpenAI"];
+          prioridadeDeIAs = ["Groq", "Gemini", "Cerebras", "DeepSeek", "Anthropic", "OpenAI"];
         }
       }
     }
