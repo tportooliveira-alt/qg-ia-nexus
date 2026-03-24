@@ -414,8 +414,13 @@ const AIService = {
         ultimoErro = erro;
         const latency = Date.now() - startTime;
         routingService.recordCall(nomeIA, routing?.domain || "unknown", latency, false);
-        if (erro.message.includes("429") || erro.message.toLowerCase().includes("quota") || erro.message.toLowerCase().includes("tokens")) {
-          console.warn(`[IA] ${nomeIA} sem quota/tokens. Tentando proxima...`);
+        if (erro.message.includes("429") || erro.message.includes("402") ||
+            erro.message.toLowerCase().includes("quota") ||
+            erro.message.toLowerCase().includes("tokens") ||
+            erro.message.toLowerCase().includes("payment") ||
+            erro.message.toLowerCase().includes("insufficient") ||
+            erro.message.toLowerCase().includes("balance")) {
+          console.warn(`[IA] ${nomeIA} sem credito/quota (${erro.message.match(/\d{3}/)?.[0] || 'err'}). Tentando proxima...`);
           continue;
         }
         console.warn(`[IA] ${nomeIA} falhou, tentando proxima...`);

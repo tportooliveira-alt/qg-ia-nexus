@@ -229,23 +229,26 @@ const NexusService = {
         "IMPORTANTE: NUNCA pule etapas — cada resposta deve aprofundar a ideia com novas perguntas ou sugestoes ate estar realmente completa. Seja generoso no dialogo, explore ao maximo antes de propor o prompt mestre.\n";
 
       const fullPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt;
-      // Cascata: Gemini → Groq → Cerebras → DeepSeek (todos gratuitos/baratos)
-      try {
-        await AIService.callGeminiStream(fullPrompt, null, onChunk);
-      } catch (e) {
-        console.warn("[STREAM] Gemini falhou, tentando Groq:", e.message);
+      // Cascata stream: Gemini → Groq → Cerebras → DeepSeek → SambaNova (fallback completo)
+      const streamCascata = [
+        { nome: "Gemini",    fn: () => AIService.callGeminiStream(fullPrompt, null, onChunk) },
+        { nome: "Groq",      fn: () => AIService.callGroqStream(fullPrompt, null, onChunk) },
+        { nome: "Cerebras",  fn: () => AIService.callCerebrasStream(fullPrompt, null, onChunk) },
+        { nome: "DeepSeek",  fn: () => AIService.callDeepSeekStream(fullPrompt, null, onChunk) },
+        { nome: "SambaNova", fn: () => AIService.chamarIAComCascata(fullPrompt, ["SambaNova", "xAI"]).then(r => onChunk(r.resultado)) },
+      ];
+      let streamOk = false;
+      for (const { nome, fn } of streamCascata) {
         try {
-          await AIService.callGroqStream(fullPrompt, null, onChunk);
-        } catch (e2) {
-          console.warn("[STREAM] Groq falhou, tentando Cerebras:", e2.message);
-          try {
-            await AIService.callCerebrasStream(fullPrompt, null, onChunk);
-          } catch (e3) {
-            console.warn("[STREAM] Cerebras falhou, tentando DeepSeek:", e3.message);
-            await AIService.callDeepSeekStream(fullPrompt, null, onChunk);
-          }
+          await fn();
+          streamOk = true;
+          break;
+        } catch (err) {
+          const code = err.message.match(/\d{3}/)?.[0];
+          console.warn(`[STREAM] ${nome} falhou (${code || err.message.slice(0,40)}), tentando proxima...`);
         }
       }
+      if (!streamOk) throw new Error("Todos os providers de stream falharam");
     }
 };
 
