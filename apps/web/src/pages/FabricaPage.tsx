@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch, apiStream } from '../api/client'
+import { apiFetch } from '../api/client'
 
 const ETAPAS = ['Analista', 'Comandante', 'Arquiteto', 'Coder', 'Designer', 'Auditor']
 
@@ -33,20 +33,23 @@ export function FabricaPage() {
       setPipelineId(pid)
       setLog((l) => [...l, `✅ Pipeline iniciado: ${pid}`])
 
-      // Stream de progresso
-      apiStream(
-        `/fabrica/pipeline/${pid}/stream`,
-        {},
-        (chunk) => {
-          try {
-            const ev = JSON.parse(chunk)
-            if (ev.etapa) { setEtapa(ETAPAS.findIndex((e) => e.toLowerCase() === ev.etapa.toLowerCase())); setLog((l) => [...l, `▶ ${ev.etapa}: ${ev.mensagem || ''}`]) }
-            if (ev.mensagem) setLog((l) => [...l, ev.mensagem])
-          } catch { setLog((l) => [...l, chunk]) }
-        },
-        () => { setRunning(false); setLog((l) => [...l, '🎉 Pipeline concluído!']) },
-        (err) => { setRunning(false); setLog((l) => [...l, `❌ Erro: ${err}`]) }
-      )
+      // Stream de progresso via EventSource (SSE GET)
+      const token = localStorage.getItem('qg_auth_token') || ''
+      const evtSource = new EventSource(`/api/fabrica/pipeline/${pid}/stream?token=${token}`)
+      evtSource.onmessage = (e) => {
+        try {
+          const ev = JSON.parse(e.data)
+          if (ev.tipo === 'stream_encerrado') {
+            evtSource.close(); setRunning(false); setLog((l) => [...l, '🎉 Pipeline concluído!']); return
+          }
+          if (ev.tipo === 'erro') {
+            evtSource.close(); setRunning(false); setLog((l) => [...l, `❌ ${ev.mensagem}`]); return
+          }
+          if (ev.etapa) { setEtapa(ETAPAS.findIndex((e2) => e2.toLowerCase() === ev.etapa.toLowerCase())); setLog((l) => [...l, `▶ ${ev.etapa}: ${ev.mensagem || ''}`]) }
+          else if (ev.mensagem) setLog((l) => [...l, ev.mensagem])
+        } catch { setLog((l) => [...l, e.data]) }
+      }
+      evtSource.onerror = () => { evtSource.close(); setRunning(false); setLog((l) => [...l, '🎉 Pipeline concluído!']) }
     } catch (err) {
       setRunning(false)
       setLog((l) => [...l, `❌ ${(err as Error).message}`])
@@ -61,8 +64,8 @@ export function FabricaPage() {
           <h2 style={{ fontSize: 18, fontWeight: 700 }}>🏭 Fábrica de IA</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
             Status:{' '}
-            <span style={{ color: status?.fabrica?.status === 'online' ? 'var(--color-success)' : status?.fabrica?.status ? 'var(--color-error)' : 'var(--color-text-muted)' }}>
-              {status?.fabrica?.status === 'online' ? 'Online' : status?.fabrica?.status ? `Offline — ${status.fabrica.status}` : 'Conectando...'}
+            <span style={{ color: status?.fabrica?.status?.toLowerCase() === 'online' ? 'var(--color-success)' : status?.fabrica?.status ? 'var(--color-error)' : 'var(--color-text-muted)' }}>
+              {status?.fabrica?.status?.toLowerCase() === 'online' ? 'Online' : status?.fabrica?.status ? `Offline — ${status.fabrica.status}` : 'Conectando...'}
             </span>
           </p>
         </div>

@@ -24,7 +24,7 @@ export function DashboardPage() {
   })
 
   return (
-    <div className="p-6 h-full overflow-y-auto bg-[#050505]">
+    <div className="p-6 overflow-y-auto bg-[#050505]">
 
       {/* ── Hero Strip ── */}
       <section className="mb-8 border border-white/5 bg-[#0B0D10] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">

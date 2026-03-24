@@ -85,7 +85,7 @@ export function AppShell() {
       </aside>
 
       {/* ── Content Area ── */}
-      <div className="transition-all duration-300 mt-12 h-[calc(100vh-3rem)] overflow-hidden" style={{ marginLeft: expanded ? '192px' : '64px' }}>
+      <div className="transition-all duration-300 mt-12 h-[calc(100vh-3rem)] overflow-y-auto" style={{ marginLeft: expanded ? '192px' : '64px' }}>
         <Outlet />
       </div>
 
