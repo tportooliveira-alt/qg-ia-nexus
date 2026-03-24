@@ -169,14 +169,54 @@ const STATUS_LABEL: Record<string, string> = {
   offline:     '✕ OFFLINE',
 }
 
+// ─── Interface para dados da API ───────────────────────────────────────────
+interface AtividadeAPI {
+  agenteId: string
+  status: string
+  projeto: string | null
+  descricao: string
+  iaUsada: string | null
+  desde: number
+}
+
 // ─── Componente principal ──────────────────────────────────────────────────
 export function AgentNetwork() {
   const [selecionado, setSelecionado] = useState<No | null>(null)
   const [pulsando, setPulsando] = useState<Set<string>>(new Set(['nexus', 'gem', 'groq', 'evolution']))
   const [simulando, setSimulando] = useState(false)
   const [etapaAtiva, setEtapaAtiva] = useState<string | null>(null)
-  // Pulsação contínua — rotaciona entre nós ativos
+
+  // ── Atividade real do servidor ──────────────────────────────────────────
+  const [atividadesReais, setAtividadesReais] = useState<AtividadeAPI[]>([])
+  const [ativosReais, setAtivosReais] = useState<Set<string>>(new Set())
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null)
+
   useEffect(() => {
+    const token = localStorage.getItem('qg_auth_token') || ''
+    async function fetchActivity() {
+      try {
+        const res = await fetch('/api/agents/activity', {
+          headers: { 'X-QG-Token': token }
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setAtividadesReais(data.detalhes || [])
+        setAtivosReais(new Set(data.ativos || []))
+        setUltimaAtualizacao(new Date())
+      } catch { /* ignora erros de rede */ }
+    }
+    fetchActivity()
+    const timer = setInterval(fetchActivity, 3000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Pulsação: usa dados reais se disponíveis, senão rotaciona os padrão
+  useEffect(() => {
+    if (simulando) return
+    if (ativosReais.size > 0) {
+      setPulsando(new Set([...ativosReais, 'nexus']))
+      return
+    }
     const nos_ativos = NOS.filter(n => n.status === 'ativo' || n.status === 'trabalhando').map(n => n.id)
     let idx = 0
     const timer = setInterval(() => {
@@ -189,7 +229,7 @@ export function AgentNetwork() {
       idx++
     }, 1200)
     return () => clearInterval(timer)
-  }, [])
+  }, [ativosReais, simulando])
 
   const simularPipeline = useCallback(() => {
     if (simulando) return
@@ -505,7 +545,120 @@ export function AgentNetwork() {
           <text x="560" y="44" textAnchor="middle" fill="#4B5563" fontSize="8.5" letterSpacing="2">
             NEXUS CLAW · FÁBRICA · PROJETOS · INFRAESTRUTURA
           </text>
+
+          {/* ── Labels de atividade em tempo real ─── */}
+          {atividadesReais.map((atv) => {
+            const no = NOS.find(n => n.id === atv.agenteId)
+            if (!no) return null
+            const r = raioNo(no.tipo)
+            const labelY = no.y - r - 16
+            const txt = atv.iaUsada ? `⚡ ${atv.iaUsada}` : atv.descricao.slice(0, 28)
+            const w = txt.length * 5.5 + 12
+            return (
+              <g key={`lbl-${atv.agenteId}`}>
+                {/* Linha de ligação label → nó */}
+                <line
+                  x1={no.x} y1={labelY + 10}
+                  x2={no.x} y2={no.y - r}
+                  stroke={no.cor + '88'} strokeWidth="1"
+                  strokeDasharray="3,2"
+                />
+                {/* Badge da atividade */}
+                <rect
+                  x={no.x - w / 2} y={labelY - 10}
+                  width={w} height={16}
+                  rx="6"
+                  fill={no.cor + '22'}
+                  stroke={no.cor + '99'}
+                  strokeWidth="1"
+                />
+                <text
+                  x={no.x} y={labelY + 1}
+                  textAnchor="middle"
+                  fill={no.cor}
+                  fontSize="8" fontWeight="700"
+                >
+                  {txt}
+                </text>
+              </g>
+            )
+          })}
         </svg>
+      </div>
+
+      {/* ── Feed de atividade em tempo real ────────────────────── */}
+      <div style={{
+        marginTop: 10,
+        background: '#0A0D12',
+        border: '1px solid #1F2937',
+        borderRadius: 10,
+        padding: '10px 14px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', letterSpacing: 1 }}>
+            ATIVIDADE EM TEMPO REAL
+          </span>
+          {ultimaAtualizacao && (
+            <span style={{ fontSize: 10, color: '#374151' }}>
+              ↻ {ultimaAtualizacao.toLocaleTimeString('pt-BR')}
+            </span>
+          )}
+          <span style={{
+            marginLeft: 'auto', fontSize: 10,
+            color: ativosReais.size > 0 ? '#22C55E' : '#4B5563',
+            fontWeight: 700,
+          }}>
+            {ativosReais.size > 0 ? `${ativosReais.size} agente(s) ativos` : 'Aguardando atividade...'}
+          </span>
+        </div>
+
+        {atividadesReais.length === 0 ? (
+          <div style={{ fontSize: 11, color: '#4B5563', fontStyle: 'italic', padding: '4px 0' }}>
+            Nenhum agente processando agora. O sistema responde a cada mensagem.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {atividadesReais.map((atv) => {
+              const no = NOS.find(n => n.id === atv.agenteId)
+              const cor = no?.cor || '#6B7280'
+              const icone = no?.icone || '●'
+              const segs = Math.round((Date.now() - atv.desde) / 1000)
+              return (
+                <div key={atv.agenteId} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: cor + '0D',
+                  border: `1px solid ${cor}33`,
+                  borderRadius: 7, padding: '6px 10px',
+                }}>
+                  <span style={{ fontSize: 16 }}>{icone}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: cor }}>{no?.label || atv.agenteId}</span>
+                      {atv.projeto && (
+                        <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 4, background: cor + '18', color: cor, border: `1px solid ${cor}44` }}>
+                          {atv.projeto}
+                        </span>
+                      )}
+                      {atv.iaUsada && (
+                        <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 4, background: '#F59E0B18', color: '#F59E0B', border: '1px solid #F59E0B44' }}>
+                          ⚡ {atv.iaUsada}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{atv.descricao}</div>
+                  </div>
+                  <span style={{ fontSize: 10, color: '#4B5563', whiteSpace: 'nowrap' }}>{segs}s atrás</span>
+                  <span style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: atv.status === 'trabalhando' ? '#F59E0B' : '#22C55E',
+                    animation: 'blink-dot 1s ease-in-out infinite',
+                    flexShrink: 0,
+                  }} />
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Painel de detalhes ──────────────────────────────────── */}

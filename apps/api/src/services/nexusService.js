@@ -4,6 +4,7 @@ const AIService = require("./aiService");
 const TerminalService = require("./terminalService");
 const MemoryService = require("./memoryService");
 const PluginManager = require("../plugins/pluginManager");
+const ActivityService = require("./activityService");
 
 // Cache de arquivos em memória — TTL de 5 minutos
 const _kbCache = new Map();
@@ -229,6 +230,9 @@ const NexusService = {
         "IMPORTANTE: NUNCA pule etapas — cada resposta deve aprofundar a ideia com novas perguntas ou sugestoes ate estar realmente completa. Seja generoso no dialogo, explore ao maximo antes de propor o prompt mestre.\n";
 
       const fullPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt;
+
+      ActivityService.registrar("nexus", { status: "trabalhando", descricao: "Processando chat...", projeto: "QG IA Nexus" });
+
       // Cascata stream: Gemini → Groq → Cerebras → SambaNova → xAI (DeepSeek removido: 402)
       const streamCascata = [
         { nome: "Gemini",    fn: () => AIService.callGeminiStream(fullPrompt, null, onChunk) },
@@ -240,14 +244,27 @@ const NexusService = {
       let streamOk = false;
       for (const { nome, fn } of streamCascata) {
         try {
+          ActivityService.registrar("nexus", { status: "trabalhando", descricao: `Usando ${nome}...`, projeto: "QG IA Nexus", iaUsada: nome });
+          // Registra provider específico como ativo também
+          const providerIdMap = { Gemini: "gem", Groq: "groq", Cerebras: "crbr", SambaNova: "sbvn", xAI: "xai" };
+          const provId = providerIdMap[nome];
+          if (provId) ActivityService.registrar(provId, { status: "trabalhando", descricao: `Gerando resposta para Nexus`, projeto: "QG IA Nexus" });
+
           await fn();
+
+          if (provId) ActivityService.finalizar(provId);
+          ActivityService.registrar("nexus", { status: "ativo", descricao: `Respondeu via ${nome}`, projeto: "QG IA Nexus", iaUsada: nome });
           streamOk = true;
           break;
         } catch (err) {
           const code = err.message.match(/\d{3}/)?.[0];
           console.warn(`[STREAM] ${nome} falhou (${code || err.message.slice(0,40)}), tentando proxima...`);
+          const providerIdMap = { Gemini: "gem", Groq: "groq", Cerebras: "crbr", SambaNova: "sbvn", xAI: "xai" };
+          const provId = providerIdMap[nome];
+          if (provId) ActivityService.finalizar(provId);
         }
       }
+      ActivityService.finalizar("nexus");
       if (!streamOk) throw new Error("Todos os providers de stream falharam");
     }
 };

@@ -4,6 +4,7 @@ const MySQLService = require("./services/mysqlService");
 const SupabaseService = require("./services/supabaseService");
 const FinancialService = require("./services/financialService");
 const ResearchService = require("./services/researchService");
+const ActivityService = require("./services/activityService");
 
 async function bootstrap(app, port) {
   app.listen(port, async () => {
@@ -62,22 +63,32 @@ async function bootstrap(app, port) {
     // ── Cron: pesquisa autônoma a cada 6 horas ────────────────────────────────
     cron.schedule("0 */6 * * *", async () => {
       console.log("[CRON] 🔍 Iniciando ciclo de pesquisa autônoma...");
+      ActivityService.registrar("research",  { status: "trabalhando", descricao: "Ciclo de pesquisa autônoma", projeto: "QG IA Nexus" });
+      ActivityService.registrar("evolution", { status: "trabalhando", descricao: "Aguardando dados do Research", projeto: "QG IA Nexus" });
       try {
         await ResearchService.cicloDeEstudoIntensivo();
         console.log("[CRON] ✅ Ciclo de pesquisa concluído.");
+        ActivityService.registrar("evolution", { status: "trabalhando", descricao: "Salvando aprendizado no Supabase", projeto: "QG IA Nexus" });
+        ActivityService.registrar("supabase",  { status: "trabalhando", descricao: "Gravando memórias do ciclo de pesquisa", projeto: "QG IA Nexus" });
       } catch (e) {
         console.error("[CRON] ❌ Falha no ciclo de pesquisa:", e.message);
+      } finally {
+        ActivityService.finalizar("research");
+        setTimeout(() => { ActivityService.finalizar("evolution"); ActivityService.finalizar("supabase"); }, 5000);
       }
     });
 
     // ── Cron: auto-correção e evolução a cada 12 horas ───────────────────────
     cron.schedule("0 */12 * * *", async () => {
       console.log("[CRON] 🧠 Iniciando ciclo de auto-correção dos agentes...");
+      ActivityService.registrar("autocorr", { status: "trabalhando", descricao: "Analisando erros e corrigindo", projeto: "QG IA Nexus" });
       try {
         await executarAutocorrecao();
         console.log("[CRON] ✅ Auto-correção concluída.");
       } catch (e) {
         console.error("[CRON] ❌ Falha na auto-correção:", e.message);
+      } finally {
+        ActivityService.finalizar("autocorr");
       }
     });
 
