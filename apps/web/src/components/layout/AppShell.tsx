@@ -79,7 +79,7 @@ export function AppShell() {
       </aside>
 
       {/* ── Content Area ── */}
-      <div className="ml-16 mt-12 min-h-screen">
+      <div className="ml-16 mt-12 h-[calc(100vh-3rem)] overflow-hidden">
         <Outlet />
       </div>
 

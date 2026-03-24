@@ -192,12 +192,17 @@ const NexusService = {
         "4. Seja proativo: se identificar um problema ou oportunidade, mencione sem esperar ser perguntado.\n";
 
       const fullPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt;
-      // Tenta Groq (gratis) → Anthropic (fallback pago)
+      // Tenta Gemini (gratis) → Groq (gratis) → Anthropic (fallback pago)
       try {
-        await AIService.callGroqStream(fullPrompt, null, onChunk);
+        await AIService.callGeminiStream(fullPrompt, null, onChunk);
       } catch (e) {
-        console.warn("[STREAM] Groq falhou, usando Anthropic:", e.message);
-        await AIService.callAnthropicStream(fullPrompt, null, onChunk);
+        console.warn("[STREAM] Gemini falhou, tentando Groq:", e.message);
+        try {
+          await AIService.callGroqStream(fullPrompt, null, onChunk);
+        } catch (e2) {
+          console.warn("[STREAM] Groq falhou, usando Anthropic:", e2.message);
+          await AIService.callAnthropicStream(fullPrompt, null, onChunk);
+        }
       }
     }
 };

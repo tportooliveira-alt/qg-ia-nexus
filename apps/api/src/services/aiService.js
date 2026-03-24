@@ -84,6 +84,44 @@ const AIService = {
     return data.content[0].text;
   },
 
+  async callGeminiStream(prompt, maxTokens = null, onChunk) {
+    if (!process.env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY ausente");
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${process.env.GEMINI_API_KEY}&alt=sse`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: getMaxTokens("Gemini", maxTokens) }
+        })
+      }
+    );
+    if (!res.ok) throw new Error(`Gemini stream falhou com status: ${res.status}`);
+
+    return new Promise((resolve, reject) => {
+      let fullText = "";
+      let buffer = "";
+      res.body.on("data", (chunk) => {
+        buffer += chunk.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw || raw === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(raw);
+            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) { fullText += text; onChunk(text); }
+          } catch { /* linha incompleta */ }
+        }
+      });
+      res.body.on("end", () => resolve(fullText));
+      res.body.on("error", reject);
+    });
+  },
+
   async callAnthropicStream(prompt, maxTokens = null, onChunk) {
     if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY ausente");
     const res = await fetch("https://api.anthropic.com/v1/messages", {
