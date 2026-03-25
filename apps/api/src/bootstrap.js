@@ -93,7 +93,31 @@ async function bootstrap(app, port) {
     });
 
     console.log("[CRON] 🔍 Pesquisa autônoma: a cada 6h | 🧠 Auto-correção: a cada 12h");
+
+    // ── Heartbeat: registra todos os agentes como monitorando ────────────────
+    registrarHeartbeats();
+    // Renova heartbeats a cada 20 minutos
+    setInterval(registrarHeartbeats, 20 * 60 * 1000);
   });
+}
+
+function registrarHeartbeats() {
+  const PROJ = "QG IA Nexus";
+  ActivityService.monitorar("nexus",    { descricao: "Aguardando comandos — online 24/7", projeto: PROJ });
+  ActivityService.monitorar("gem",      { descricao: "Provider principal — pronto", projeto: PROJ });
+  ActivityService.monitorar("groq",     { descricao: "Backup ultra-rápido — online", projeto: PROJ });
+  ActivityService.monitorar("crbr",     { descricao: "Fallback Cerebras — online", projeto: PROJ });
+  ActivityService.monitorar("sbvn",     { descricao: "Fallback SambaNova — online", projeto: PROJ });
+  ActivityService.monitorar("supa",     { descricao: "Memória ativa — leitura/escrita", projeto: PROJ });
+  ActivityService.monitorar("mysql",    { descricao: "Backup MySQL — sincronizado", projeto: PROJ });
+  ActivityService.monitorar("scout",    { descricao: "Pronto para pesquisar na web", projeto: PROJ });
+  ActivityService.monitorar("research", { descricao: "Ciclo autônomo: próximo em ~6h", projeto: PROJ });
+  ActivityService.monitorar("autocorr", { descricao: "Monitorando logs — ciclo 12h", projeto: PROJ });
+  ActivityService.monitorar("fabrica",  { descricao: "Pipeline pronto — aguardando ideia", projeto: PROJ });
+  ActivityService.monitorar("qgia",     { descricao: "Plataforma central — online", projeto: PROJ });
+  ActivityService.monitorar("agromacro",{ descricao: "PWA 27 módulos — em desenvolvimento", projeto: "AgroMacro" });
+  ActivityService.monitorar("gestcort", { descricao: "Gestão de gado de corte — ativo", projeto: "GestCort" });
+  ActivityService.monitorar("frigogest",{ descricao: "Automação frigorífico — standby", projeto: "FrigoGest" });
 }
 
 /**
