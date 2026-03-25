@@ -13,6 +13,8 @@ const port = process.env.PORT || 3000;
 // ─── Middlewares ──────────────────────────────────────────────────────────────
 app.use(cors({
   origin: [
+    "https://fabrica-ia.com.br",
+    "https://www.fabrica-ia.com.br",
     "https://ideiatoapp.me",
     "https://www.ideiatoapp.me",
     "http://localhost:3000",
