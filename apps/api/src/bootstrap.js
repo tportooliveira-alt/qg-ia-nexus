@@ -118,6 +118,7 @@ function registrarHeartbeats() {
   ActivityService.monitorar("agromacro",{ descricao: "PWA 27 módulos — em desenvolvimento", projeto: "AgroMacro" });
   ActivityService.monitorar("gestcort", { descricao: "Gestão de gado de corte — ativo", projeto: "GestCort" });
   ActivityService.monitorar("frigogest",{ descricao: "Automação frigorífico — standby", projeto: "FrigoGest" });
+  ActivityService.monitorar("hosting",  { descricao: "Consultor de hospedagem — pronto", projeto: "QG IA Nexus" });
 }
 
 /**
