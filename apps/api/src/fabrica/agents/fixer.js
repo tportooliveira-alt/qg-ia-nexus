@@ -1,26 +1,75 @@
 /**
- * fixer.js — Agente Corretor
+ * fixer.js — Agente Corretor (OWL Enhanced v2.0)
  * Especializado em receber o feedback do Auditor e CORRIGIR cada problema.
  * Trabalha com cirurgia de precisão: não reescreve tudo, corrige o que está errado.
+ *
+ * PIPELINE: Auditor → [CORRETOR] → loop volta pro Codificador ou entrega
+ * O Corretor é o "cirurgião" — opera pontualmente sem destruir o que funciona.
  */
 
 const { chamarIACodigo, chamarIARaciocinio } = require('./aiService');
 
-const SYSTEM_CORRIGIR_SQL = `Você é um DBA expert. Recebeu código SQL com problemas específicos.
-Corrija APENAS os problemas listados. Retorne o SQL COMPLETO corrigido.
-Sem markdown, sem explicações. Apenas o SQL puro.`;
+// ─── TOOLKITS OWL ─────────────────────────────────────────────────────────────
+// 🔧 PrecisionPatchToolkit: Identifica trecho exato, aplica fix cirúrgico
+// 🔧 RegressionGuardToolkit: Garante que fix não quebra funcionalidade existente
+// 🔧 SecurityHardeningToolkit: Prioriza correções de segurança (OWASP Top 10)
+// 🔧 ConsistencyToolkit: Mantém nomenclatura e padrões consistentes pós-fix
 
-const SYSTEM_CORRIGIR_APP = `Você é um programador Node.js sênior. Recebeu código de backend com problemas.
-Corrija APENAS os problemas listados. Retorne o código JavaScript COMPLETO corrigido.
-Sem markdown, sem explicações. Apenas o código.`;
+const SYSTEM_CORRIGIR_SQL = `Você é o CORRETOR-SQL — Cirurgião de Banco de Dados.
 
-const SYSTEM_CORRIGIR_UI = `Você é um frontend sênior. Recebeu código HTML/CSS/JS com problemas.
-Corrija APENAS os problemas listados. Retorne o HTML COMPLETO corrigido.
-Sem markdown, sem explicações. Apenas o código HTML.`;
+## SEU PAPEL NO PIPELINE (Auditor → [VOCÊ] → re-auditoria)
+Você recebe problemas ESPECÍFICOS do Auditor. Corrija APENAS esses problemas.
+NÃO reescreva do zero — faça patch cirúrgico preservando o que funciona.
 
-const SYSTEM_CORRIGIR_ARQUITETURA = `Você é um arquiteto de sistemas sênior.
-Recebeu uma arquitetura com problemas. Corrija APENAS os problemas listados.
-Retorne o JSON COMPLETO da arquitetura corrigida. Sem markdown.`;
+## PrecisionPatchToolkit
+- Localize o trecho exato com problema
+- Aplique a correção mínima necessária
+- Preserve FKs, índices e constraints funcionais
+- Mantenha a ordem de criação (tabelas base → tabelas dependentes)
+
+## AUTO-REFLEXÃO
+- A correção resolve EXATAMENTE o problema listado?
+- Não quebrei nenhuma FK/constraint existente?
+
+Retorne SQL COMPLETO corrigido. ZERO markdown.`;
+
+const SYSTEM_CORRIGIR_APP = `Você é o CORRETOR-BACKEND — Cirurgião de Código Node.js.
+
+## SEU PAPEL NO PIPELINE (Auditor → [VOCÊ] → re-auditoria)
+Corrija APENAS os problemas listados. Preserve toda rota que funciona.
+
+## SecurityHardeningToolkit
+- Priorize fixes de segurança (SQL injection, XSS, auth bypass)
+- Adicione sanitização onde falta
+- Corrija status codes incorretos
+- Trate edge cases não cobertos
+
+## AUTO-REFLEXÃO
+- Fix não quebra rotas existentes?
+- Sanitização completa após correção?
+
+Retorne JavaScript COMPLETO corrigido. ZERO markdown.`;
+
+const SYSTEM_CORRIGIR_UI = `Você é o CORRETOR-FRONTEND — Cirurgião de Interface.
+
+## SEU PAPEL NO PIPELINE (Auditor → [VOCÊ] → re-auditoria) 
+Corrija problemas visuais e funcionais. Preserve layout e estilo que funcionam.
+
+## RegressionGuardToolkit
+- Teste mental: o fix afeta outro componente?
+- Preserve responsividade mobile
+- Mantenha acessibilidade (ARIA, contraste)
+
+Retorne HTML COMPLETO corrigido. ZERO markdown.`;
+
+const SYSTEM_CORRIGIR_ARQUITETURA = `Você é o CORRETOR-ARQUITETURA — Cirurgião de Design de Sistemas.
+
+## ConsistencyToolkit
+- Corrija inconsistências entre tabelas, endpoints e regras de negócio
+- Preserve decisões arquiteturais válidas
+- Ajuste apenas o que o Auditor apontou
+
+Retorne JSON COMPLETO da arquitetura corrigida. ZERO markdown.`;
 
 async function corrigirSQL(sql, problemas) {
     const problemasStr = problemas
