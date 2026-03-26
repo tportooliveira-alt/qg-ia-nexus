@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fábrica de IA — Pipeline Multi-Agentes</title>
+  <meta name="description" content="Pipeline autônomo de 7 agentes IA para gerar projetos completos a partir de ideias.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0f; color: #f0f0f5; min-height: 100vh; }
+
+    /* Gradientes e efeitos */
+    .hero-gradient { background: linear-gradient(135deg, #0f0c29 0%, #1a0a3e 40%, #24243e 100%); }
+    .glass { background: rgba(15, 15, 30, 0.7); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid rgba(139, 92, 246, 0.15); }
+    .glow-purple { box-shadow: 0 0 40px rgba(139, 92, 246, 0.15), 0 0 80px rgba(139, 92, 246, 0.05); }
+    .glow-btn { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), inset 0 1px 0 rgba(255,255,255,0.1); }
+    .text-gradient { background: linear-gradient(135deg, #a78bfa, #6dd5fa, #2ecc71); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* Animações */
+    @keyframes pulse-glow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes typewriter { from { width: 0; } to { width: 100%; } }
+    .animate-slide-up { animation: slideUp 0.5s ease-out; }
+    .animate-fade { animation: fadeIn 0.4s ease-out; }
+    .spin { animation: spin 1s linear infinite; }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+    /* Tabs */
+    .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: #71717a; transition: all 0.2s; }
+    .tab:hover { color: #a78bfa; }
+    .tab.active { color: #a78bfa; border-bottom-color: #a78bfa; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+    /* Pipeline steps */
+    .step { background: rgba(20, 20, 35, 0.8); border: 1px solid #27272a; border-radius: 12px; padding: 16px; transition: all 0.3s; }
+    .step.active { border-color: #7c3aed; box-shadow: 0 0 20px rgba(124, 58, 237, 0.2); }
+    .step.done { border-color: #22c55e; }
+    .step.error { border-color: #ef4444; }
+
+    /* Prism overrides */
+    pre[class*="language-"] { border-radius: 12px; margin: 0; font-size: 12px; }
+    code[class*="language-"] { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+    /* Agent nodes */
+    .agent-node { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; position: relative; transition: all 0.3s; }
+    .agent-node.idle { background: #18181b; border: 2px solid #27272a; }
+    .agent-node.active { background: #2e1065; border: 2px solid #a78bfa; animation: pulse-glow 1.5s ease-in-out infinite; }
+    .agent-node.done { background: #052e16; border: 2px solid #22c55e; }
+
+    /* Textarea */
+    textarea { background: rgba(15, 15, 25, 0.9); border: 1px solid #27272a; border-radius: 16px; padding: 20px; color: #f0f0f5; font-size: 15px; resize: none; transition: border-color 0.3s; }
+    textarea:focus { outline: none; border-color: #7c3aed; }
+    textarea::placeholder { color: #52525b; }
+
+    /* Responsivo */
+    @media (max-width: 768px) {
+      .pipeline-visual { flex-direction: column; gap: 12px !important; }
+      .agent-node { width: 48px; height: 48px; font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="hero-gradient border-b border-purple-900/30">
+    <nav class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🏭</span>
+        <div>
+          <h1 class="text-lg font-bold">Fábrica de IA</h1>
+          <p class="text-xs text-purple-300/60">Pipeline Multi-Agentes Autônomo</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="status-dot" class="w-2 h-2 rounded-full bg-green-500 pulse-glow"></span>
+        <span class="text-xs text-zinc-400" id="status-text">Operacional</span>
+
+        <!-- PAINEL DE CONTROLE DOS AGENTES -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+          <span id="modo-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">🔧 TESTE</span>
+          <button id="btn-toggle-agentes" onclick="toggleAgentes()"
+            class="text-xs px-2 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/40 transition font-semibold"
+            title="Parar todos os agentes">
+            ⏸️ Pausar
+          </button>
+          <button onclick="abrirPainelControle()"
+            class="text-xs px-2 py-0.5 rounded-md bg-white/5 text-zinc-400 hover:bg-white/10 transition"
+            title="Painel de controle completo">
+            ⚙️
+          </button>
+        </div>
+
+        <a href="/" class="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition text-zinc-300">← IdeaOrganizer</a>
+      </div>
+
+      <!-- MODAL PAINEL DE CONTROLE -->
+      <div id="modal-controle" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="bg-zinc-900 border border-purple-900/40 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <h3 class="text-lg font-bold text-white mb-1">⚙️ Painel de Controle</h3>
+          <p class="text-xs text-zinc-500 mb-6">Controle os agentes e o modo de operação do sistema</p>
+
+          <!-- Status atual -->
+          <div class="bg-zinc-800/60 rounded-xl p-4 mb-4 space-y-2">
+            <div class="flex justify-between text-xs">
+              <span class="text-zinc-400">Agentes</span>
+              <span id="ctrl-agentes-status" class="font-semibold text-green-400">✅ Ativos</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-zinc-400">Modo</span>
+              <span id="ctrl-modo-status" class="font-semibold text-yellow-400">🔧 Teste</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-zinc-400">Pipelines rodando</span>
+              <span id="ctrl-pipelines" class="font-semibold text-zinc-300">0</span>
+            </div>
+          </div>
+
+          <!-- Botões de ação -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <button onclick="enviarControle('pausar')"
+              class="py-3 rounded-xl bg-red-900/30 border border-red-800/40 hover:bg-red-800/40 text-red-300 font-semibold text-sm transition">
+              ⏸️ Pausar Agentes
+            </button>
+            <button onclick="enviarControle('ligar')"
+              class="py-3 rounded-xl bg-green-900/30 border border-green-800/40 hover:bg-green-800/40 text-green-300 font-semibold text-sm transition">
+              ▶️ Ligar Agentes
+            </button>
+            <button onclick="enviarControle('modo_teste')"
+              class="py-3 rounded-xl bg-yellow-900/30 border border-yellow-800/40 hover:bg-yellow-800/40 text-yellow-300 font-semibold text-sm transition">
+              🔧 Modo Teste
+            </button>
+            <button onclick="enviarControle('modo_producao')"
+              class="py-3 rounded-xl bg-purple-900/30 border border-purple-800/40 hover:bg-purple-800/40 text-purple-300 font-semibold text-sm transition">
+              🚀 Modo Produção
+            </button>
+          </div>
+
+          <p class="text-[10px] text-zinc-600 text-center mb-4">
+            🔧 Modo Teste = emails e CRON bloqueados<br>
+            🚀 Modo Produção = sistema completo ativo
+          </p>
+
+          <button onclick="fecharPainelControle()"
+            class="w-full py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm transition">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- PIPELINE VISUAL -->
+    <div class="glass rounded-2xl p-6 mb-8 glow-purple">
+      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">Pipeline de Agentes</h2>
+      <div class="pipeline-visual flex items-center justify-center gap-4 flex-wrap" id="pipeline-nodes">
+        <div class="text-center">
+          <div class="agent-node idle" id="node-analyst">🧪</div>
+          <p class="text-[10px] text-zinc-500 mt-2 font-medium">Analista</p>
+        </div>
+        <div class="text-zinc-700 text-lg hidden md:block">→</div>
+        <div class="text-center">
+          <div class="agent-node idle" id="node-commander">🎖️</div>
+          <p class="text-[10px] text-zinc-500 mt-2 font-medium">Comandante</p>
+        </div>
+        <div class="text-zinc-700 text-lg hidden md:block">→</div>
+        <div class="text-center">
+          <div class="agent-node idle" id="node-architect">📐</div>
+          <p class="text-[10px] text-zinc-500 mt-2 font-medium">Arquiteto</p>
+        </div>
+        <div class="text-zinc-700 text-lg hidden md:block">→</div>
+        <div class="text-center">
+          <div class="agent-node idle" id="node-coder">💻</div>
+          <p class="text-[10px] text-zinc-500 mt-2 font-medium">Codificador</p>
+        </div>
+        <div class="text-zinc-700 text-lg hidden md:block">→</div>
+        <div class="text-center">
+          <div class="agent-node idle" id="node-designer">🎨</div>
+          <p class="text-[10px] text-zinc-500 mt-2 font-medium">Designer</p>
+        </div>
+        <div class="text-zinc-700 text-lg hidden md:block">→</div>
+        <div class="text-center">
+          <div class="agent-node idle" id="node-auditor">🔍</div>
+          <p class="text-[10px] text-zinc-500 mt-2 font-medium">Auditor</p>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center gap-3">
+        <div class="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+          <div id="progress-bar" class="h-full rounded-full bg-gradient-to-r from-purple-600 to-cyan-500 transition-all duration-500" style="width:0%"></div>
+        </div>
+        <span id="progress-text" class="text-xs font-mono text-zinc-500">0%</span>
+      </div>
+      <p id="pipeline-status" class="text-xs text-zinc-500 mt-2 text-center">Aguardando ideia...</p>
+    </div>
+
+    <!-- INPUT -->
+    <div class="glass rounded-2xl p-6 mb-8">
+      <label class="text-sm font-semibold text-zinc-300 mb-3 block">💡 Descreva sua ideia</label>
+      <textarea id="input-ideia" rows="4" placeholder="Ex: Um app de controle financeiro para MEIs com dashboard, boletos e relatórios..."></textarea>
+      <div class="flex items-center justify-between mt-4">
+        <div class="flex gap-3">
+          <button onclick="exemploIdeia(1)" class="text-xs text-zinc-500 hover:text-zinc-300 transition px-2 py-1 rounded bg-white/5">Ex 1</button>
+          <button onclick="exemploIdeia(2)" class="text-xs text-zinc-500 hover:text-zinc-300 transition px-2 py-1 rounded bg-white/5">Ex 2</button>
+        </div>
+        <button onclick="executarFabrica()" id="btn-executar"
+          class="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-sm transition glow-btn flex items-center gap-2">
+          <span>🚀</span> Executar Fábrica
+        </button>
+      </div>
+    </div>
+
+    <!-- LOG EM TEMPO REAL -->
+    <div id="log-area" class="glass rounded-2xl p-6 mb-8 hidden">
+      <h3 class="text-sm font-semibold text-zinc-300 mb-3">📋 Log de Execução</h3>
+      <div id="log-entries" class="space-y-2 max-h-64 overflow-y-auto font-mono text-xs"></div>
+    </div>
+
+    <!-- RESULTADO COM ABAS -->
+    <div id="result-area" class="hidden animate-slide-up">
+      <!-- Header do resultado -->
+      <div class="glass rounded-t-2xl p-6 border-b border-purple-900/20">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-bold text-gradient" id="result-nome">Projeto Gerado</h3>
+            <p class="text-xs text-zinc-500 mt-1" id="result-meta">Aguardando...</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="exportarWord()" class="text-xs px-3 py-2 rounded-lg bg-blue-900/30 border border-blue-800/40 hover:bg-blue-800/40 text-blue-300 transition font-semibold">📄 Word</button>
+            <button onclick="exportarExcel()" class="text-xs px-3 py-2 rounded-lg bg-green-900/30 border border-green-800/40 hover:bg-green-800/40 text-green-300 transition font-semibold">📊 Excel</button>
+            <button onclick="copiarTudo()" class="text-xs px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-300 transition font-semibold">📋 Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="glass border-b border-purple-900/20 flex gap-0 overflow-x-auto">
+        <div class="tab active" onclick="mudarAba('plano')" data-tab="plano">🎖️ Plano</div>
+        <div class="tab" onclick="mudarAba('arquitetura')" data-tab="arquitetura">📐 Arquitetura</div>
+        <div class="tab" onclick="mudarAba('sql')" data-tab="sql">🗄️ SQL</div>
+        <div class="tab" onclick="mudarAba('app')" data-tab="app">💻 App</div>
+        <div class="tab" onclick="mudarAba('ui')" data-tab="ui">🎨 UI</div>
+        <div class="tab" onclick="mudarAba('auditoria')" data-tab="auditoria">🔍 Auditoria</div>
+      </div>
+
+      <!-- Conteúdo das abas -->
+      <div class="glass rounded-b-2xl p-6">
+        <div id="aba-plano" class="tab-content active">
+          <pre><code class="language-json" id="code-plano">{}</code></pre>
+        </div>
+        <div id="aba-arquitetura" class="tab-content">
+          <pre><code class="language-json" id="code-arquitetura">{}</code></pre>
+        </div>
+        <div id="aba-sql" class="tab-content">
+          <pre><code class="language-sql" id="code-sql">-- Aguardando...</code></pre>
+        </div>
+        <div id="aba-app" class="tab-content">
+          <pre><code class="language-javascript" id="code-app">// Aguardando...</code></pre>
+        </div>
+        <div id="aba-ui" class="tab-content">
+          <div id="ui-preview" class="border border-zinc-800 rounded-xl overflow-hidden mb-4" style="height:400px">
+            <iframe id="iframe-ui" class="w-full h-full bg-white" srcdoc="<p style='padding:40px;color:#888;text-align:center'>Preview aparecerá aqui</p>"></iframe>
+          </div>
+          <details class="mt-2">
+            <summary class="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300">Ver código HTML</summary>
+            <pre class="mt-2"><code class="language-markup" id="code-ui">&lt;!-- Aguardando... --&gt;</code></pre>
+          </details>
+        </div>
+        <div id="aba-auditoria" class="tab-content">
+          <div id="auditoria-visual"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center py-8 text-xs text-zinc-600">
+    Fábrica de IA v2.0 · Pipeline: Analista → Comandante → Arquiteto → Codificador → Designer → Auditor
+  </footer>
+
+  <script>
+    // ═══════════════════════════════════════════════
+    // CONFIGURAÇÃO
+    // ═══════════════════════════════════════════════
+    // Se estiver rodando local (localhost/127) usa origin, senão aponta pro Render
+    const API_BASE = window.location.origin;
+
+    // Chave da fábrica — não usa prompt() no load (bloqueia página em alguns browsers)
+    let CHAVE = localStorage.getItem('fabrica_chave') || 'qgia-fabrica-2026';
+    localStorage.setItem('fabrica_chave', CHAVE);
+
+    let resultadoAtual = null;
+
+    // ═══════════════════════════════════════════════
+    // PIPELINE VISUAL
+    // ═══════════════════════════════════════════════
+    const agentOrder = ['analyst', 'commander', 'architect', 'coder', 'designer', 'auditor'];
+    
+    function ativarNode(id) {
+      agentOrder.forEach(a => {
+        const el = document.getElementById('node-' + a);
+        if (a === id) { el.className = 'agent-node active'; }
+      });
+    }
+
+    function concluirNode(id) {
+      const el = document.getElementById('node-' + id);
+      if (el) el.className = 'agent-node done';
+    }
+
+    function resetNodes() {
+      agentOrder.forEach(a => {
+        document.getElementById('node-' + a).className = 'agent-node idle';
+      });
+      setProgress(0);
+      document.getElementById('pipeline-status').textContent = 'Aguardando ideia...';
+    }
+
+    function setProgress(pct, label) {
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-text').textContent = pct + '%';
+      if (label) document.getElementById('pipeline-status').textContent = label;
+    }
+
+    // ═══════════════════════════════════════════════
+    // LOG
+    // ═══════════════════════════════════════════════
+    function addLog(agente, msg, tipo = '') {
+      const log = document.getElementById('log-entries');
+      const cores = { 'COMANDANTE': '#a78bfa', 'ARQUITETO': '#60a5fa', 'CODIFICADOR': '#34d399', 'DESIGNER': '#f472b6', 'AUDITOR': '#f59e0b', 'ANALISTA': '#06b6d4', 'FÁBRICA': '#8b5cf6' };
+      const cor = cores[agente] || '#71717a';
+      const icon = tipo === 'ok' ? '✅' : tipo === 'err' ? '❌' : tipo === 'warn' ? '⚠️' : '→';
+      log.innerHTML += `<div class="flex gap-2 items-start animate-fade"><span style="color:${cor}" class="font-bold shrink-0">[${agente}]</span><span class="text-zinc-400">${icon} ${msg}</span></div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // ═══════════════════════════════════════════════
+    // EXECUTAR FÁBRICA
+    // ═══════════════════════════════════════════════
+    let pipelineAtual = null; // EventSource ativo
+
+    async function executarFabrica() {
+      const ideia = document.getElementById('input-ideia').value.trim();
+      if (!ideia || ideia.length < 5) { alert('Descreva sua ideia (mín 5 caracteres)'); return; }
+      if (!CHAVE) { alert('Chave da Fábrica não configurada!'); return; }
+
+      // Fechar pipeline anterior se existir
+      if (pipelineAtual) { pipelineAtual.close(); pipelineAtual = null; }
+
+      // Reset UI
+      resetNodes();
+      document.getElementById('log-area').classList.remove('hidden');
+      document.getElementById('log-entries').innerHTML = '';
+      document.getElementById('result-area').classList.add('hidden');
+      document.getElementById('btn-executar').disabled = true;
+      document.getElementById('btn-executar').innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full spin"></div> Executando...';
+
+      try {
+        // PASSO 1: Iniciar pipeline e obter ID imediatamente
+        const initResp = await fetch(`${API_BASE}/api/fabrica/pipeline/iniciar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-chave-fabrica': CHAVE },
+          body: JSON.stringify({ ideia, usuario_id: 'usuario_web' })
+        });
+
+        if (!initResp.ok) {
+          // Fallback: tentar rota antiga
+          return executarFabricaLegado(ideia);
+        }
+
+        const { pipelineId, stream_url } = await initResp.json();
+        addLog('SISTEMA', `Pipeline ${pipelineId} criado — abrindo stream...`, 'ok');
+
+        // PASSO 2: Abrir SSE e receber eventos em tempo real
+        pipelineAtual = new EventSource(`${API_BASE}${stream_url}`);
+
+        pipelineAtual.onmessage = (e) => {
+          try {
+            const evento = JSON.parse(e.data);
+            processarEventoSSE(evento);
+          } catch (err) { /* ignora malformed */ }
+        };
+
+        pipelineAtual.onerror = () => {
+          addLog('SISTEMA', '⚠️ Conexão SSE perdida', 'err');
+          fecharPipeline();
+        };
+
+      } catch (err) {
+        addLog('FÁBRICA', `Erro: ${err.message}`, 'err');
+        setProgress(0, '❌ Erro');
+        fecharPipeline();
+      }
+    }
+
+    // Processar cada evento SSE recebido em tempo real
+    function processarEventoSSE(ev) {
+      const { tipo, agente, mensagem, progresso, dados } = ev;
+
+      // Atualizar log visual
+      if (mensagem) addLog(agente || 'SISTEMA', mensagem, tipo?.includes('erro') ? 'err' : 'ok');
+
+      // Atualizar barra de progresso
+      if (progresso !== undefined && progresso >= 0) setProgress(progresso, mensagem || '');
+
+      // Ativar/concluir nós do pipeline
+      const mapa = {
+        'Analista': 'analyst', 'Comandante': 'commander',
+        'Arquiteto': 'architect', 'CoderChief': 'coder',
+        'SqlAgent': 'coder', 'BackendAgent': 'coder', 'FrontendAgent': 'coder',
+        'Designer': 'designer', 'Auditor-Claude': 'auditor', 'Corretor': 'auditor'
+      };
+      if (agente && mapa[agente]) {
+        if (tipo === 'agente_ativo') ativarNode(mapa[agente]);
+        if (tipo === 'agente_concluido') concluirNode(mapa[agente]);
+      }
+
+      // Sub-agentes spawn
+      if (tipo === 'sub_agentes_spawn' && ev.agentes) {
+        addLog('CoderChief', `⚡ Paralelo: ${ev.agentes.join(' + ')}`, 'ok');
+      }
+
+      // Auditoria
+      if (tipo === 'auditoria_resultado' && dados) {
+        const cor = dados.veredicto === 'APROVADO' ? 'ok' : dados.veredicto === 'REPROVADO' ? 'err' : '';
+        addLog('Auditor-Claude', `${dados.veredicto} | Score: ${dados.score}/100`, cor);
+      }
+
+      // Concluído
+      if (tipo === 'pipeline_concluido' && dados) {
+        agentOrder.forEach(a => concluirNode(a));
+        setProgress(100, '✅ Concluído!');
+        resultadoAtual = dados;
+        const res = dados.resultado || dados;
+        mostrarResultado(res);
+        fecharPipeline();
+      }
+
+      // Erro ou cancelado
+      if (tipo === 'pipeline_erro' || tipo === 'pipeline_cancelado') {
+        setProgress(0, '❌ ' + (mensagem || 'Falhou'));
+        fecharPipeline();
+      }
+    }
+
+    function fecharPipeline() {
+      if (pipelineAtual) { pipelineAtual.close(); pipelineAtual = null; }
+      document.getElementById('btn-executar').disabled = false;
+      document.getElementById('btn-executar').innerHTML = '<span>🚀</span> Executar Fábrica';
+    }
+
+    // Fallback: rota antiga (sem SSE) caso o servidor seja versão anterior
+    async function executarFabricaLegado(ideia) {
+      addLog('SISTEMA', 'Usando modo legado (sem streaming)...', '');
+      try {
+        const resp = await fetch(`${API_BASE}/api/fabrica/orquestrar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-chave-fabrica': CHAVE },
+          body: JSON.stringify({ ideia })
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        resultadoAtual = data;
+        agentOrder.forEach(a => concluirNode(a));
+        setProgress(100, '✅ Completo');
+        mostrarResultado(data.resultado || data);
+      } catch (err) {
+        addLog('FÁBRICA', `Erro: ${err.message}`, 'err');
+      }
+      fecharPipeline();
+    }
+
+    function simulateProgress() {
+      let pct = 5;
+      const steps = [
+        { p: 15, label: '🎖️ Comandante planejando...', node: 'commander' },
+        { p: 30, label: '📐 Arquiteto projetando...', node: 'architect' },
+        { p: 50, label: '💻 Codificador gerando SQL...', node: 'coder' },
+        { p: 65, label: '💻 Codificador gerando App...', node: 'coder' },
+        { p: 75, label: '🎨 Designer criando UI...', node: 'designer' },
+        { p: 88, label: '🔍 Auditor revisando...', node: 'auditor' },
+      ];
+      let idx = 0;
+      return setInterval(() => {
+        if (idx < steps.length) {
+          pct = steps[idx].p;
+          setProgress(pct, steps[idx].label);
+          ativarNode(steps[idx].node);
+          if (idx > 0) concluirNode(steps[idx - 1].node);
+          addLog(steps[idx].node.toUpperCase(), steps[idx].label.replace(/[^\w\s]/g, '').trim());
+          idx++;
+        }
+      }, 8000);
+    }
+
+    // ═══════════════════════════════════════════════
+    // MOSTRAR RESULTADO
+    // ═══════════════════════════════════════════════
+    function mostrarResultado(data) {
+      document.getElementById('result-area').classList.remove('hidden');
+
+      const nome = data.plano?.nome_sugerido || data.projeto?.nome || 'Projeto';
+      const tempo = data.tempo_total_ms ? `${(data.tempo_total_ms / 1000).toFixed(1)}s` : '';
+      const veredicto = data.auditoria?.veredicto || 'N/A';
+      const score = data.auditoria?.score || 0;
+
+      document.getElementById('result-nome').textContent = `🏭 ${nome}`;
+      document.getElementById('result-meta').textContent = `Gerado em ${tempo} · Score: ${score}/100 · ${veredicto} · ${data.provedores_usados?.join(', ') || ''}`;
+
+      // Plano
+      document.getElementById('code-plano').textContent = JSON.stringify(data.plano || {}, null, 2);
+
+      // Arquitetura
+      document.getElementById('code-arquitetura').textContent = JSON.stringify(data.arquitetura || {}, null, 2);
+
+      // SQL
+      document.getElementById('code-sql').textContent = data.codigo_sql || '-- Nenhum SQL gerado';
+
+      // App
+      document.getElementById('code-app').textContent = data.codigo_app || '// Nenhum código gerado';
+
+      // UI
+      const uiCode = data.codigo_ui || data.design?.html_preview || '';
+      document.getElementById('code-ui').textContent = uiCode || '<!-- Nenhum UI gerado -->';
+      if (uiCode) document.getElementById('iframe-ui').srcdoc = uiCode;
+
+      // Auditoria
+      renderAuditoria(data.auditoria);
+
+      // Re-highlight com Prism
+      Prism.highlightAll();
+    }
+
+    function renderAuditoria(audit) {
+      if (!audit) return;
+      const cor = audit.veredicto === 'APROVADO' ? 'green' : audit.veredicto === 'REPROVADO' ? 'red' : 'yellow';
+      let html = `
+        <div class="flex items-center gap-4 mb-6">
+          <div class="text-center">
+            <div class="text-4xl font-black text-${cor}-400">${audit.score || 0}</div>
+            <div class="text-xs text-zinc-500">Score</div>
+          </div>
+          <div class="flex-1">
+            <div class="text-lg font-bold text-${cor}-400">${audit.veredicto || 'N/A'}</div>
+            <p class="text-sm text-zinc-400">${audit.resumo || ''}</p>
+          </div>
+        </div>`;
+
+      if (audit.problemas?.length > 0) {
+        html += '<h4 class="text-xs font-semibold text-zinc-400 uppercase mb-2">Problemas Encontrados</h4>';
+        audit.problemas.forEach(p => {
+          const gc = p.gravidade === 'alta' ? 'red' : p.gravidade === 'media' ? 'yellow' : 'zinc';
+          html += `<div class="flex gap-2 items-start mb-2 p-3 rounded-lg bg-${gc}-900/20 border border-${gc}-800/30">
+            <span class="text-xs font-bold text-${gc}-400 shrink-0">[${p.gravidade?.toUpperCase()}]</span>
+            <span class="text-xs text-zinc-300">${p.local}: ${p.descricao}</span>
+          </div>`;
+        });
+      }
+
+      if (audit.sugestoes?.length > 0) {
+        html += '<h4 class="text-xs font-semibold text-zinc-400 uppercase mt-4 mb-2">Sugestões</h4>';
+        audit.sugestoes.forEach(s => {
+          html += `<div class="text-xs text-zinc-400 mb-1">💡 ${s}</div>`;
+        });
+      }
+
+      document.getElementById('auditoria-visual').innerHTML = html;
+    }
+
+    // ═══════════════════════════════════════════════
+    // ABAS
+    // ═══════════════════════════════════════════════
+    function mudarAba(nome) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === nome));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.toggle('active', tc.id === 'aba-' + nome));
+    }
+
+    // ═══════════════════════════════════════════════
+    // EXPORTAÇÃO WORD
+    // ═══════════════════════════════════════════════
+    function exportarWord() {
+      if (!resultadoAtual) { alert('Execute a fábrica primeiro!'); return; }
+      const d = resultadoAtual;
+      const nome = d.plano?.nome_sugerido || 'Projeto';
+      
+      let html = `<html><head><meta charset="UTF-8"><style>body{font-family:Arial;padding:40px}h1{color:#333}h2{color:#555;border-bottom:1px solid #ddd;padding-bottom:8px}pre{background:#f5f5f5;padding:16px;border-radius:8px;overflow:auto;font-size:12px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f0f0f0}</style></head><body>`;
+      html += `<h1>🏭 ${nome} — Relatório da Fábrica de IA</h1>`;
+      html += `<p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>`;
+      html += `<p><strong>Score:</strong> ${d.auditoria?.score || 0}/100 — ${d.auditoria?.veredicto || 'N/A'}</p>`;
+      
+      html += `<h2>📐 Arquitetura</h2><pre>${JSON.stringify(d.arquitetura, null, 2)}</pre>`;
+      html += `<h2>🗄️ Código SQL</h2><pre>${escHtml(d.codigo_sql || '')}</pre>`;
+      html += `<h2>💻 Código App</h2><pre>${escHtml(d.codigo_app || '')}</pre>`;
+      html += `<h2>🔍 Auditoria</h2><pre>${JSON.stringify(d.auditoria, null, 2)}</pre>`;
+      html += '</body></html>';
+
+      download(`${nome.replace(/\s/g, '_')}_relatorio.doc`, html, 'application/msword');
+    }
+
+    // ═══════════════════════════════════════════════
+    // EXPORTAÇÃO EXCEL (CSV)
+    // ═══════════════════════════════════════════════
+    function exportarExcel() {
+      if (!resultadoAtual) { alert('Execute a fábrica primeiro!'); return; }
+      const d = resultadoAtual;
+      const nome = d.plano?.nome_sugerido || 'Projeto';
+
+      let csv = 'Campo,Valor\n';
+      csv += `Nome,${nome}\n`;
+      csv += `Tipo,${d.plano?.tipo_projeto || 'N/A'}\n`;
+      csv += `Complexidade,${d.plano?.complexidade || 'N/A'}\n`;
+      csv += `Score,${d.auditoria?.score || 0}\n`;
+      csv += `Veredicto,${d.auditoria?.veredicto || 'N/A'}\n`;
+      csv += `Tempo (ms),${d.tempo_total_ms || 0}\n`;
+
+      if (d.arquitetura?.tabelas) {
+        csv += '\nTabela,Colunas\n';
+        d.arquitetura.tabelas.forEach(t => {
+          const cols = t.colunas?.map(c => c.nome || c).join('; ') || '';
+          csv += `${t.nome},"${cols}"\n`;
+        });
+      }
+
+      if (d.arquitetura?.endpoints) {
+        csv += '\nMétodo,Rota,Descrição\n';
+        d.arquitetura.endpoints.forEach(e => {
+          csv += `${e.metodo},${e.rota},"${e.descricao || ''}"\n`;
+        });
+      }
+
+      download(`${nome.replace(/\s/g, '_')}_dados.csv`, '\ufeff' + csv, 'text/csv;charset=utf-8');
+    }
+
+    function copiarTudo() {
+      if (!resultadoAtual) return;
+      const texto = JSON.stringify(resultadoAtual, null, 2);
+      navigator.clipboard.writeText(texto).then(() => alert('Copiado para a área de transferência!')).catch(e => alert('Erro: ' + e));
+    }
+
+    // ═══════════════════════════════════════════════
+    // UTILS
+    // ═══════════════════════════════════════════════
+    function download(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function exemploIdeia(n) {
+      const exemplos = {
+        1: 'Um app de controle financeiro para MEIs com dashboard de receitas/despesas, gerador de boletos, relatórios mensais em PDF e integração com WhatsApp para envio de cobranças.',
+        2: 'Sistema de gestão para pecuária de corte com pesagem de gado, cálculo de GMD, controle sanitário, gestão de pastagens com GPS e módulo financeiro completo.'
+      };
+      document.getElementById('input-ideia').value = exemplos[n] || '';
+    }
+
+    // ═══════════════════════════════════════════════
+    // CONTROLE DE AGENTES
+    // ═══════════════════════════════════════════════
+
+    let estadoControle = { agentes_ativos: true, modo_teste: true, pipelines_em_execucao: 0 };
+    const CHAVE_FABRICA = window.CHAVE_FABRICA || 'qgia-fabrica-2026';
+
+    async function carregarEstadoControle() {
+      try {
+        const r = await fetch(`${API_BASE}/api/fabrica/controle`);
+        estadoControle = await r.json();
+        atualizarUIControle();
+      } catch(e) { console.warn('Controle offline', e); }
+    }
+
+    function atualizarUIControle() {
+      const { agentes_ativos, modo_teste } = estadoControle;
+
+      // Badge modo
+      const badge = document.getElementById('modo-badge');
+      if (badge) {
+        badge.textContent = modo_teste ? '🔧 TESTE' : '🚀 PROD';
+        badge.className = modo_teste
+          ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+          : 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30';
+      }
+
+      // Botão toggle
+      const btn = document.getElementById('btn-toggle-agentes');
+      if (btn) {
+        btn.innerHTML = agentes_ativos ? '⏸️ Pausar' : '▶️ Ligar';
+        btn.className = agentes_ativos
+          ? 'text-xs px-2 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/40 transition font-semibold'
+          : 'text-xs px-2 py-0.5 rounded-md bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/40 transition font-semibold';
+      }
+
+      // Status dot
+      const dot = document.getElementById('status-dot');
+      const txt = document.getElementById('status-text');
+      if (dot && txt) {
+        if (!agentes_ativos) {
+          dot.className = 'w-2 h-2 rounded-full bg-yellow-400';
+          txt.textContent = 'Pausado';
+        } else if (modo_teste) {
+          dot.className = 'w-2 h-2 rounded-full bg-yellow-500 pulse-glow';
+          txt.textContent = 'Modo Teste';
+        } else {
+          dot.className = 'w-2 h-2 rounded-full bg-green-500 pulse-glow';
+          txt.textContent = 'Operacional';
+        }
+      }
+
+      // Modal
+      const ctrlAgentes = document.getElementById('ctrl-agentes-status');
+      const ctrlModo    = document.getElementById('ctrl-modo-status');
+      const ctrlPipes   = document.getElementById('ctrl-pipelines');
+      if (ctrlAgentes) ctrlAgentes.textContent = agentes_ativos ? '✅ Ativos' : '⏸️ Pausados';
+      if (ctrlModo)    ctrlModo.textContent    = modo_teste ? '🔧 Teste' : '🚀 Produção';
+      if (ctrlPipes)   ctrlPipes.textContent   = estadoControle.pipelines_em_execucao || 0;
+    }
+
+    async function toggleAgentes() {
+      const acao = estadoControle.agentes_ativos ? 'pausar' : 'ligar';
+      await enviarControle(acao);
+    }
+
+    async function enviarControle(acao) {
+      try {
+        const r = await fetch(`${API_BASE}/api/fabrica/controle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ acao, chave: CHAVE_FABRICA })
+        });
+        const data = await r.json();
+        if (data.success) {
+          estadoControle = data.estado;
+          atualizarUIControle();
+          // Mostrar feedback visual
+          const msg = {
+            pausar: '⏸️ Agentes pausados — nenhum pipeline vai rodar',
+            ligar: '▶️ Agentes ligados — sistema ativo',
+            modo_teste: '🔧 Modo teste ativo — emails e CRON bloqueados',
+            modo_producao: '🚀 Modo produção ativo — sistema completo'
+          };
+          alert(msg[acao] || 'Ação executada');
+        } else {
+          alert('Erro: ' + (data.error || 'Falha desconhecida'));
+        }
+      } catch(e) {
+        alert('Erro ao comunicar com o servidor: ' + e.message);
+      }
+    }
+
+    function abrirPainelControle() {
+      carregarEstadoControle();
+      document.getElementById('modal-controle').classList.remove('hidden');
+    }
+
+    function fecharPainelControle() {
+      document.getElementById('modal-controle').classList.add('hidden');
+    }
+
+    // Fechar modal clicando fora
+    document.getElementById('modal-controle').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) fecharPainelControle();
+    });
+
+    // ═══════════════════════════════════════════════
+    // STATUS CHECK
+    // ═══════════════════════════════════════════════
+    fetch(`${API_BASE}/api/status`).then(r => r.json()).then(d => {
+      estadoControle.agentes_ativos = d.agentes_ativos !== false;
+      estadoControle.modo_teste     = d.modo_teste !== false;
+      estadoControle.pipelines_em_execucao = d.pipelines_em_execucao || 0;
+      atualizarUIControle();
+    }).catch(() => {
+      document.getElementById('status-dot').className = 'w-2 h-2 rounded-full bg-red-500';
+      document.getElementById('status-text').textContent = 'Offline';
+    });
+  </script>
+</body>
+</html>

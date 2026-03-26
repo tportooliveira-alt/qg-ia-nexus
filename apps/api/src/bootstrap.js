@@ -1,8 +1,6 @@
 const cron = require("node-cron");
 const WhatsAppService = require("./services/whatsappService");
-const MySQLService = require("./services/mysqlService");
 const SupabaseService = require("./services/supabaseService");
-const FinancialService = require("./services/financialService");
 const ResearchService = require("./services/researchService");
 const ActivityService = require("./services/activityService");
 
@@ -23,41 +21,21 @@ async function bootstrap(app, port) {
       console.log("⭕ WhatsApp SERVICE: Desativado (ENABLE_WHATSAPP != true).");
     }
 
-    // ── Supabase (primário) ───────────────────────────────────────────────────
+    // ── Supabase (único backend) ──────────────────────────────────────────────
     if (SupabaseService.ativo()) {
       try {
         const ping = await SupabaseService.ping();
         if (ping.ok) {
-          console.log(`✅ Supabase: Conectado (${ping.latencia_ms}ms) — armazenamento primário ativo.`);
+          console.log(`✅ Supabase: Conectado (${ping.latencia_ms}ms) — banco de dados ativo.`);
         } else {
-          console.warn(`⚠️ Supabase: Ping falhou (${ping.erro}) — usando MySQL como fallback.`);
+          console.error(`❌ Supabase: Ping falhou (${ping.erro}) — verifique SUPABASE_URL e SUPABASE_SERVICE_KEY.`);
         }
       } catch (e) {
-        console.warn("⚠️ Supabase: Erro ao verificar conexão:", e.message);
+        console.error("❌ Supabase: Erro ao verificar conexão:", e.message);
       }
     } else {
-      console.log("⭕ Supabase: Desativado (SUPABASE_URL ou SUPABASE_SERVICE_KEY ausentes).");
-    }
-
-    // ── MySQL (backup) ────────────────────────────────────────────────────────
-    const hasMySQL = !!(
-      process.env.DB_HOST &&
-      process.env.DB_USER &&
-      process.env.DB_NAME &&
-      process.env.DB_PASS &&
-      process.env.DB_PASS !== "COLE_SUA_SENHA_MYSQL_AQUI"
-    );
-    if (hasMySQL) {
-      try {
-        await MySQLService.inicializarTabelas();
-        await FinancialService.inicializarTabelaFinanceira();
-        const sb = SupabaseService.ativo() ? " (backup — primário é Supabase)" : " (primário)";
-        console.log(`💾 MySQL: Conectado ao banco ${process.env.DB_NAME}${sb}.`);
-      } catch (e) {
-        console.log("❌ MySQL: Falha ao conectar.", e.message);
-      }
-    } else {
-      console.log("⭕ MySQL: Desativado (credenciais ausentes).");
+      console.error("❌ Supabase: DESATIVADO — SUPABASE_URL ou SUPABASE_SERVICE_KEY ausentes no .env!");
+      console.error("   → O sistema NÃO funcionará sem Supabase. Configure as variáveis e reinicie.");
     }
 
     // ── Cron: pesquisa autônoma a cada 6 horas ────────────────────────────────
@@ -108,8 +86,7 @@ function registrarHeartbeats() {
   ActivityService.monitorar("groq",     { descricao: "Backup ultra-rápido — online", projeto: PROJ });
   ActivityService.monitorar("crbr",     { descricao: "Fallback Cerebras — online", projeto: PROJ });
   ActivityService.monitorar("sbvn",     { descricao: "Fallback SambaNova — online", projeto: PROJ });
-  ActivityService.monitorar("supa",     { descricao: "Memória ativa — leitura/escrita", projeto: PROJ });
-  ActivityService.monitorar("mysql",    { descricao: "Backup MySQL — sincronizado", projeto: PROJ });
+  ActivityService.monitorar("supa",     { descricao: "Banco de dados ativo — Supabase", projeto: PROJ });
   ActivityService.monitorar("scout",    { descricao: "Pronto para pesquisar na web", projeto: PROJ });
   ActivityService.monitorar("research", { descricao: "Ciclo autônomo: próximo em ~6h", projeto: PROJ });
   ActivityService.monitorar("autocorr", { descricao: "Monitorando logs — ciclo 12h", projeto: PROJ });
@@ -132,7 +109,6 @@ async function executarAutocorrecao() {
   const MemoryService = require("./services/memoryService");
   const AIService = require("./services/aiService");
 
-  // Busca erros recentes
   const erros = await AuditService.listar({ status: "erro", limit: 10 });
   if (erros.length === 0) {
     console.log("[AUTO-CORRECAO] Nenhum erro recente encontrado — sistema saudável.");

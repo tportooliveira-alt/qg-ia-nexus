@@ -1,44 +1,56 @@
-const MySQLService = require("./mysqlService");
+/**
+ * financialService.js — Registro financeiro de projetos
+ *
+ * Armazenamento: Supabase (único backend)
+ * Tabela: transacoes_financeiras (id, projeto, tipo, valor, descricao, data_registro)
+ */
+
+const SupabaseService = require('./supabaseService');
 
 const FinancialService = {
   async registrarTransacao(projeto, tipo, valor, descricao) {
-    const sql = `
-      INSERT INTO transacoes_financeiras (projeto, tipo, valor, descricao)
-      VALUES (?, ?, ?, ?);
-    `;
+    if (!SupabaseService.ativo()) {
+      console.warn('[CFO] Supabase não configurado — transação descartada.');
+      return;
+    }
+
     try {
-      await MySQLService.query(sql, [projeto, tipo, valor, descricao]);
+      await SupabaseService.inserir('transacoes_financeiras', {
+        projeto, tipo, valor, descricao
+      });
       console.log(`[CFO] Transação registrada: ${tipo} de R$${valor} em ${projeto}`);
     } catch (err) {
-      console.error("[CFO] Erro ao registrar transação:", err.message);
+      console.error('[CFO] Erro ao registrar transação:', err.message);
     }
   },
 
   async gerarResumoDRE(projeto) {
-    const sql = `
-      SELECT 
-        SUM(CASE WHEN tipo = 'RECEITA' THEN valor ELSE 0 END) as total_receita,
-        SUM(CASE WHEN tipo = 'DESPESA' THEN valor ELSE 0 END) as total_despesa
-      FROM transacoes_financeiras
-      WHERE projeto = ?;
-    `;
-    const [res] = await MySQLService.query(sql, [projeto]);
-    const lucro = res.total_receita - res.total_despesa;
-    return { ...res, lucro };
+    if (!SupabaseService.ativo()) {
+      return { total_receita: 0, total_despesa: 0, lucro: 0 };
+    }
+
+    try {
+      const dados = await SupabaseService.buscar('transacoes_financeiras', {
+        filtros: { projeto }, limit: 1000, orderBy: 'data_registro', ascending: false
+      });
+
+      const total_receita = dados
+        .filter(t => t.tipo === 'RECEITA')
+        .reduce((sum, t) => sum + parseFloat(t.valor || 0), 0);
+      const total_despesa = dados
+        .filter(t => t.tipo === 'DESPESA')
+        .reduce((sum, t) => sum + parseFloat(t.valor || 0), 0);
+
+      return { total_receita, total_despesa, lucro: total_receita - total_despesa };
+    } catch (err) {
+      console.error('[CFO] Erro ao gerar DRE:', err.message);
+      return { total_receita: 0, total_despesa: 0, lucro: 0 };
+    }
   },
 
+  // No-op: tabela criada via SUPABASE_SETUP.sql
   async inicializarTabelaFinanceira() {
-    const sql = `
-      CREATE TABLE IF NOT EXISTS transacoes_financeiras (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        projeto VARCHAR(100),
-        tipo ENUM('RECEITA', 'DESPESA'),
-        valor DECIMAL(10, 2),
-        descricao TEXT,
-        data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-    await MySQLService.query(sql);
+    console.log('[CFO] Tabela gerenciada pelo Supabase — inicialização automática.');
   }
 };
 
