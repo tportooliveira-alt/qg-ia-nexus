@@ -1,5 +1,10 @@
 import { create } from 'zustand'
 
+const genId = () =>
+  typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36)
+
 export interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -24,11 +29,11 @@ export const useChatStore = create<ChatState>((set) => ({
 
   addUserMessage: (content) =>
     set((s) => ({
-      messages: [...s.messages, { id: crypto.randomUUID(), role: 'user', content }],
+      messages: [...s.messages, { id: genId(), role: 'user', content }],
     })),
 
   startAssistantMessage: () => {
-    const id = crypto.randomUUID()
+    const id = genId()
     set((s) => ({
       isStreaming: true,
       messages: [...s.messages, { id, role: 'assistant', content: '', streaming: true }],
