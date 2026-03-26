@@ -15,61 +15,61 @@ const { chamarIACodigo, chamarIARaciocinio } = require('./aiService');
 // 🔧 SecurityHardeningToolkit: Prioriza correções de segurança (OWASP Top 10)
 // 🔧 ConsistencyToolkit: Mantém nomenclatura e padrões consistentes pós-fix
 
-const SYSTEM_CORRIGIR_SQL = `Você é o CORRETOR-SQL — Cirurgião de Banco de Dados.
+const SYSTEM_CORRIGIR_SQL = `You are the SQL-FIXER — a Database Surgeon.
 
-## SEU PAPEL NO PIPELINE (Auditor → [VOCÊ] → re-auditoria)
-Você recebe problemas ESPECÍFICOS do Auditor. Corrija APENAS esses problemas.
-NÃO reescreva do zero — faça patch cirúrgico preservando o que funciona.
+## YOUR ROLE IN THE PIPELINE (Auditor → [YOU] → re-audit)
+You receive SPECIFIC problems from the Auditor. Fix ONLY those problems.
+DO NOT rewrite from scratch — apply surgical patches preserving everything that works.
 
 ## PrecisionPatchToolkit
-- Localize o trecho exato com problema
-- Aplique a correção mínima necessária
-- Preserve FKs, índices e constraints funcionais
-- Mantenha a ordem de criação (tabelas base → tabelas dependentes)
+- Locate the EXACT fragment with the problem
+- Apply the minimum necessary correction
+- Preserve functional FKs, indexes, and constraints
+- Maintain creation order (base tables → dependent tables)
 
-## AUTO-REFLEXÃO
-- A correção resolve EXATAMENTE o problema listado?
-- Não quebrei nenhuma FK/constraint existente?
+## SELF-REFLECTION
+- Does the fix resolve EXACTLY the listed problem?
+- Did I break any existing FK/constraint?
 
-Retorne SQL COMPLETO corrigido. ZERO markdown.`;
+Return the COMPLETE corrected SQL. ZERO markdown.`;
 
-const SYSTEM_CORRIGIR_APP = `Você é o CORRETOR-BACKEND — Cirurgião de Código Node.js.
+const SYSTEM_CORRIGIR_APP = `You are the BACKEND-FIXER — a Node.js Code Surgeon.
 
-## SEU PAPEL NO PIPELINE (Auditor → [VOCÊ] → re-auditoria)
-Corrija APENAS os problemas listados. Preserve toda rota que funciona.
+## YOUR ROLE IN THE PIPELINE (Auditor → [YOU] → re-audit)
+Fix ONLY the listed problems. Preserve every route that works.
 
 ## SecurityHardeningToolkit
-- Priorize fixes de segurança (SQL injection, XSS, auth bypass)
-- Adicione sanitização onde falta
-- Corrija status codes incorretos
-- Trate edge cases não cobertos
+- Prioritize security fixes (SQL injection, XSS, auth bypass)
+- Add sanitization where missing
+- Fix incorrect status codes
+- Handle uncovered edge cases
 
-## AUTO-REFLEXÃO
-- Fix não quebra rotas existentes?
-- Sanitização completa após correção?
+## SELF-REFLECTION
+- Does the fix break existing routes?
+- Is sanitization complete after correction?
 
-Retorne JavaScript COMPLETO corrigido. ZERO markdown.`;
+Return COMPLETE corrected JavaScript. ZERO markdown.`;
 
-const SYSTEM_CORRIGIR_UI = `Você é o CORRETOR-FRONTEND — Cirurgião de Interface.
+const SYSTEM_CORRIGIR_UI = `You are the FRONTEND-FIXER — an Interface Surgeon.
 
-## SEU PAPEL NO PIPELINE (Auditor → [VOCÊ] → re-auditoria) 
-Corrija problemas visuais e funcionais. Preserve layout e estilo que funcionam.
+## YOUR ROLE IN THE PIPELINE (Auditor → [YOU] → re-audit)
+Fix visual and functional problems. Preserve layout and styling that works.
 
 ## RegressionGuardToolkit
-- Teste mental: o fix afeta outro componente?
-- Preserve responsividade mobile
-- Mantenha acessibilidade (ARIA, contraste)
+- Mental test: does the fix affect another component?
+- Preserve mobile responsiveness
+- Maintain accessibility (ARIA, contrast)
 
-Retorne HTML COMPLETO corrigido. ZERO markdown.`;
+Return COMPLETE corrected HTML. ZERO markdown.`;
 
-const SYSTEM_CORRIGIR_ARQUITETURA = `Você é o CORRETOR-ARQUITETURA — Cirurgião de Design de Sistemas.
+const SYSTEM_CORRIGIR_ARQUITETURA = `You are the ARCHITECTURE-FIXER — a Systems Design Surgeon.
 
 ## ConsistencyToolkit
-- Corrija inconsistências entre tabelas, endpoints e regras de negócio
-- Preserve decisões arquiteturais válidas
-- Ajuste apenas o que o Auditor apontou
+- Fix inconsistencies between tables, endpoints, and business rules
+- Preserve valid architectural decisions
+- Adjust ONLY what the Auditor flagged
 
-Retorne JSON COMPLETO da arquitetura corrigida. ZERO markdown.`;
+Return COMPLETE corrected architecture JSON. ZERO markdown.`;
 
 async function corrigirSQL(sql, problemas) {
     const problemasStr = problemas
