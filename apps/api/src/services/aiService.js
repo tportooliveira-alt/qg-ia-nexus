@@ -101,27 +101,28 @@ const AIService = {
     );
     if (!res.ok) throw new Error(`Gemini stream falhou com status: ${res.status}`);
 
-    return new Promise((resolve, reject) => {
-      let fullText = "";
-      let buffer = "";
-      res.body.on("data", (chunk) => {
-        buffer += chunk.toString();
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6).trim();
-          if (!raw || raw === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(raw);
-            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) { fullText += text; onChunk(text); }
-          } catch { /* linha incompleta */ }
-        }
-      });
-      res.body.on("end", () => resolve(fullText));
-      res.body.on("error", reject);
-    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) { fullText += text; onChunk(text); }
+        } catch { /* linha incompleta */ }
+      }
+    }
+    return fullText;
   },
 
   async callAnthropicStream(prompt, maxTokens = null, onChunk) {
@@ -142,29 +143,30 @@ const AIService = {
     });
     if (!res.ok) throw new Error(`Anthropic stream falhou com status: ${res.status}`);
 
-    return new Promise((resolve, reject) => {
-      let fullText = "";
-      let buffer = "";
-      res.body.on("data", (chunk) => {
-        buffer += chunk.toString();
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6).trim();
-          if (!raw || raw === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(raw);
-            if (parsed.type === "content_block_delta" && parsed.delta?.text) {
-              fullText += parsed.delta.text;
-              onChunk(parsed.delta.text);
-            }
-          } catch { /* linha incompleta, ignora */ }
-        }
-      });
-      res.body.on("end", () => resolve(fullText));
-      res.body.on("error", reject);
-    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+            fullText += parsed.delta.text;
+            onChunk(parsed.delta.text);
+          }
+        } catch { /* linha incompleta */ }
+      }
+    }
+    return fullText;
   },
 
   async callGroqStream(prompt, maxTokens = null, onChunk) {
@@ -184,27 +186,28 @@ const AIService = {
     });
     if (!res.ok) throw new Error(`Groq stream falhou com status: ${res.status}`);
 
-    return new Promise((resolve, reject) => {
-      let fullText = "";
-      let buffer = "";
-      res.body.on("data", (chunk) => {
-        buffer += chunk.toString();
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6).trim();
-          if (!raw || raw === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(raw);
-            const text = parsed.choices?.[0]?.delta?.content;
-            if (text) { fullText += text; onChunk(text); }
-          } catch { /* linha incompleta */ }
-        }
-      });
-      res.body.on("end", () => resolve(fullText));
-      res.body.on("error", reject);
-    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const text = parsed.choices?.[0]?.delta?.content;
+          if (text) { fullText += text; onChunk(text); }
+        } catch { /* linha incompleta */ }
+      }
+    }
+    return fullText;
   },
 
   async callCerebrasStream(prompt, maxTokens = null, onChunk) {
@@ -224,27 +227,28 @@ const AIService = {
     });
     if (!res.ok) throw new Error(`Cerebras stream falhou com status: ${res.status}`);
 
-    return new Promise((resolve, reject) => {
-      let fullText = "";
-      let buffer = "";
-      res.body.on("data", (chunk) => {
-        buffer += chunk.toString();
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6).trim();
-          if (!raw || raw === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(raw);
-            const text = parsed.choices?.[0]?.delta?.content;
-            if (text) { fullText += text; onChunk(text); }
-          } catch { /* linha incompleta */ }
-        }
-      });
-      res.body.on("end", () => resolve(fullText));
-      res.body.on("error", reject);
-    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const text = parsed.choices?.[0]?.delta?.content;
+          if (text) { fullText += text; onChunk(text); }
+        } catch { /* linha incompleta */ }
+      }
+    }
+    return fullText;
   },
 
   async callDeepSeekStream(prompt, maxTokens = null, onChunk) {
@@ -264,27 +268,28 @@ const AIService = {
     });
     if (!res.ok) throw new Error(`DeepSeek stream falhou com status: ${res.status}`);
 
-    return new Promise((resolve, reject) => {
-      let fullText = "";
-      let buffer = "";
-      res.body.on("data", (chunk) => {
-        buffer += chunk.toString();
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const raw = line.slice(6).trim();
-          if (!raw || raw === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(raw);
-            const text = parsed.choices?.[0]?.delta?.content;
-            if (text) { fullText += text; onChunk(text); }
-          } catch { /* linha incompleta */ }
-        }
-      });
-      res.body.on("end", () => resolve(fullText));
-      res.body.on("error", reject);
-    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(raw);
+          const text = parsed.choices?.[0]?.delta?.content;
+          if (text) { fullText += text; onChunk(text); }
+        } catch { /* linha incompleta */ }
+      }
+    }
+    return fullText;
   },
 
   async callOpenAI(prompt, maxTokens = null) {

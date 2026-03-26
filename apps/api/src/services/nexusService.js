@@ -64,7 +64,10 @@ const NexusService = {
       }
 
       try {
-        const memorias = await MemoryService.listar({ agente: "NexusClaw", limit: 15 });
+        const memorias = await Promise.race([
+          MemoryService.listar({ agente: "NexusClaw", limit: 15 }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error("mem_timeout")), 3000))
+        ]);
         if (memorias && memorias.length) {
           const resumo = memorias.map(m => "- [" + m.categoria + "] " + m.conteudo.substring(0, 120)).join("\n");
           contextoOpcional += "\nMEMORIAS RECENTES DO NEXUS:\n" + resumo + "\n";
