@@ -62,9 +62,10 @@ Required JSON structure:
   "html_preview": "<!DOCTYPE html><html>...</html> - COMPLETE functional interface with inline CSS and JS"
 }`;
 
-async function projetarUI(arquitetura) {
+async function projetarUI(arquitetura, contexto = '') {
     const entrada = typeof arquitetura === 'object' ? JSON.stringify(arquitetura, null, 2) : String(arquitetura);
-    const prompt = `Crie o design system completo e a interface HTML para este projeto:\n\n${entrada}`;
+    const contextoExtra = contexto ? `\n\n## DOMÍNIO / CONTEXTO ADICIONAL:\n${contexto}` : '';
+    const prompt = `Crie o design system completo e a interface HTML para este projeto:${contextoExtra}\n\n${entrada}`;
 
     const resposta = await chamarIA(SYSTEM_PROMPT, prompt, 4000);
 

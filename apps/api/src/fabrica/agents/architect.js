@@ -68,16 +68,21 @@ Required JSON structure:
   "regras_negocio": ["important business rule 1", "important business rule 2"]
 }`;
 
-async function projetar(plano) {
+async function projetar(plano, contexto = '') {
     const entrada = typeof plano === 'object' ? JSON.stringify(plano, null, 2) : String(plano);
-    const prompt = `Com base neste plano, projete a arquitetura técnica completa:\n\n${entrada}`;
+    const contextoExtra = contexto ? `\n\n## DOMÍNIO / CONTEXTO ADICIONAL:\n${contexto}` : '';
+    const prompt = `Com base neste plano, projete a arquitetura técnica completa:${contextoExtra}\n\n${entrada}`;
 
     const resposta = await chamarIA(SYSTEM_PROMPT, prompt, 3000);
 
     const jsonMatch = resposta.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('Arquiteto não retornou JSON válido');
 
-    return JSON.parse(jsonMatch[0]);
+    try {
+        return JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+        throw new Error(`Arquiteto retornou JSON malformado: ${parseErr.message}`);
+    }
 }
 
 module.exports = { projetar };

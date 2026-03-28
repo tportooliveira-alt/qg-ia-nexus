@@ -12,8 +12,11 @@ const router = Router();
 // Chat completo
 router.post("/nexus/comando", autenticarToken, rateLimiter(20), async (req, res) => {
   const { prompt } = req.body;
+  if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+    return res.status(400).json({ error: "Campo 'prompt' obrigatório e não pode ser vazio." });
+  }
   try {
-    const resposta = await NexusService.processarComando(prompt, req.body.historico || []);
+    const resposta = await NexusService.processarComando(prompt.trim(), req.body.historico || []);
     await safeAudit({ agente: "NexusClaw", acao: "nexus_comando", status: "ok", detalhe: { prompt }, origem: "api" });
     res.json({ status: "Sucesso", resposta });
   } catch (err) {
@@ -25,6 +28,9 @@ router.post("/nexus/comando", autenticarToken, rateLimiter(20), async (req, res)
 // Chat streaming SSE (com sessionId para reconexão)
 router.post("/nexus/stream", autenticarToken, rateLimiter(20), async (req, res) => {
   const { prompt, historico = [], sessionId } = req.body;
+  if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+    return res.status(400).json({ error: "Campo 'prompt' obrigatório e não pode ser vazio." });
+  }
   const session = SessionService.createOrResume(sessionId);
 
   res.setHeader("Content-Type", "text/event-stream");
@@ -42,7 +48,7 @@ router.post("/nexus/stream", autenticarToken, rateLimiter(20), async (req, res) 
   send({ sessionId: session.id });
 
   try {
-    await NexusService.processarComandoStream(prompt, historico, (chunk) => {
+    await NexusService.processarComandoStream(prompt.trim(), historico, (chunk) => {
       SessionService.update(session.id, chunk);
       send({ chunk });
     });

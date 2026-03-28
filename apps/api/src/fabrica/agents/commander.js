@@ -60,15 +60,20 @@ Required JSON structure:
   "resumo": "One-sentence project summary"
 }`;
 
-async function analisar(ideia) {
-    const prompt = `Analise esta ideia e monte o plano completo:\n\n"${ideia}"`;
+async function analisar(ideia, contexto = '') {
+    const contextoExtra = contexto ? `\n\n## DOMÍNIO / CONTEXTO ADICIONAL:\n${contexto}` : '';
+    const prompt = `Analise esta ideia e monte o plano completo:${contextoExtra}\n\n"${ideia}"`;
     const resposta = await chamarIA(SYSTEM_PROMPT, prompt, 2000);
 
     // Extrair JSON da resposta
     const jsonMatch = resposta.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('Comandante não retornou JSON válido');
 
-    return JSON.parse(jsonMatch[0]);
+    try {
+        return JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+        throw new Error(`Comandante retornou JSON malformado: ${parseErr.message}`);
+    }
 }
 
 module.exports = { analisar };

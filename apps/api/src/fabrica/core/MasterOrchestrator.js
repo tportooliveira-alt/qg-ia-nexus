@@ -96,7 +96,7 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                        mensagem: `${r.tabelas?.length || 0} tabelas, ${r.endpoints?.length || 0} endpoints` });
                 return r;
             }),
-            designer.projetarUI(plano, roteamentoFinal.contextos.designer).then(r => {
+            designer.projetarUI(plano, roteamentoFinal.contextos.designer).then(r => { // FIX: fase 2 usa plano (arquitetura ainda não existe); arquitetura chega depois no loop
                 emit({ tipo: 'agente_concluido', agente: 'Designer-Conceito', progresso: 32,
                        mensagem: 'Conceito visual definido' });
                 return r;
@@ -183,7 +183,7 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
         // ── FASE 4: APRENDER + SALVAR ─────────────────────────────────────
         emit({ tipo: 'fase_iniciada', fase: 4, progresso: 90, mensagem: '💾 Salvando e aprendendo...' });
 
-        await Promise.allSettled([
+        const resultadosMemoria = await Promise.allSettled([
             AgentMemory.aprenderComAuditoria(usuario_id, plano, melhor.auditoria),
             AgentMemory.salvar('comandante', usuario_id, {
                 tipo: 'padrao_aprovado',
@@ -191,6 +191,9 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                 metadata: { score: melhor.score }
             }),
         ]);
+        resultadosMemoria.forEach((r, i) => {
+            if (r.status === 'rejected') console.error(`[MasterOrchestrator] Falha ao salvar memória [${i}]:`, r.reason?.message);
+        });
 
         // ── RESULTADO FINAL ───────────────────────────────────────────────
         const resultado = {

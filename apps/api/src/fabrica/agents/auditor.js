@@ -83,7 +83,19 @@ async function auditar(artefatos) {
         };
     }
 
-    const resultado = JSON.parse(jsonMatch[0]);
+    let resultado;
+    try {
+        resultado = JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+        return {
+            veredicto: 'PARCIAL',
+            score: 55,
+            problemas: [{ gravidade: 'baixa', local: 'Auditor', descricao: 'JSON de auditoria malformado', como_corrigir: 'Revisão manual recomendada' }],
+            pontos_positivos: ['Gerado com sucesso'],
+            sugestoes: ['Revisão manual recomendada'],
+            resumo: `Auditoria retornou JSON inválido: ${parseErr.message}`
+        };
+    }
 
     // Garantir campos obrigatórios
     resultado.veredicto = resultado.veredicto || 'PARCIAL';

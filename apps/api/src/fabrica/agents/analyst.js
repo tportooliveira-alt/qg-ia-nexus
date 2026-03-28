@@ -52,7 +52,7 @@ Required JSON structure:
   "prompt_perfeito": "Complete structured briefing describing the entire project to be passed to the Commander"
 }`;
 
-async function analisarConversa(conversa) {
+async function analisarConversa(conversa, contexto = '') {
     let textoConversa = '';
 
     if (Array.isArray(conversa)) {
@@ -64,7 +64,8 @@ async function analisarConversa(conversa) {
         textoConversa = String(conversa);
     }
 
-    const prompt = `Analise esta conversa completa e extraia todos os requisitos:\n\n${textoConversa}`;
+    const contextoExtra = contexto ? `\n\n## DOMÍNIO / CONTEXTO ADICIONAL:\n${contexto}` : '';
+    const prompt = `Analise esta conversa completa e extraia todos os requisitos:${contextoExtra}\n\n${textoConversa}`;
     const resposta = await chamarIA(SYSTEM_PROMPT, prompt, 2500);
 
     const jsonMatch = resposta.match(/\{[\s\S]*\}/);
@@ -84,7 +85,11 @@ async function analisarConversa(conversa) {
         };
     }
 
-    return JSON.parse(jsonMatch[0]);
+    try {
+        return JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+        throw new Error(`Analista retornou JSON malformado: ${parseErr.message}`);
+    }
 }
 
 async function conversaParaPrompt(conversa) {
