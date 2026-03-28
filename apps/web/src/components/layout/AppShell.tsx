@@ -11,6 +11,7 @@ const NAV = [
   { to: '/memory',    icon: 'memory',                  label: 'Memória'   },
   { to: '/audit',     icon: 'security',                label: 'Audit'     },
   { to: '/mcp',       icon: 'account_tree',            label: 'MCP'       },
+  { to: '/vps',       icon: 'dns',                     label: 'VPS'       },
 ]
 
 export function AppShell() {

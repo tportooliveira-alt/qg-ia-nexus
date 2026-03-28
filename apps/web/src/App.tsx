@@ -12,6 +12,7 @@ import { MemoryPage } from './pages/MemoryPage'
 import { KnowledgePage } from './pages/KnowledgePage'
 import { AuditPage } from './pages/AuditPage'
 import { MCPPage } from './pages/MCPPage'
+import { VPSPage } from './pages/VPSPage'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="knowledge"  element={<KnowledgePage />} />
             <Route path="audit"      element={<AuditPage />} />
             <Route path="mcp"        element={<MCPPage />} />
+            <Route path="vps"        element={<VPSPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

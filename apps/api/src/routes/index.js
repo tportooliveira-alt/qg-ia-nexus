@@ -19,5 +19,6 @@ router.use(require("./providers.routes"));
 router.use("/docs", require("./document.routes"));
 router.use(require("./activity.routes"));
 router.use(require("./capacitacao.routes"));
+router.use(require("./vps.routes"));
 
 module.exports = router;

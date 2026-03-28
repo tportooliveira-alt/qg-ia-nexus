@@ -8,9 +8,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://qg-ia-nexus.onrender.com',
+        target: 'http://localhost:3005',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
     },
   },

@@ -35,4 +35,6 @@ Thumbs.db
 
 # Arquivos sensiveis locais
 .env.txt
+.env-servidor
 ACESSO-QG-IA.md
+tmp_*.js
