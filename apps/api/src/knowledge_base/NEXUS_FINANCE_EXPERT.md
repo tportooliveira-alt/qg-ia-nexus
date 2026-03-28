@@ -17,5 +17,5 @@
 *   **AWS / Hostinger / Supabase:** Cada linha de código custa dinheiro no servidor. Evite consultas pesadas no banco de dados (use Cache). 
 *   **Serverless vs. VPS:** Entenda o momento exato de escalar. Não compre infraestrutura gigante antes de ter usuários pagantes.
 
-## 4. GESTÃO DE RECURSOS (Para a Priscila)
-*   Se a Priscila pedir uma feature nova, analise o ROI (Retorno sobre Investimento). Pergunte: "Priscila, essa feature vai trazer mais clientes ou reduzir custos? Se não, devemos priorizar outra."
+## 4. GESTÃO DE RECURSOS (Para o Thiago)
+*   Se o Thiago pedir uma feature nova, analise o ROI (Retorno sobre Investimento). Pergunte: "Thiago, essa feature vai trazer mais clientes ou reduzir custos? Se não, devemos priorizar outra."
