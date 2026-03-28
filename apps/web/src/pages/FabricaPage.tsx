@@ -138,7 +138,7 @@ export function FabricaPage() {
 
   const { data: status } = useQuery({
     queryKey: ['fabrica-status'],
-    queryFn: () => apiFetch<{ fabrica: { status: string } }>('/fabrica/status'),
+    queryFn: () => apiFetch<{ status: string; fabricaAtiva: boolean }>('/fabrica/status'),
     refetchInterval: 30000,
   })
 
@@ -159,7 +159,7 @@ export function FabricaPage() {
     setConcluido(false)
 
     try {
-      const data = await apiFetch<{ pipelineId: string; stream_url?: string }>('/fabrica/orquestrar', {
+      const data = await apiFetch<{ pipelineId: string; stream_url?: string }>('/fabrica/pipeline/iniciar', {
         method: 'POST',
         body: JSON.stringify({ ideia }),
       })
@@ -232,8 +232,8 @@ export function FabricaPage() {
     setIdeia('')
   }
 
-  const statusFab = String(status?.fabrica?.status ?? '').toLowerCase()
-  const fabricaOnline = statusFab === 'online' || statusFab === 'ok'
+  const statusFab = String(status?.status ?? '').toLowerCase()
+  const fabricaOnline = (statusFab === 'online' || statusFab === 'ok') && status?.fabricaAtiva !== false
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', padding: 24 }}>
