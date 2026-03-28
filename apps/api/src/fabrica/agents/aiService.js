@@ -114,9 +114,15 @@ const PROVEDORES = [
     {
         nome: 'Anthropic',
         ativo: () => !!process.env.ANTHROPIC_API_KEY,
-        chamar: async (system, user, maxTokens) => {
+        chamar: async (system, user, maxTokens, opcoes = {}) => {
+            // Roteamento por complexidade:
+            // raciocinio/auditoria → claude-sonnet-4-6 (melhor)
+            // tarefas rápidas     → claude-haiku-4-5-20251001 (rápido e barato)
+            const modelo = opcoes.modelo || (
+                opcoes.complexidade === 'alta' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001'
+            );
             const body = JSON.stringify({
-                model: 'claude-3-5-sonnet-20241022',
+                model: modelo,
                 max_tokens: maxTokens,
                 system: system,
                 messages: [{ role: 'user', content: user }]
@@ -262,8 +268,8 @@ const ROTAS_ESPECIALIDADE = {
     codigo:      ['DeepSeek', 'Groq', 'Mistral', 'Together', 'Fireworks', 'Anthropic', 'Gemini', 'OpenAI', 'Cerebras', 'SambaNova'],
     //  Rápido: Groq (ultra-rápido) → Cerebras → Fireworks → Together
     rapido:      ['Groq', 'Cerebras', 'Fireworks', 'Together', 'Gemini', 'Mistral', 'DeepSeek', 'Anthropic', 'OpenAI', 'SambaNova'],
-    //  Raciocínio: Anthropic → OpenAI → Mistral → Cohere → Gemini
-    raciocinio:  ['Anthropic', 'OpenAI', 'Mistral', 'Cohere', 'Gemini', 'Together', 'DeepSeek', 'Groq', 'Cerebras', 'SambaNova'],
+    //  Raciocínio: Anthropic (claude-sonnet-4-6 ATIVO!) → Mistral → Cohere → Gemini
+    raciocinio:  ['Anthropic', 'Mistral', 'Cohere', 'Gemini', 'Together', 'OpenAI', 'DeepSeek', 'Groq', 'Cerebras', 'SambaNova'],
     //  Design/Visual: Gemini (multimodal) → Anthropic → OpenAI → resto
     design:      ['Gemini', 'Anthropic', 'OpenAI', 'Mistral', 'DeepSeek', 'Groq', 'Cerebras', 'Together', 'Fireworks', 'SambaNova'],
     //  Análise: Cohere (especialista em análise) → Anthropic → Gemini → Mistral
