@@ -39,13 +39,11 @@ app.get("/dashboard", (req, res) => {
 });
 
 // ─── Fábrica de IA (frontend) ─────────────────────────────────────────────────
+// Serve o React SPA (index.html) para a rota /fabrica
+// NOTA: nginx serve arquivos estáticos de /var/www/qgia — ao atualizar o build,
+// copiar também para lá: cp -r apps/api/public/* /var/www/qgia/
 app.get("/fabrica", (req, res) => {
-  const fabricaHtml = path.join(__dirname, "public", "fabrica.html");
-  if (require("fs").existsSync(fabricaHtml)) {
-    res.sendFile(fabricaHtml);
-  } else {
-    res.status(404).json({ error: "fabrica.html não encontrado em /public" });
-  }
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
