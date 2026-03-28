@@ -90,11 +90,22 @@ const TerminalService = {
           return { status: "Erro", msg: `Falha crítica após ${maxTentativas} tentativas.`, erro: falha.stderr };
         }
 
-        // Tenta curar o comando usando IA
+        // Tenta curar o comando usando IA (com timeout de 15s para não travar)
         const promptCorrecao = `O comando terminal '${comandoAtual}' falhou com o erro: '${falha.stderr}'.\nCorrija o comando para que funcione no Linux/Hostinger e retorne APENAS o novo comando no formato CMD: <comando>.`;
-        const { resultado } = await AIService.chamarIAComCascata(promptCorrecao, ['DeepSeek', 'Gemini']);
+        let resultado;
+        try {
+          const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('IA timeout')), 15000)
+          );
+          const iaCall = AIService.chamarIAComCascata(promptCorrecao, ['Groq', 'Cerebras', 'Gemini']);
+          const iaResult = await Promise.race([iaCall, timeout]);
+          resultado = iaResult.resultado;
+        } catch (iaErr) {
+          console.log(`[TERMINAL] Auto-healing IA falhou: ${iaErr.message}`);
+          return { status: "Erro", msg: `Falha na tentativa ${tentativas}. Auto-healing indisponível.`, erro: falha.stderr };
+        }
 
-        if (resultado.includes('CMD:')) {
+        if (resultado && resultado.includes('CMD:')) {
           comandoAtual = resultado.split('CMD:')[1].trim().split('\n')[0]; // Pega só a primeira linha
 
           // Valida de novo o comando que a IA sugeriu (ela pode sugerir algo perigoso)
