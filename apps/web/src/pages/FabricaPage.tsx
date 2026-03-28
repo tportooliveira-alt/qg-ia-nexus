@@ -393,6 +393,7 @@ export function FabricaPage() {
   const [_etapaAtual, setEtapaAtual] = useState(-1)
   const [concluido, setConcluido] = useState(false)
   const [agentes, setAgentes] = useState<Record<string, EstadoAgente>>(estadoInicial())
+  const [resultadoProjeto, setResultadoProjeto] = useState<Record<string, unknown> | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
   const concluidoRef = useRef(false)
 
@@ -458,6 +459,10 @@ export function FabricaPage() {
             setEtapaAtual(5)
             atualizarAgente(5, { status: 'done', concluiuEm: Date.now() })
             adicionarMsg(tipo, ev.mensagem || '✅ Pipeline concluído!', 5)
+            // Salvar projeto completo para download
+            if (tipo === 'pipeline_concluido' && ev.dados) {
+              setResultadoProjeto(ev.dados as Record<string, unknown>)
+            }
             return
           }
 
@@ -527,6 +532,20 @@ export function FabricaPage() {
     }
     setIdeia('')
   }, [ideia, running])
+
+  // Download de arquivos gerados
+  const baixarArquivo = useCallback((conteudo: string, nome: string, tipo: string) => {
+    const blob = new Blob([conteudo], { type: tipo })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = nome; a.click()
+    URL.revokeObjectURL(url)
+  }, [])
+
+  const abrirPreview = useCallback((html: string) => {
+    const w = window.open('', '_blank')
+    if (w) { w.document.write(html); w.document.close() }
+  }, [])
 
   const statusFab = String(status?.status ?? '').toLowerCase()
   const fabricaOnline = (statusFab === 'online' || statusFab === 'ok') && status?.fabricaAtiva !== false
@@ -642,6 +661,64 @@ export function FabricaPage() {
               />
             ))}
           </div>
+
+          {/* ─── Resultado do Projeto ─────────────────────────── */}
+          {resultadoProjeto && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08))',
+              border: '1.5px solid var(--color-primary-500)',
+              borderRadius: 12, padding: 20, marginBottom: 20,
+            }}>
+              {(() => {
+                const nome = String(resultadoProjeto.nome || 'Projeto Gerado')
+                const score = resultadoProjeto.score_final as number
+                const iteracoes = String(resultadoProjeto.iteracoes ?? '?')
+                const tempoS = Math.round((resultadoProjeto.tempo_total_ms as number || 0) / 1000)
+                const aprovado = Boolean(resultadoProjeto.aprovado)
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <div>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>🎉 {nome}</h3>
+                      <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: '4px 0 0' }}>
+                        Score: <strong style={{ color: score >= 75 ? '#10B981' : '#F59E0B' }}>{score}/100</strong>
+                        {' · '}Iterações: {iteracoes}
+                        {' · '}Tempo: {tempoS}s
+                      </p>
+                    </div>
+                    <span style={{
+                      padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                      background: aprovado ? '#10B98122' : '#F59E0B22',
+                      color: aprovado ? '#10B981' : '#F59E0B',
+                      border: `1px solid ${aprovado ? '#10B981' : '#F59E0B'}`,
+                    }}>
+                      {aprovado ? '✅ APROVADO' : '⚠️ PARCIAL'}
+                    </span>
+                  </div>
+                )
+              })()}
+
+              {(() => {
+                const ui = resultadoProjeto.codigo_ui as string | null
+                const sql = resultadoProjeto.codigo_sql as string | null
+                const app = resultadoProjeto.codigo_app as string | null
+                const nomeProjeto = String(resultadoProjeto.nome || 'projeto')
+                const btnStyle = (cor: string) => ({
+                  padding: '8px 16px', borderRadius: 8, border: `1px solid ${cor}`,
+                  background: `${cor}22`, color: cor,
+                  fontWeight: 600 as const, cursor: 'pointer' as const, fontSize: 13,
+                })
+                return (
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {ui && <button onClick={() => abrirPreview(ui)} style={btnStyle('#06B6D4')}>🌐 Abrir App</button>}
+                    {ui && <button onClick={() => baixarArquivo(ui, `${nomeProjeto}.html`, 'text/html')} style={btnStyle('#7C3AED')}>⬇️ HTML</button>}
+                    {sql && <button onClick={() => baixarArquivo(sql, `${nomeProjeto}.sql`, 'text/plain')} style={btnStyle('#10B981')}>⬇️ SQL</button>}
+                    {app && <button onClick={() => baixarArquivo(app, `${nomeProjeto}_backend.js`, 'text/javascript')} style={btnStyle('#F59E0B')}>⬇️ Backend</button>}
+                    <button onClick={() => baixarArquivo(JSON.stringify(resultadoProjeto, null, 2), `${nomeProjeto}_completo.json`, 'application/json')} style={btnStyle('#6B7280')}>📦 JSON Completo</button>
+                  </div>
+                )
+              })()}
+            </div>
+          )}
 
           {/* Log de eventos compacto */}
           {mensagens.length > 0 && (
