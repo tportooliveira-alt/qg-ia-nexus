@@ -180,17 +180,54 @@ const NexusService = {
               modoComplexo
             );
 
-      if (resultado.includes("CMD:")) {
-              const cmd = resultado.split("CMD:")[1].split("\n")[0].trim();
+      let loopResultado = resultado;
+      let loopCount = 0;
+      let finalIaUsada = iaUsada;
+
+      // === LAÇO RE-ACT (MCP E CMD MUNDO REAL) ===
+      while (loopResultado.includes("MCP:") && loopCount < 3) {
+        const match = loopResultado.match(/MCP:([^:]+):([^:]+):(.+)/);
+        if (match) {
+          const mcpServer = match[1].trim();
+          const mcpTool = match[2].trim();
+          let mcpArgs = {};
+          try { mcpArgs = JSON.parse(match[3].trim()); } catch(e) {}
+          
+          let mcpCallResult = "";
+          try {
+             // Dinamicamente chamando mcpService. Se não existir o servidor em tempo de runtime, não quebra, só avisa a IA
+             mcpCallResult = await require('./mcpService').invokeTool(mcpServer, mcpTool, mcpArgs);
+          } catch(e) {
+             mcpCallResult = `Erro na ferramenta: ${e.message}`;
+          }
+
+          ActivityService.registrar("nexus", { status: "trabalhando", descricao: `Ferramenta MCP executada. Repensando...`, projeto: "QG IA Nexus" });
+          
+          const novoPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt + 
+            "\n\n[AÇÃO DO SISTEMA OCORREU]: Você pediu para usar MCP " + mcpTool + " no servidor " + mcpServer + ".\nO resultado do mundo real foi:\n" + JSON.stringify(mcpCallResult) + 
+            "\n\nLevando isso em consideração, dê a resposta final e brilhante para o usuário (não exponha novamente a sintaxe da ferramenta, apenas entregue o resultado processado ajudando-o a construir o seu futuro!).";
+
+          const subCall = await AIService.chamarIAComCascata(novoPrompt, historico, modoComplexo);
+          loopResultado = subCall.resultado;
+          finalIaUsada = subCall.iaUsada;
+          loopCount++;
+        } else {
+          break; // sintaxe falhou ou parse mal sucedido continua para resposta
+        }
+      }
+
+      // Tratamento original para CMD de Root / Sysadmin
+      if (loopResultado.includes("CMD:")) {
+              const cmd = loopResultado.split("CMD:")[1].split("\n")[0].trim();
               const execResult = await TerminalService.executarComAutoHealing(cmd);
               if (execResult.status === "Sucesso") {
-                        return "OK NEXUS [" + iaUsada + "]:\n" + resultado.split("CMD:")[0] + "\n\n[AUTO-HEALING: SUCESSO]\nSaida:\n" + execResult.stdout;
+                        return "OK NEXUS [" + finalIaUsada + "]:\n" + loopResultado.split("CMD:")[0] + "\n\n[MUNDO REAL AUTÔNOMO: SUCESSO]\nSaida:\n" + execResult.stdout;
               } else {
-                        return "AVISO NEXUS [" + iaUsada + "]:\n" + resultado.split("CMD:")[0] + "\n\n[ERRO]: " + execResult.msg + "\n" + (execResult.erro || "");
+                        return "AVISO NEXUS [" + finalIaUsada + "]:\n" + loopResultado.split("CMD:")[0] + "\n\n[ERRO DO MUNDO REAL]: " + execResult.msg + "\n" + (execResult.erro || "");
               }
       }
 
-      return "OK NEXUS [" + iaUsada + "]:\n" + resultado;
+      return "OK NEXUS [" + finalIaUsada + "]:\n" + loopResultado;
     },
 
     async processarComandoStream(prompt, historico = [], onChunk) {

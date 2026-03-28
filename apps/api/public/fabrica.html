@@ -12,8 +12,23 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  
+  <!-- Editor de Código (Ace) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/theme-tomorrow_night_eighties.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-sql.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-javascript.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-html.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-json.min.js" type="text/javascript" charset="utf-8"></script>
+
+  <!-- Bibliotecas de Exportação (XLSX, PPTX) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.min.js"></script>
   <style>
     * { font-family: 'Inter', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    .editor-container { height: 400px; width: 100%; }
+    .ui-preview-container { height: 450px; background: #fff; }
     body { background: #0a0a0f; color: #f0f0f5; min-height: 100vh; }
 
     /* Gradientes e efeitos */
@@ -242,6 +257,7 @@
             <p class="text-xs text-zinc-500 mt-1" id="result-meta">Aguardando...</p>
           </div>
           <div class="flex gap-2">
+            <button onclick="exportarPPT()" class="text-xs px-3 py-2 rounded-lg bg-orange-900/30 border border-orange-800/40 hover:bg-orange-800/40 text-orange-300 transition font-semibold">🟧 PowerPoint</button>
             <button onclick="exportarWord()" class="text-xs px-3 py-2 rounded-lg bg-blue-900/30 border border-blue-800/40 hover:bg-blue-800/40 text-blue-300 transition font-semibold">📄 Word</button>
             <button onclick="exportarExcel()" class="text-xs px-3 py-2 rounded-lg bg-green-900/30 border border-green-800/40 hover:bg-green-800/40 text-green-300 transition font-semibold">📊 Excel</button>
             <button onclick="copiarTudo()" class="text-xs px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-300 transition font-semibold">📋 Copiar</button>
@@ -262,24 +278,29 @@
       <!-- Conteúdo das abas -->
       <div class="glass rounded-b-2xl p-6">
         <div id="aba-plano" class="tab-content active">
-          <pre><code class="language-json" id="code-plano">{}</code></pre>
+          <div id="editor-plano" class="rounded-xl overflow-hidden editor-container"></div>
         </div>
         <div id="aba-arquitetura" class="tab-content">
-          <pre><code class="language-json" id="code-arquitetura">{}</code></pre>
+          <div id="editor-arquitetura" class="rounded-xl overflow-hidden editor-container"></div>
         </div>
         <div id="aba-sql" class="tab-content">
-          <pre><code class="language-sql" id="code-sql">-- Aguardando...</code></pre>
+          <div id="editor-sql" class="rounded-xl overflow-hidden editor-container"></div>
         </div>
         <div id="aba-app" class="tab-content">
-          <pre><code class="language-javascript" id="code-app">// Aguardando...</code></pre>
+          <div id="editor-app" class="rounded-xl overflow-hidden editor-container"></div>
         </div>
         <div id="aba-ui" class="tab-content">
-          <div id="ui-preview" class="border border-zinc-800 rounded-xl overflow-hidden mb-4" style="height:400px">
-            <iframe id="iframe-ui" class="w-full h-full bg-white" srcdoc="<p style='padding:40px;color:#888;text-align:center'>Preview aparecerá aqui</p>"></iframe>
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-sm text-zinc-400">Canvas Dashboard (Preview)</h4>
+            <button onclick="atualizarPreviewCanvas()" class="text-xs px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold transition">🔄 Atualizar Canvas do Editor</button>
           </div>
-          <details class="mt-2">
-            <summary class="text-xs text-zinc-500 cursor-pointer hover:text-zinc-300">Ver código HTML</summary>
-            <pre class="mt-2"><code class="language-markup" id="code-ui">&lt;!-- Aguardando... --&gt;</code></pre>
+          <div id="ui-preview" class="border border-zinc-700 rounded-xl overflow-hidden mb-4 shadow-xl ui-preview-container">
+            <iframe id="iframe-ui" class="w-full h-full border-0" srcdoc="<p style='padding:40px;color:#888;text-align:center;font-family:sans-serif'>Canvas do Aplicativo aparecerá aqui</p>"></iframe>
+          </div>
+          
+          <details class="mt-4" open>
+            <summary class="text-sm font-semibold text-zinc-300 cursor-pointer hover:text-white p-2 bg-white/5 rounded-lg mb-2">Lugar para Escrever Código (HTML/CSS/JS)</summary>
+            <div id="editor-ui" class="rounded-xl overflow-hidden border border-zinc-800 editor-container"></div>
           </details>
         </div>
         <div id="aba-auditoria" class="tab-content">
@@ -301,8 +322,41 @@
     const API_BASE = window.location.origin;
 
     // Chave da fábrica — não usa prompt() no load (bloqueia página em alguns browsers)
-    let CHAVE = localStorage.getItem('fabrica_chave') || 'qgia-fabrica-2026';
-    localStorage.setItem('fabrica_chave', CHAVE);
+    // ═══════════════════════════════════════════════
+    // CONFIGURAÇÃO DOS EDITORES DE CÓDIGO (ACE)
+    // ═══════════════════════════════════════════════
+    const editores = {};
+    
+    function inicializarEditores() {
+      const configEditor = (id, mode) => {
+        const ed = ace.edit(id);
+        ed.setTheme("ace/theme/tomorrow_night_eighties");
+        ed.session.setMode("ace/mode/" + mode);
+        ed.setOptions({
+          fontSize: "13px",
+          showPrintMargin: false,
+          enableBasicAutocompletion: true,
+          enableLiveAutocompletion: true,
+          wrap: true
+        });
+        return ed;
+      };
+
+      editores.plano = configEditor("editor-plano", "json");
+      editores.arquitetura = configEditor("editor-arquitetura", "json");
+      editores.sql = configEditor("editor-sql", "sql");
+      editores.app = configEditor("editor-app", "javascript");
+      editores.ui = configEditor("editor-ui", "html");
+    }
+
+    // Inicializar no carregamento da página
+    window.addEventListener('DOMContentLoaded', inicializarEditores);
+
+    // Atualiza o iframe com o código do editor UI
+    function atualizarPreviewCanvas() {
+      const htmlCode = editores.ui.getValue();
+      document.getElementById('iframe-ui').srcdoc = htmlCode;
+    }
 
     let resultadoAtual = null;
 
@@ -522,28 +576,18 @@
       document.getElementById('result-nome').textContent = `🏭 ${nome}`;
       document.getElementById('result-meta').textContent = `Gerado em ${tempo} · Score: ${score}/100 · ${veredicto} · ${data.provedores_usados?.join(', ') || ''}`;
 
-      // Plano
-      document.getElementById('code-plano').textContent = JSON.stringify(data.plano || {}, null, 2);
-
-      // Arquitetura
-      document.getElementById('code-arquitetura').textContent = JSON.stringify(data.arquitetura || {}, null, 2);
-
-      // SQL
-      document.getElementById('code-sql').textContent = data.codigo_sql || '-- Nenhum SQL gerado';
-
-      // App
-      document.getElementById('code-app').textContent = data.codigo_app || '// Nenhum código gerado';
-
-      // UI
-      const uiCode = data.codigo_ui || data.design?.html_preview || '';
-      document.getElementById('code-ui').textContent = uiCode || '<!-- Nenhum UI gerado -->';
-      if (uiCode) document.getElementById('iframe-ui').srcdoc = uiCode;
+      // Atualiza os Editores de Código Interativos
+      editores.plano.setValue(JSON.stringify(data.plano || {}, null, 2), -1);
+      editores.arquitetura.setValue(JSON.stringify(data.arquitetura || {}, null, 2), -1);
+      editores.sql.setValue(data.codigo_sql || '-- Nenhum SQL gerado', -1);
+      editores.app.setValue(data.codigo_app || '// Nenhum código gerado', -1);
+      
+      const uiCode = data.codigo_ui || data.design?.html_preview || '<!-- Nenhum UI gerado -->';
+      editores.ui.setValue(uiCode, -1);
+      document.getElementById('iframe-ui').srcdoc = uiCode;
 
       // Auditoria
       renderAuditoria(data.auditoria);
-
-      // Re-highlight com Prism
-      Prism.highlightAll();
     }
 
     function renderAuditoria(audit) {
@@ -613,37 +657,96 @@
     }
 
     // ═══════════════════════════════════════════════
-    // EXPORTAÇÃO EXCEL (CSV)
+    // EXPORTAÇÃO EXCEL (Usando SheetJS para .xlsx real)
     // ═══════════════════════════════════════════════
     function exportarExcel() {
       if (!resultadoAtual) { alert('Execute a fábrica primeiro!'); return; }
+      if (typeof XLSX === 'undefined') { alert('SheetJS não carregado!'); return; }
+      
       const d = resultadoAtual;
       const nome = d.plano?.nome_sugerido || 'Projeto';
 
-      let csv = 'Campo,Valor\n';
-      csv += `Nome,${nome}\n`;
-      csv += `Tipo,${d.plano?.tipo_projeto || 'N/A'}\n`;
-      csv += `Complexidade,${d.plano?.complexidade || 'N/A'}\n`;
-      csv += `Score,${d.auditoria?.score || 0}\n`;
-      csv += `Veredicto,${d.auditoria?.veredicto || 'N/A'}\n`;
-      csv += `Tempo (ms),${d.tempo_total_ms || 0}\n`;
+      // Criar WorkBook
+      const wb = XLSX.utils.book_new();
 
+      // Aba Resumo
+      const wsResumo = XLSX.utils.aoa_to_sheet([
+        ["Campo", "Valor"],
+        ["Nome", nome],
+        ["Tipo", d.plano?.tipo_projeto || 'N/A'],
+        ["Complexidade", d.plano?.complexidade || 'N/A'],
+        ["Score Auditoria", d.auditoria?.score || 0],
+        ["Veredicto", d.auditoria?.veredicto || 'N/A'],
+        ["Tempo Geração (ms)", d.tempo_total_ms || 0]
+      ]);
+      XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+
+      // Aba Tabelas Banco de Dados
       if (d.arquitetura?.tabelas) {
-        csv += '\nTabela,Colunas\n';
+        const dadosTabelas = [["Nome da Tabela", "Colunas", "Chaves / Relacionamentos"]];
         d.arquitetura.tabelas.forEach(t => {
-          const cols = t.colunas?.map(c => c.nome || c).join('; ') || '';
-          csv += `${t.nome},"${cols}"\n`;
+          dadosTabelas.push([t.nome, t.colunas?.map(c => typeof c === 'string'?c:c.nome).join(', '), JSON.stringify(t.relacionamentos||[])]);
         });
+        const wsTabelas = XLSX.utils.aoa_to_sheet(dadosTabelas);
+        XLSX.utils.book_append_sheet(wb, wsTabelas, "Tabelas_BD");
       }
 
+      // Aba Terminais/Endpoints
       if (d.arquitetura?.endpoints) {
-        csv += '\nMétodo,Rota,Descrição\n';
+        const dadosEndpoints = [["Método", "Rota", "Descrição", "Autenticação"]];
         d.arquitetura.endpoints.forEach(e => {
-          csv += `${e.metodo},${e.rota},"${e.descricao || ''}"\n`;
+          dadosEndpoints.push([e.metodo, e.rota, e.descricao || '', e.auth ? 'Sim' : 'Não']);
         });
+        const wsEndpoints = XLSX.utils.aoa_to_sheet(dadosEndpoints);
+        XLSX.utils.book_append_sheet(wb, wsEndpoints, "Endpoints_API");
       }
 
-      download(`${nome.replace(/\s/g, '_')}_dados.csv`, '\ufeff' + csv, 'text/csv;charset=utf-8');
+      // Salvar arquivo xlsx
+      XLSX.writeFile(wb, `${nome.replace(/\s/g, '_')}_Dashboard.xlsx`);
+    }
+
+    // ═══════════════════════════════════════════════
+    // EXPORTAÇÃO POWERPOINT (Usando PptxGenJS)
+    // ═══════════════════════════════════════════════
+    function exportarPPT() {
+      if (!resultadoAtual) { alert('Execute a fábrica primeiro!'); return; }
+      if (typeof PptxGenJS === 'undefined') { alert('PptxGenJS não carregado!'); return; }
+      
+      const d = resultadoAtual;
+      const nome = d.plano?.nome_sugerido || 'Projeto IA';
+      
+      let pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_WIDE';
+      
+      // Slide de Capa
+      let slide1 = pptx.addSlide();
+      slide1.background = { color: "1e1e2f" };
+      slide1.addText(`FÁBRICA DE IA`, { x:0, y:1.5, w:"100%", align:"center", color:"a78bfa", fontSize:24, bold:true });
+      slide1.addText(nome.toUpperCase(), { x:0, y:2.5, w:"100%", align:"center", color:"FFFFFF", fontSize:48, bold:true });
+      slide1.addText(`Gerado automaticamente pelo Pipeline Multi-Agente`, { x:0, y:5, w:"100%", align:"center", color:"a0a0a0", fontSize:18 });
+      
+      // Slide de Resumo
+      let slide2 = pptx.addSlide();
+      slide2.addText("Resumo Executivo", { x:0.5, y:0.5, fontSize:32, color:"2e1065", bold:true });
+      slide2.addText([
+        { text: `Tipo: ${d.plano?.tipo_projeto || 'N/A'}\n\n`, options:{ fontSize: 18 } },
+        { text: `Complexidade: ${d.plano?.complexidade || 'N/A'}\n\n`, options:{ fontSize: 18 } },
+        { text: `Score de Qualidade: ${d.auditoria?.score || 0}/100\n\n`, options:{ fontSize: 18 } },
+        { text: `Veredicto Auditoria: ${d.auditoria?.veredicto || 'N/A'}`, options:{ fontSize: 18 } }
+      ], { x: 1, y: 2, w: '80%', h: 4, align: 'left', color: '333333' });
+
+      // Slide de Arquitetura (Tabelas)
+      if (d.arquitetura?.tabelas && d.arquitetura.tabelas.length > 0) {
+        let slide3 = pptx.addSlide();
+        slide3.addText("Estrutura do Banco de Dados", { x:0.5, y:0.5, fontSize:32, color:"2e1065", bold:true });
+        let rows = [["Tabela", "Colunas"]];
+        d.arquitetura.tabelas.slice(0, 8).forEach(t => {
+          rows.push([t.nome, t.colunas?.map(c => typeof c === 'string'?c:c.nome).join(', ')]);
+        });
+        slide3.addTable(rows, { x: 0.5, y: 1.5, w: 9, fill: "F7F7F7", fontSize: 14, color: "363636" });
+      }
+
+      pptx.writeFile({ fileName: `${nome.replace(/\s/g, '_')}_Apresentacao.pptx` });
     }
 
     function copiarTudo() {
