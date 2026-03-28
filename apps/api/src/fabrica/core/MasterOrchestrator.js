@@ -29,9 +29,10 @@ const AgentMemory = require('./AgentMemory');
 const PipelineManager = require('./PipelineManager');
 const ContextRouter = require('./ContextRouter');
 const { listarProvedoresAtivos } = require('../agents/aiService');
+const SupabaseService = require('../../services/supabaseService');
 
-const MAX_ITERACOES   = 4;
-const SCORE_APROVACAO = 75;
+const MAX_ITERACOES   = 6;   // aumentado: mais chances de chegar a 100
+const SCORE_APROVACAO = 85;  // meta mais alta: 85+ para aprovar
 
 // ─── Executar pipeline completo ───────────────────────────────────────────────
 
@@ -219,6 +220,37 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
             tempo_total_ms: Date.now() - inicio,
             criado_em: new Date().toISOString()
         };
+
+        // ── SALVAR NO SUPABASE ────────────────────────────────────────────
+        if (SupabaseService.ativo()) {
+            try {
+                await SupabaseService.inserir('projetos_fabrica', {
+                    id: resultado.id,
+                    usuario_id: resultado.usuario_id,
+                    nome: resultado.nome,
+                    tipo: resultado.tipo,
+                    tipo_entregavel: resultado.tipo_entregavel,
+                    ideia_original: resultado.ideia_original,
+                    status: resultado.status,
+                    score_final: resultado.score_final,
+                    iteracoes: resultado.iteracoes,
+                    aprovado: resultado.aprovado,
+                    plano: resultado.plano,
+                    arquitetura: resultado.arquitetura,
+                    codigo_sql: resultado.codigo_sql,
+                    codigo_app: resultado.codigo_app,
+                    codigo_ui: resultado.codigo_ui,
+                    planilha: resultado.planilha,
+                    documento: resultado.documento,
+                    design_system: resultado.design_system,
+                    auditoria: resultado.auditoria,
+                    tempo_total_ms: resultado.tempo_total_ms,
+                });
+                console.log(`[MasterOrchestrator] Projeto "${resultado.nome}" salvo no Supabase (score: ${resultado.score_final})`);
+            } catch (saveErr) {
+                console.error('[MasterOrchestrator] Falha ao salvar no Supabase:', saveErr.message);
+            }
+        }
 
         emit({ tipo: 'pipeline_concluido', progresso: 100,
                mensagem: `🏁 Concluído em ${((Date.now() - inicio)/1000).toFixed(1)}s | Score: ${melhor.score}/100`,
