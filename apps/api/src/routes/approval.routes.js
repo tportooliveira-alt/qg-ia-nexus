@@ -27,7 +27,7 @@ router.post("/approvals/decide", autenticarToken, rateLimiter(20), async (req, r
     const { id, status, decisor, observacao } = req.body;
     if (!id || !status) return res.status(400).json({ error: "id e status sao obrigatorios" });
     const data = await ApprovalService.decidir({ id, status, decisor, observacao });
-    await safeAudit({ agente: decisor || "Priscila", acao: "approval_decide", status, detalhe: { id }, origem: "api" });
+    await safeAudit({ agente: decisor || "Thiago", acao: "approval_decide", status, detalhe: { id }, origem: "api" });
     res.json({ status: "Sucesso", approval: data });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

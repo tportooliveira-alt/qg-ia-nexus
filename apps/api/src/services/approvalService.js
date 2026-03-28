@@ -47,7 +47,7 @@ const ApprovalService = {
     const supabase = getSupabase();
     const payload = {
       status,
-      decisor: decisor || "Priscila",
+      decisor: decisor || "Thiago",
       observacao: observacao || null,
       decidido_em: new Date().toISOString()
     };

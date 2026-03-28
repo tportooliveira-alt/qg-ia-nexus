@@ -1,5 +1,5 @@
 {
-  "usuario": "Priscila",
+  "usuario": "Thiago",
   "estilo_de_codigo": "Moderno, Clean Code, Prioriza Performance e UX estilo n8n.",
   "projetos_ativos": [
     "QG-IA-NOVO (Centro de Comando)",
@@ -16,7 +16,7 @@
     "Criação do Visual n8n com Grafo de Fluxo."
   ],
   "aprendizados_do_thiago_claw": [
-    "A Priscila gosta de ter o controle total Root.",
+    "A Thiago gosta de ter o controle total Root.",
     "Segurança (RLS) deve ser tratada no backend, não no frontend."
   ]
 }

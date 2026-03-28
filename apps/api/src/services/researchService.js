@@ -87,7 +87,7 @@ ${FONTES_CIENTIFICAS}
 
     console.log("[ESTUDO] Ciclo de aprendizado concluído com sucesso.");
 
-    // Avisa Priscila pelo WhatsApp com resumo dos aprendizados
+    // Avisa Thiago pelo WhatsApp com resumo dos aprendizados
     const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     const msg = `⚔️ *NEXUS CLAW — Ciclo de Pesquisa Concluído*\n🕐 ${agora}\n📊 ${resumos.length}/${temas.length} temas pesquisados\n\n${resumos.slice(0,2).join('\n\n---\n\n')}\n\n_Ver tudo no Dashboard: /dashboard_`;
     await notificarWhatsApp(msg);

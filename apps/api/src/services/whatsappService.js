@@ -92,8 +92,8 @@ const WhatsAppService = {
       if (lower.startsWith("aprovar ")) {
         const id = lower.replace("aprovar ", "").trim();
         try {
-          const aprovado = await ApprovalService.decidir({ id, status: "APROVADO", decisor: "Priscila (WhatsApp)" });
-          try { await AuditService.registrar({ agente: "Priscila", acao: "approval_decide", status: "APROVADO", detalhe: { id }, origem: "whatsapp" }); } catch {}
+          const aprovado = await ApprovalService.decidir({ id, status: "APROVADO", decisor: "Thiago (WhatsApp)" });
+          try { await AuditService.registrar({ agente: "Thiago", acao: "approval_decide", status: "APROVADO", detalhe: { id }, origem: "whatsapp" }); } catch {}
           if (aprovado && aprovado.acao === "whatsapp_command") {
             let detalhes = {};
             try { detalhes = JSON.parse(aprovado.detalhes || "{}"); } catch {}
@@ -115,8 +115,8 @@ const WhatsAppService = {
       if (lower.startsWith("negar ")) {
         const id = lower.replace("negar ", "").trim();
         try {
-          await ApprovalService.decidir({ id, status: "NEGADO", decisor: "Priscila (WhatsApp)" });
-          try { await AuditService.registrar({ agente: "Priscila", acao: "approval_decide", status: "NEGADO", detalhe: { id }, origem: "whatsapp" }); } catch {}
+          await ApprovalService.decidir({ id, status: "NEGADO", decisor: "Thiago (WhatsApp)" });
+          try { await AuditService.registrar({ agente: "Thiago", acao: "approval_decide", status: "NEGADO", detalhe: { id }, origem: "whatsapp" }); } catch {}
           await sock.sendMessage(remetente, { text: `🚫 Ação negada: ${id}` });
         } catch (err) {
           await sock.sendMessage(remetente, { text: `❌ Falha ao negar: ${err.message}` });
@@ -152,7 +152,7 @@ const WhatsAppService = {
           const fabricaPlugin = PluginManager.get('fabricaIA');
           const resultado = await fabricaPlugin.submeterIdeia(ideia);
           const pipelineId = resultado.pipelineId || resultado.id || '(aguardando)';
-          try { await AuditService.registrar({ agente: "Priscila", acao: "fabrica_whatsapp", status: "ok", detalhe: { pipelineId, ideia: ideia.substring(0,80) }, origem: "whatsapp" }); } catch {}
+          try { await AuditService.registrar({ agente: "Thiago", acao: "fabrica_whatsapp", status: "ok", detalhe: { pipelineId, ideia: ideia.substring(0,80) }, origem: "whatsapp" }); } catch {}
           await sock.sendMessage(remetente, {
             text: `🏭 *FÁBRICA DE IA ACIONADA!*\n\nIdeia: "${ideia.substring(0,150)}"\nPipeline ID: *${pipelineId}*\n\nOs agentes já estão trabalhando. Quando concluído, veja os artefatos no Dashboard → aba Fábrica de IA.`
           });
