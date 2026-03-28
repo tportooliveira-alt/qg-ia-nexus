@@ -137,7 +137,8 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
             const auditoria = await auditor.auditar({
                 plano, arquitetura,
                 sql: artefatos.sql, app: artefatos.codigo_app, ui: artefatos.codigo_ui,
-                planilha: artefatos.planilha, documento: artefatos.documento
+                planilha: artefatos.planilha, documento: artefatos.documento,
+                testes: artefatos.testes, seguranca: artefatos.seguranca
             });
 
             emit({ tipo: 'auditoria_resultado', agente: 'Auditor-Claude',
@@ -210,12 +211,16 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
             aprovado,
             plano,
             arquitetura,
-            codigo_sql:  melhor.artefatos?.sql        || null,
-            codigo_app:  melhor.artefatos?.codigo_app  || null,
-            codigo_ui:   melhor.artefatos?.codigo_ui   || null,
-            planilha:    melhor.artefatos?.planilha    || null,
-            documento:   melhor.artefatos?.documento   || null,
-            design_system: melhor.design,
+            codigo_sql:     melhor.artefatos?.sql           || null,
+            codigo_app:     melhor.artefatos?.codigo_app    || null,
+            codigo_ui:      melhor.artefatos?.codigo_ui     || null,
+            planilha:       melhor.artefatos?.planilha      || null,
+            documento:      melhor.artefatos?.documento     || null,
+            testes:         melhor.artefatos?.testes        || null,
+            seguranca:      melhor.artefatos?.seguranca     || null,
+            documentacao:   melhor.artefatos?.documentacao  || null,
+            deploy_config:  melhor.artefatos?.deploy_config || null,
+            design_system:  melhor.design,
             auditoria: melhor.auditoria,
             tempo_total_ms: Date.now() - inicio,
             criado_em: new Date().toISOString()
@@ -242,6 +247,10 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                     codigo_ui: resultado.codigo_ui,
                     planilha: resultado.planilha,
                     documento: resultado.documento,
+                    testes: resultado.testes,
+                    seguranca: resultado.seguranca,
+                    documentacao: resultado.documentacao,
+                    deploy_config: resultado.deploy_config,
                     design_system: resultado.design_system,
                     auditoria: resultado.auditoria,
                     tempo_total_ms: resultado.tempo_total_ms,

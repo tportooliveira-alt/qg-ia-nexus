@@ -698,9 +698,12 @@ export function FabricaPage() {
               })()}
 
               {(() => {
-                const ui = resultadoProjeto.codigo_ui as string | null
-                const sql = resultadoProjeto.codigo_sql as string | null
-                const app = resultadoProjeto.codigo_app as string | null
+                const ui       = resultadoProjeto.codigo_ui     as string | null
+                const sql      = resultadoProjeto.codigo_sql    as string | null
+                const app      = resultadoProjeto.codigo_app    as string | null
+                const testes   = resultadoProjeto.testes        as string | null
+                const docs     = resultadoProjeto.documentacao  as string | null
+                const deploy   = resultadoProjeto.deploy_config as Record<string,string> | null
                 const nomeProjeto = String(resultadoProjeto.nome || 'projeto')
                 const btnStyle = (cor: string) => ({
                   padding: '8px 16px', borderRadius: 8, border: `1px solid ${cor}`,
@@ -709,11 +712,15 @@ export function FabricaPage() {
                 })
                 return (
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    {ui && <button onClick={() => abrirPreview(ui)} style={btnStyle('#06B6D4')}>🌐 Abrir App</button>}
-                    {ui && <button onClick={() => baixarArquivo(ui, `${nomeProjeto}.html`, 'text/html')} style={btnStyle('#7C3AED')}>⬇️ HTML</button>}
-                    {sql && <button onClick={() => baixarArquivo(sql, `${nomeProjeto}.sql`, 'text/plain')} style={btnStyle('#10B981')}>⬇️ SQL</button>}
-                    {app && <button onClick={() => baixarArquivo(app, `${nomeProjeto}_backend.js`, 'text/javascript')} style={btnStyle('#F59E0B')}>⬇️ Backend</button>}
-                    <button onClick={() => baixarArquivo(JSON.stringify(resultadoProjeto, null, 2), `${nomeProjeto}_completo.json`, 'application/json')} style={btnStyle('#6B7280')}>📦 JSON Completo</button>
+                    {ui   && <button onClick={() => abrirPreview(ui)}  style={btnStyle('#06B6D4')}>🌐 Abrir App</button>}
+                    {ui   && <button onClick={() => baixarArquivo(ui,  `${nomeProjeto}.html`,        'text/html')}       style={btnStyle('#7C3AED')}>⬇️ HTML</button>}
+                    {sql  && <button onClick={() => baixarArquivo(sql, `${nomeProjeto}.sql`,         'text/plain')}      style={btnStyle('#10B981')}>⬇️ SQL</button>}
+                    {app  && <button onClick={() => baixarArquivo(app, `${nomeProjeto}_backend.js`,  'text/javascript')} style={btnStyle('#F59E0B')}>⬇️ Backend</button>}
+                    {testes && <button onClick={() => baixarArquivo(testes, `${nomeProjeto}.test.js`, 'text/javascript')} style={btnStyle('#EC4899')}>🧪 Testes</button>}
+                    {docs   && <button onClick={() => baixarArquivo(docs, `${nomeProjeto}_README.md`, 'text/markdown')}   style={btnStyle('#94A3B8')}>📚 Docs</button>}
+                    {deploy && deploy.docker_compose && <button onClick={() => baixarArquivo(deploy.docker_compose, 'docker-compose.yml', 'text/yaml')} style={btnStyle('#0EA5E9')}>🐳 Docker</button>}
+                    {deploy && deploy.pm2_ecosystem && <button onClick={() => baixarArquivo(deploy.pm2_ecosystem, 'ecosystem.config.js', 'text/javascript')} style={btnStyle('#F97316')}>⚙️ PM2</button>}
+                    <button onClick={() => baixarArquivo(JSON.stringify(resultadoProjeto, null, 2), `${nomeProjeto}_completo.json`, 'application/json')} style={btnStyle('#6B7280')}>📦 JSON</button>
                   </div>
                 )
               })()}
