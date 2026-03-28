@@ -4,7 +4,7 @@
  * Zero tolerância para bugs de segurança. Verifica consistência entre artefatos.
  */
 
-const { chamarIARaciocinio: chamarIA } = require('./aiService'); // Auditor usa raciocínio crítico (Anthropic→OpenAI)
+const { chamarIARaciocinio, chamarIAPremium } = require('./aiService');
 
 const SYSTEM_PROMPT = `You are the AUDITOR — the "Devil's Advocate" and final gate-keeper of the autonomous software factory.
 
@@ -54,7 +54,13 @@ Required JSON structure:
 }`;
 
 async function auditar(artefatos) {
-    const { plano, arquitetura, sql, app, ui, planilha, documento } = artefatos;
+    const { plano, arquitetura, sql, app, ui, planilha, documento, nivel = 'normal' } = artefatos;
+
+    // Escala o modelo conforme o nível da iteração:
+    // economico → Mistral/Gemini (grátis, boa análise)
+    // normal    → Mistral/Cohere/Gemini (barato, boa qualidade)
+    // premium   → claude-sonnet-4-6 (melhor raciocínio — só nas iterações 5-6)
+    const chamarIA = nivel === 'premium' ? chamarIAPremium : chamarIARaciocinio;
 
     // Montar contexto para o auditor (truncado para não explodir o contexto da IA)
     const contexto = {

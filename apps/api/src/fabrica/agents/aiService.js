@@ -262,29 +262,60 @@ const PROVEDORES = [
 
 // ─── Roteamento por especialidade ────────────────────────────────────────────
 // Define qual provedor tentar PRIMEIRO para cada tipo de tarefa
-// Cada especialidade tem uma ordem otimizada de provedores
+// ─── Custo por provedor ────────────────────────────────────────────────────────
+// 0 = grátis, 1 = muito barato, 2 = médio, 3 = caro
+const CUSTO = {
+    Groq:      0,  // grátis
+    Cerebras:  0,  // grátis
+    Gemini:    0,  // grátis (1500 req/dia)
+    Fireworks: 0,  // grátis no tier gratuito
+    Together:  1,  // muito barato
+    SambaNova: 1,  // muito barato
+    Mistral:   1,  // muito barato
+    DeepSeek:  1,  // muito barato
+    Cohere:    1,  // tem tier gratuito
+    Anthropic: 3,  // PAGO — usar só quando necessário
+    OpenAI:    3,  // PAGO — usar só quando necessário
+};
+
+// Cada especialidade tem ordem otimizada: GRÁTIS → BARATO → PAGO
 const ROTAS_ESPECIALIDADE = {
-    //  Código: DeepSeek é o melhor → Groq rápido → Mistral → Together → resto
-    codigo:      ['DeepSeek', 'Groq', 'Mistral', 'Together', 'Fireworks', 'Anthropic', 'Gemini', 'OpenAI', 'Cerebras', 'SambaNova'],
-    //  Rápido: Groq (ultra-rápido) → Cerebras → Fireworks → Together
-    rapido:      ['Groq', 'Cerebras', 'Fireworks', 'Together', 'Gemini', 'Mistral', 'DeepSeek', 'Anthropic', 'OpenAI', 'SambaNova'],
-    //  Raciocínio: Anthropic (claude-sonnet-4-6 ATIVO!) → Mistral → Cohere → Gemini
-    raciocinio:  ['Anthropic', 'Mistral', 'Cohere', 'Gemini', 'Together', 'OpenAI', 'DeepSeek', 'Groq', 'Cerebras', 'SambaNova'],
-    //  Design/Visual: Gemini (multimodal) → Anthropic → OpenAI → resto
-    design:      ['Gemini', 'Anthropic', 'OpenAI', 'Mistral', 'DeepSeek', 'Groq', 'Cerebras', 'Together', 'Fireworks', 'SambaNova'],
-    //  Análise: Cohere (especialista em análise) → Anthropic → Gemini → Mistral
-    analise:     ['Cohere', 'Anthropic', 'Gemini', 'Mistral', 'OpenAI', 'Together', 'DeepSeek', 'Groq', 'Cerebras', 'SambaNova'],
-    //  Pesquisa: Together (Llama 70B) → SambaNova → Gemini → Groq
-    pesquisa:    ['Together', 'SambaNova', 'Gemini', 'Groq', 'Mistral', 'Fireworks', 'Cohere', 'Anthropic', 'OpenAI', 'DeepSeek'],
-    //  Contexto longo: SambaNova → Together → Gemini → Anthropic
-    contexto:    ['SambaNova', 'Together', 'Gemini', 'Anthropic', 'Mistral', 'OpenAI', 'Groq', 'DeepSeek', 'Fireworks', 'Cohere'],
-    //  Padrão: Gemini → Groq → Mistral → Together → resto
-    padrao:      ['Gemini', 'Groq', 'Mistral', 'Together', 'Anthropic', 'OpenAI', 'DeepSeek', 'Cerebras', 'Fireworks', 'SambaNova', 'Cohere']
+    // Código: DeepSeek ótimo pra código e barato → Groq → Mistral → Together → PAGO só se falhar tudo
+    codigo:     ['DeepSeek', 'Groq', 'Mistral', 'Together', 'Fireworks', 'SambaNova', 'Gemini', 'Cerebras', 'Anthropic', 'OpenAI'],
+    // Rápido: sempre grátis primeiro
+    rapido:     ['Groq', 'Cerebras', 'Fireworks', 'Gemini', 'Together', 'Mistral', 'SambaNova', 'DeepSeek', 'Anthropic', 'OpenAI'],
+    // Raciocínio: começa com Mistral/Cohere (bons e baratos), Anthropic só no fim
+    raciocinio: ['Mistral', 'Cohere', 'Gemini', 'Together', 'SambaNova', 'DeepSeek', 'Groq', 'Anthropic', 'OpenAI', 'Cerebras'],
+    // Design: Gemini é o melhor e gratuito → resto
+    design:     ['Gemini', 'Mistral', 'Together', 'Fireworks', 'SambaNova', 'DeepSeek', 'Groq', 'Cerebras', 'Anthropic', 'OpenAI'],
+    // Análise: Cohere (especialista), Gemini, Mistral — PAGO só emergência
+    analise:    ['Cohere', 'Gemini', 'Mistral', 'Together', 'SambaNova', 'DeepSeek', 'Groq', 'Cerebras', 'Anthropic', 'OpenAI'],
+    // Pesquisa: modelos grandes e baratos
+    pesquisa:   ['Together', 'SambaNova', 'Gemini', 'Groq', 'Mistral', 'Fireworks', 'Cohere', 'DeepSeek', 'Anthropic', 'OpenAI'],
+    // Contexto longo: SambaNova e Together têm janelas grandes e são baratos
+    contexto:   ['SambaNova', 'Together', 'Gemini', 'Mistral', 'Fireworks', 'Groq', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
+    // Padrão: sempre grátis/barato primeiro
+    padrao:     ['Groq', 'Gemini', 'Cerebras', 'Mistral', 'Together', 'Fireworks', 'SambaNova', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
+    // Premium: usado pelo Auditor nas iterações finais — melhor qualidade disponível
+    premium:    ['Anthropic', 'Mistral', 'Cohere', 'Gemini', 'Together', 'SambaNova', 'DeepSeek', 'Groq', 'Cerebras', 'OpenAI'],
 };
 
 // ─── Função principal com roteamento inteligente + cascata ─────────────────────
-async function chamarIA(system, user, maxTokens = 2500, especialidade = 'padrao') {
-    const ordem = ROTAS_ESPECIALIDADE[especialidade] || ROTAS_ESPECIALIDADE.padrao;
+// nivel: 'economico' (só grátis/barato) | 'normal' (padrão) | 'premium' (melhor qualidade)
+async function chamarIA(system, user, maxTokens = 2500, especialidade = 'padrao', nivel = 'normal') {
+    let ordem = ROTAS_ESPECIALIDADE[especialidade] || ROTAS_ESPECIALIDADE.padrao;
+
+    // Filtro por nível de custo
+    if (nivel === 'economico') {
+        // Só usa provedores grátis (custo 0)
+        ordem = ordem.filter(nome => (CUSTO[nome] ?? 99) === 0);
+        if (ordem.length === 0) ordem = ['Groq', 'Gemini', 'Cerebras']; // fallback mínimo
+    } else if (nivel === 'premium') {
+        // Usa a rota premium (Anthropic primeiro)
+        ordem = ROTAS_ESPECIALIDADE.premium;
+    }
+    // nivel 'normal' usa a ordem padrão da especialidade
+
     const provedoresOrdenados = ordem
         .map(nome => PROVEDORES.find(p => p.nome === nome))
         .filter(p => p && p.ativo());
@@ -293,14 +324,16 @@ async function chamarIA(system, user, maxTokens = 2500, especialidade = 'padrao'
         throw new Error('Nenhum provedor de IA está configurado. Adicione chaves de API no .env');
     }
 
+    const custoLabel = nivel === 'economico' ? '💚GRÁTIS' : nivel === 'premium' ? '💜PREMIUM' : '🔵NORMAL';
     const erros = [];
 
     for (const provedor of provedoresOrdenados) {
         try {
-            console.log(`[IA/${especialidade}] Tentando ${provedor.nome}...`);
+            console.log(`[IA/${especialidade}/${custoLabel}] Tentando ${provedor.nome}...`);
             const resultado = await provedor.chamar(system, user, maxTokens);
             if (resultado && resultado.trim().length > 0) {
-                console.log(`[IA/${especialidade}] ✅ ${provedor.nome} (${resultado.length} chars)`);
+                const custo = CUSTO[provedor.nome] ?? '?';
+                console.log(`[IA/${especialidade}] ✅ ${provedor.nome} custo:${custo} (${resultado.length} chars)`);
                 return resultado;
             }
         } catch (err) {
@@ -318,17 +351,21 @@ function listarProvedoresAtivos() {
 }
 
 // Atalhos por especialidade (usados pelos agentes)
-const chamarIACodigo     = (s, u, t) => chamarIA(s, u, t, 'codigo');
-const chamarIARapido     = (s, u, t) => chamarIA(s, u, t, 'rapido');
-const chamarIARaciocinio = (s, u, t) => chamarIA(s, u, t, 'raciocinio');
-const chamarIADesign     = (s, u, t) => chamarIA(s, u, t, 'design');
-const chamarIAAnalise    = (s, u, t) => chamarIA(s, u, t, 'analise');
-const chamarIAPesquisa   = (s, u, t) => chamarIA(s, u, t, 'pesquisa');
-const chamarIAContexto   = (s, u, t) => chamarIA(s, u, t, 'contexto');
+// Aceita nivel opcional: 'economico' | 'normal' | 'premium'
+const chamarIACodigo     = (s, u, t, nivel='normal')   => chamarIA(s, u, t, 'codigo',     nivel);
+const chamarIARapido     = (s, u, t, nivel='economico') => chamarIA(s, u, t, 'rapido',     nivel);
+const chamarIARaciocinio = (s, u, t, nivel='normal')   => chamarIA(s, u, t, 'raciocinio', nivel);
+const chamarIADesign     = (s, u, t, nivel='normal')   => chamarIA(s, u, t, 'design',     nivel);
+const chamarIAAnalise    = (s, u, t, nivel='normal')   => chamarIA(s, u, t, 'analise',    nivel);
+const chamarIAPesquisa   = (s, u, t, nivel='economico') => chamarIA(s, u, t, 'pesquisa',   nivel);
+const chamarIAContexto   = (s, u, t, nivel='economico') => chamarIA(s, u, t, 'contexto',   nivel);
+const chamarIAPremium    = (s, u, t)                   => chamarIA(s, u, t, 'raciocinio', 'premium');
 
 module.exports = {
     chamarIA,
+    CUSTO,
     chamarIACodigo,
+    chamarIAPremium,
     chamarIARapido,
     chamarIARaciocinio,
     chamarIADesign,

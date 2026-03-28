@@ -31,8 +31,18 @@ const ContextRouter = require('./ContextRouter');
 const { listarProvedoresAtivos } = require('../agents/aiService');
 const SupabaseService = require('../../services/supabaseService');
 
-const MAX_ITERACOES   = 6;   // aumentado: mais chances de chegar a 100
-const SCORE_APROVACAO = 85;  // meta mais alta: 85+ para aprovar
+const MAX_ITERACOES   = 6;   // 6 chances de chegar ao score ideal
+const SCORE_APROVACAO = 85;  // 85+ para aprovar
+
+// ─── Estratégia de custo por iteração ─────────────────────────────────────────
+// Iterações 1-2: só grátis (Groq, Gemini, Cerebras) — rápido e sem custo
+// Iterações 3-4: normal (inclui DeepSeek, Mistral, Together) — barato
+// Iterações 5-6: premium (Anthropic claude-sonnet-4-6) — só quando necessário
+function nivelPorIteracao(iteracao) {
+    if (iteracao <= 2) return 'economico';
+    if (iteracao <= 4) return 'normal';
+    return 'premium';
+}
 
 // ─── Executar pipeline completo ───────────────────────────────────────────────
 
@@ -114,31 +124,37 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
             iteracao++;
             const progBase = 40 + (iteracao - 1) * 12;
 
+            // Nível de custo cresce com as iterações: grátis → normal → premium
+            const nivel = nivelPorIteracao(iteracao);
+            const nivelLabel = nivel === 'economico' ? '💚 grátis' : nivel === 'premium' ? '💜 premium' : '🔵 normal';
+
             emit({ tipo: 'fase_iniciada', fase: 3, iteracao, progresso: progBase,
-                   mensagem: `🔄 Iteração ${iteracao}/${MAX_ITERACOES} — Gerando artefatos...` });
+                   mensagem: `🔄 Iteração ${iteracao}/${MAX_ITERACOES} [${nivelLabel}] — Gerando artefatos...` });
 
             // CoderChief spawna sub-agentes em paralelo
             const artefatos = await CoderChief.executar(
-                arquitetura, tipoEntregavel, usuario_id, emit
+                arquitetura, tipoEntregavel, usuario_id, emit, nivel
             );
 
-            // Designer refina (em paralelo com auditoria se tiver design base)
+            // Designer refina
             const designFinal = designConceito || artefatos.codigo_ui
                 ? await designer.projetarUI(arquitetura).catch(() => designConceito)
                 : null;
             emit({ tipo: 'agente_concluido', agente: 'Designer', progresso: progBase + 8,
                    mensagem: 'Design system finalizado' });
 
-            // ─ AUDITOR = CLAUDE (Anthropic) — supervisão obrigatória ──────
+            // ─ AUDITOR: escala qualidade com as iterações ─────────────────
             if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
-            emit({ tipo: 'agente_ativo', agente: 'Auditor-Claude', progresso: progBase + 9,
-                   mensagem: '🔍 Revisando código gerado (supervisão Claude)...' });
+            const auditorLabel = nivel === 'premium' ? 'Auditor-Claude-Sonnet' : 'Auditor';
+            emit({ tipo: 'agente_ativo', agente: auditorLabel, progresso: progBase + 9,
+                   mensagem: `🔍 Revisando código [${nivelLabel}]...` });
 
             const auditoria = await auditor.auditar({
                 plano, arquitetura,
                 sql: artefatos.sql, app: artefatos.codigo_app, ui: artefatos.codigo_ui,
                 planilha: artefatos.planilha, documento: artefatos.documento,
-                testes: artefatos.testes, seguranca: artefatos.seguranca
+                testes: artefatos.testes, seguranca: artefatos.seguranca,
+                nivel  // passa o nível para o auditor usar o modelo certo
             });
 
             emit({ tipo: 'auditoria_resultado', agente: 'Auditor-Claude',
