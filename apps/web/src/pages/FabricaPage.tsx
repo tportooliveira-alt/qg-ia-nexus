@@ -244,7 +244,7 @@ export function FabricaPage() {
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
             Status:{' '}
             <span style={{ color: fabricaOnline ? 'var(--color-success)' : status?.fabrica?.status ? 'var(--color-error)' : 'var(--color-text-muted)' }}>
-              {fabricaOnline ? '🟢 Online' : status?.fabrica?.status ? `🔴 ${status.fabrica.status}` : '⏳ Conectando...'}
+              {fabricaOnline ? '🟢 Online' : status?.status ? `🔴 ${status.status}` : '⏳ Conectando...'}
             </span>
           </p>
         </div>
