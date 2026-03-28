@@ -54,20 +54,46 @@ function httpPost(url, body, headers) {
 const PROVEDORES = [
     {
         nome: 'Gemini',
-        ativo: () => !!process.env.GEMINI_API_KEY,
+        ativo: () => !!(process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_2),
         chamar: async (system, user, maxTokens, opcoes = {}) => {
-            // Seleciona modelo por complexidade — todos grátis
-            // simples/media → gemini-2.0-flash | complexa → gemini-2.5-flash
+            // Rodízio automático de chaves — evita 429 por limite de quota
+            // Alterna entre GEMINI_API_KEY e GEMINI_API_KEY_2 se disponíveis
+            const chaves = [
+                process.env.GEMINI_API_KEY,
+                process.env.GEMINI_API_KEY_2,
+                process.env.GEMINI_API_KEY_3,
+            ].filter(Boolean);
+
+            if (chaves.length === 0) throw new Error('Nenhuma chave Gemini configurada');
+
             const modelo = opcoes.modelo || (
                 opcoes.complexidade === 'complexa' ? 'gemini-2.5-flash' : 'gemini-2.0-flash'
             );
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-            const body = JSON.stringify({
-                contents: [{ parts: [{ text: `${system}\n\n${user}` }] }],
-                generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
-            });
-            const resp = JSON.parse(await httpPost(url, body, {}));
-            return resp.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+            const errosGemini = [];
+            for (const chave of chaves) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${chave}`;
+                    const body = JSON.stringify({
+                        contents: [{ parts: [{ text: `${system}\n\n${user}` }] }],
+                        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
+                    });
+                    const resp = JSON.parse(await httpPost(url, body, {}));
+                    const texto = resp.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    if (texto) return texto;
+                    throw new Error('Resposta vazia');
+                } catch (err) {
+                    const msg = err.message?.substring(0, 100) || '';
+                    errosGemini.push(`chave${chaves.indexOf(chave)+1}: ${msg}`);
+                    // Se for 429 (rate limit), tenta próxima chave
+                    if (msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')) {
+                        console.warn(`[Gemini] 429 na chave ${chaves.indexOf(chave)+1}, tentando próxima...`);
+                        continue;
+                    }
+                    throw err; // Outro erro — não adianta tentar outra chave
+                }
+            }
+            throw new Error(`Todas as chaves Gemini falharam: ${errosGemini.join(' | ')}`);
         }
     },
     {
