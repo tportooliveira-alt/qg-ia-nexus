@@ -4,9 +4,6 @@ const AIService = require("./aiService");
 const TerminalService = require("./terminalService");
 const MemoryService = require("./memoryService");
 const PluginManager = require("../plugins/pluginManager");
-const ActivityService = require("./activityService");
-const ToolExecutor = require("./toolExecutor");
-const MemoryRetriever = require("./memoryRetriever");
 
 // Cache de arquivos em memória — TTL de 5 minutos
 const _kbCache = new Map();
@@ -65,14 +62,11 @@ const NexusService = {
         contextoOpcional += "\nCONTEXTO FRIGO: O QG esta desenvolvendo FrigoGest (React + Supabase, 16 agentes IA em 5 tiers para automacao total do processo de frigorifico).\n";
       }
 
-      // ── MEMÓRIA INTELIGENTE: puxa do Supabase baseado no prompt ──
       try {
-        const memoriasRelevantes = await Promise.race([
-          MemoryRetriever.buscarTudo(prompt, "NexusClaw"),
-          new Promise((_, rej) => setTimeout(() => rej(new Error("mem_timeout")), 5000))
-        ]);
-        if (memoriasRelevantes) {
-          contextoOpcional += memoriasRelevantes;
+        const memorias = await MemoryService.listar({ agente: "NexusClaw", limit: 15 });
+        if (memorias && memorias.length) {
+          const resumo = memorias.map(m => "- [" + m.categoria + "] " + m.conteudo.substring(0, 120)).join("\n");
+          contextoOpcional += "\nMEMORIAS RECENTES DO NEXUS:\n" + resumo + "\n";
         }
       } catch { /* sem memoria nao bloqueia */ }
 
@@ -102,13 +96,13 @@ const NexusService = {
               "6. Se o usuario pedir algo relacionado aos projetos (AgroMacro, FrigoGest, Fazenda Cerebro), consulte o contexto e de orientacoes especificas.\n" +
               "7. Seja proativo: se identificar um problema ou oportunidade, mencione sem esperar ser perguntado.\n" +
               "\n=== MODO CO-CRIADOR (PRINCIPAL FORMA DE TRABALHO) ===\n" +
-              "Quando o Thiago compartilhar uma ideia, negocio, produto ou projeto:\n" +
+              "Quando a Priscila compartilhar uma ideia, negocio, produto ou projeto:\n" +
               "1. CELEBRE o que tem de forte na ideia — identifique os pontos de ouro, o diferencial, o potencial de mercado.\n" +
               "2. FAÇA 2 ou 3 perguntas estrategicas para aprofundar — usuario-alvo, problema resolvido, como vai ganhar dinheiro, diferenciais.\n" +
-              "3. CONSTRUA JUNTO — sugira funcionalidades, melhorias, modulos, integrações com os outros projetos do Thiago.\n" +
+              "3. CONSTRUA JUNTO — sugira funcionalidades, melhorias, modulos, integrações com os outros projetos da Priscila.\n" +
               "4. NAO acione a Fabrica ainda — continue o dialogo ate a ideia estar completa e madura.\n" +
               "5. Quando a ideia estiver bem desenvolvida, PROPONHA ativamente: 'A ideia esta madura! Posso gerar o prompt mestre para a Fabrica executar?'\n" +
-              "6. Apos confirmacao do Thiago, gere o PROMPT MESTRE DETALHADO no formato:\n" +
+              "6. Apos confirmacao da Priscila, gere o PROMPT MESTRE DETALHADO no formato:\n" +
               "   🏭 PROMPT MESTRE — [nome do projeto]\n" +
               "   • Objetivo: ...\n" +
               "   • Usuarios-alvo: ...\n" +
@@ -118,9 +112,6 @@ const NexusService = {
               "   • Criterios de sucesso: ...\n" +
               "   • Pontos de atencao: ...\n" +
               "   Entao acione a Fabrica com esse prompt detalhado.\n";
-
-      // Adicionar ferramentas disponíveis ao contexto
-      const contextoComTools = contextoSupremo + ToolExecutor.getToolsPromptSection();
 
       // 🏭 DETECÇÃO DE INTENÇÃO FÁBRICA — aciona pipeline automaticamente
       const pLower = prompt.toLowerCase();
@@ -180,84 +171,22 @@ const NexusService = {
               prompt.toLowerCase().includes("diagnostico");
 
       const { resultado, iaUsada } = await AIService.chamarIAComCascata(
-              contextoComTools + "\n\nPedido do usuario:\n" + prompt,
+              contextoSupremo + "\n\nPedido do usuario:\n" + prompt,
               historico,
               modoComplexo
             );
 
-      let loopResultado = resultado;
-      let loopCount = 0;
-      let finalIaUsada = iaUsada;
-
-      // === LAÇO TOOL EXECUTION (ferramentas reais do ToolExecutor) ===
-      const toolCalls = ToolExecutor.parseToolCalls(loopResultado);
-      if (toolCalls.length > 0 && loopCount < 3) {
-        const toolResults = [];
-        for (const tc of toolCalls) {
-          const result = await ToolExecutor.executeTool(tc.tool, tc.args);
-          toolResults.push({ tool: tc.tool, args: tc.args, result });
-        }
-
-        ActivityService.registrar("nexus", { status: "trabalhando", descricao: `Executando ${toolCalls.length} ferramenta(s)...`, projeto: "QG IA Nexus" });
-
-        const toolContext = toolResults.map(tr =>
-          `[RESULTADO ${tr.tool}]: ${JSON.stringify(tr.result).substring(0, 2000)}`
-        ).join("\n");
-
-        const followUp = contextoComTools + "\n\nPedido do usuario:\n" + prompt +
-          "\n\n[FERRAMENTAS EXECUTADAS]:\n" + toolContext +
-          "\n\nAgora, usando os resultados das ferramentas acima, dê a resposta final completa ao usuário. NÃO repita a sintaxe TOOL:, apenas use os resultados.";
-
-        const subCall = await AIService.chamarIAComCascata(followUp, historico, modoComplexo);
-        loopResultado = subCall.resultado;
-        finalIaUsada = subCall.iaUsada;
-        loopCount++;
-      }
-
-      // === LAÇO RE-ACT (MCP E CMD MUNDO REAL) ===
-      while (loopResultado.includes("MCP:") && loopCount < 3) {
-        const match = loopResultado.match(/MCP:([^:]+):([^:]+):(.+)/);
-        if (match) {
-          const mcpServer = match[1].trim();
-          const mcpTool = match[2].trim();
-          let mcpArgs = {};
-          try { mcpArgs = JSON.parse(match[3].trim()); } catch(e) {}
-          
-          let mcpCallResult = "";
-          try {
-             // Dinamicamente chamando mcpService. Se não existir o servidor em tempo de runtime, não quebra, só avisa a IA
-             mcpCallResult = await require('./mcpService').invokeTool(mcpServer, mcpTool, mcpArgs);
-          } catch(e) {
-             mcpCallResult = `Erro na ferramenta: ${e.message}`;
-          }
-
-          ActivityService.registrar("nexus", { status: "trabalhando", descricao: `Ferramenta MCP executada. Repensando...`, projeto: "QG IA Nexus" });
-          
-          const novoPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt + 
-            "\n\n[AÇÃO DO SISTEMA OCORREU]: Você pediu para usar MCP " + mcpTool + " no servidor " + mcpServer + ".\nO resultado do mundo real foi:\n" + JSON.stringify(mcpCallResult) + 
-            "\n\nLevando isso em consideração, dê a resposta final e brilhante para o usuário (não exponha novamente a sintaxe da ferramenta, apenas entregue o resultado processado ajudando-o a construir o seu futuro!).";
-
-          const subCall = await AIService.chamarIAComCascata(novoPrompt, historico, modoComplexo);
-          loopResultado = subCall.resultado;
-          finalIaUsada = subCall.iaUsada;
-          loopCount++;
-        } else {
-          break; // sintaxe falhou ou parse mal sucedido continua para resposta
-        }
-      }
-
-      // Tratamento original para CMD de Root / Sysadmin
-      if (loopResultado.includes("CMD:")) {
-              const cmd = loopResultado.split("CMD:")[1].split("\n")[0].trim();
+      if (resultado.includes("CMD:")) {
+              const cmd = resultado.split("CMD:")[1].split("\n")[0].trim();
               const execResult = await TerminalService.executarComAutoHealing(cmd);
               if (execResult.status === "Sucesso") {
-                        return "OK NEXUS [" + finalIaUsada + "]:\n" + loopResultado.split("CMD:")[0] + "\n\n[MUNDO REAL AUTÔNOMO: SUCESSO]\nSaida:\n" + execResult.stdout;
+                        return "OK NEXUS [" + iaUsada + "]:\n" + resultado.split("CMD:")[0] + "\n\n[AUTO-HEALING: SUCESSO]\nSaida:\n" + execResult.stdout;
               } else {
-                        return "AVISO NEXUS [" + finalIaUsada + "]:\n" + loopResultado.split("CMD:")[0] + "\n\n[ERRO DO MUNDO REAL]: " + execResult.msg + "\n" + (execResult.erro || "");
+                        return "AVISO NEXUS [" + iaUsada + "]:\n" + resultado.split("CMD:")[0] + "\n\n[ERRO]: " + execResult.msg + "\n" + (execResult.erro || "");
               }
       }
 
-      return "OK NEXUS [" + finalIaUsada + "]:\n" + loopResultado;
+      return "OK NEXUS [" + iaUsada + "]:\n" + resultado;
     },
 
     async processarComandoStream(prompt, historico = [], onChunk) {
@@ -281,13 +210,13 @@ const NexusService = {
         "5. Voce tem memoria das ultimas pesquisas e pode referencia-las.\n" +
         "6. Se o usuario pedir algo relacionado aos projetos (AgroMacro, FrigoGest, Fazenda Cerebro), consulte o contexto e de orientacoes especificas.\n" +
         "\n=== MODO CO-CRIADOR (PRINCIPAL FORMA DE TRABALHO) ===\n" +
-        "Quando o Thiago compartilhar uma ideia, negocio, produto ou projeto:\n" +
+        "Quando a Priscila compartilhar uma ideia, negocio, produto ou projeto:\n" +
         "1. CELEBRE o que tem de forte na ideia — identifique os pontos de ouro, o diferencial, o potencial de mercado.\n" +
         "2. FAÇA 2 ou 3 perguntas estrategicas para aprofundar — usuario-alvo, problema resolvido, como vai ganhar dinheiro, diferenciais.\n" +
-        "3. CONSTRUA JUNTO — sugira funcionalidades, melhorias, modulos, integracoes com os outros projetos do Thiago.\n" +
+        "3. CONSTRUA JUNTO — sugira funcionalidades, melhorias, modulos, integracoes com os outros projetos da Priscila.\n" +
         "4. NAO acione a Fabrica ainda — continue o dialogo ate a ideia estar completa e madura.\n" +
         "5. Quando a ideia estiver bem desenvolvida, PROPONHA ativamente: 'A ideia esta madura! Posso gerar o prompt mestre para a Fabrica executar?'\n" +
-        "6. Apos confirmacao do Thiago, gere o PROMPT MESTRE DETALHADO no formato:\n" +
+        "6. Apos confirmacao da Priscila, gere o PROMPT MESTRE DETALHADO no formato:\n" +
         "   🏭 PROMPT MESTRE — [nome do projeto]\n" +
         "   • Objetivo: ...\n" +
         "   • Usuarios-alvo: ...\n" +
@@ -300,42 +229,23 @@ const NexusService = {
         "IMPORTANTE: NUNCA pule etapas — cada resposta deve aprofundar a ideia com novas perguntas ou sugestoes ate estar realmente completa. Seja generoso no dialogo, explore ao maximo antes de propor o prompt mestre.\n";
 
       const fullPrompt = contextoSupremo + "\n\nPedido do usuario:\n" + prompt;
-
-      ActivityService.registrar("nexus", { status: "trabalhando", descricao: "Processando chat...", projeto: "QG IA Nexus" });
-
-      // Cascata stream: Gemini → Groq → Cerebras → SambaNova → xAI (DeepSeek removido: 402)
-      const streamCascata = [
-        { nome: "Gemini",    fn: () => AIService.callGeminiStream(fullPrompt, null, onChunk) },
-        { nome: "Groq",      fn: () => AIService.callGroqStream(fullPrompt, null, onChunk) },
-        { nome: "Cerebras",  fn: () => AIService.callCerebrasStream(fullPrompt, null, onChunk) },
-        { nome: "SambaNova", fn: () => AIService.chamarIAComCascata(fullPrompt, ["SambaNova"]).then(r => { onChunk(r.resultado); }) },
-        { nome: "xAI",       fn: () => AIService.chamarIAComCascata(fullPrompt, ["xAI"]).then(r => { onChunk(r.resultado); }) },
-      ];
-      let streamOk = false;
-      for (const { nome, fn } of streamCascata) {
+      // Cascata grátis: Gemini → Groq → Cerebras → DeepSeek
+      try {
+        await AIService.callGeminiStream(fullPrompt, null, onChunk);
+      } catch (e) {
+        console.warn("[STREAM] Gemini falhou, tentando Groq:", e.message);
         try {
-          ActivityService.registrar("nexus", { status: "trabalhando", descricao: `Usando ${nome}...`, projeto: "QG IA Nexus", iaUsada: nome });
-          // Registra provider específico como ativo também
-          const providerIdMap = { Gemini: "gem", Groq: "groq", Cerebras: "crbr", SambaNova: "sbvn", xAI: "xai" };
-          const provId = providerIdMap[nome];
-          if (provId) ActivityService.registrar(provId, { status: "trabalhando", descricao: `Gerando resposta para Nexus`, projeto: "QG IA Nexus" });
-
-          await fn();
-
-          if (provId) ActivityService.finalizar(provId);
-          ActivityService.registrar("nexus", { status: "ativo", descricao: `Respondeu via ${nome}`, projeto: "QG IA Nexus", iaUsada: nome });
-          streamOk = true;
-          break;
-        } catch (err) {
-          const code = err.message.match(/\d{3}/)?.[0];
-          console.warn(`[STREAM] ${nome} falhou (${code || err.message.slice(0,40)}), tentando proxima...`);
-          const providerIdMap = { Gemini: "gem", Groq: "groq", Cerebras: "crbr", SambaNova: "sbvn", xAI: "xai" };
-          const provId = providerIdMap[nome];
-          if (provId) ActivityService.finalizar(provId);
+          await AIService.callGroqStream(fullPrompt, null, onChunk);
+        } catch (e2) {
+          console.warn("[STREAM] Groq falhou, tentando Cerebras:", e2.message);
+          try {
+            await AIService.callCerebrasStream(fullPrompt, null, onChunk);
+          } catch (e3) {
+            console.warn("[STREAM] Cerebras falhou, tentando DeepSeek:", e3.message);
+            await AIService.callDeepSeekStream(fullPrompt, null, onChunk);
+          }
         }
       }
-      ActivityService.finalizar("nexus");
-      if (!streamOk) throw new Error("Todos os providers de stream falharam");
     }
 };
 

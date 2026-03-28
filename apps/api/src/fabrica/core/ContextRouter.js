@@ -43,7 +43,7 @@ const DOMINIOS = {
         agentes:    ['Backend Specialist', 'Frontend Specialist', 'Database Architect',
                      'DevOps Engineer', 'Security Auditor', 'QA Automation Engineer'],
         ia_debate:  'gemini-2.0-flash',
-        ia_codigo:  'deepseek'
+        ia_codigo:  'groq'
     },
     agro: {
         palavras: ['fazenda', 'rebanho', 'gado', 'boi', 'pasto', 'lavoura', 'colheita',
@@ -54,7 +54,7 @@ const DOMINIOS = {
         agentes:    ['Agro Specialist', 'Backend Specialist', 'Database Architect',
                      'Mobile Developer'],
         ia_debate:  'gemini-2.0-flash',
-        ia_codigo:  'deepseek'
+        ia_codigo:  'groq'
     },
     mecanica: {
         palavras: ['mecânica', 'motor', 'engrenagem', 'estrutura', 'resistência', 'torque',
@@ -72,7 +72,7 @@ const DOMINIOS = {
         fontes_hub: ['engenharia_eletrica', 'software_e_dev'],
         agentes:    ['Electrical Engineer', 'Backend Specialist', 'DevOps Engineer'],
         ia_debate:  'gemini-2.0-flash',
-        ia_codigo:  'deepseek'
+        ia_codigo:  'groq'
     },
     civil: {
         palavras: ['civil', 'construção', 'obra', 'estrutural', 'concreto', 'fundação',
@@ -99,7 +99,7 @@ const DOMINIOS = {
         fontes_hub: ['ia_e_ml', 'software_e_dev'],
         agentes:    ['AI Research Scout', 'Backend Specialist', 'Database Architect'],
         ia_debate:  'gemini-2.5-flash',
-        ia_codigo:  'deepseek'
+        ia_codigo:  'groq'
     }
 };
 

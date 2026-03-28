@@ -4,6 +4,7 @@ const SupabaseService = require("./services/supabaseService");
 const ResearchService = require("./services/researchService");
 const ActivityService = require("./services/activityService");
 const AutoCapacitationService = require("./services/autoCapacitationService");
+const AgentMemory = require("./fabrica/core/AgentMemory");
 
 async function bootstrap(app, port) {
   app.listen(port, async () => {
@@ -28,6 +29,9 @@ async function bootstrap(app, port) {
         const ping = await SupabaseService.ping();
         if (ping.ok) {
           console.log(`✅ Supabase: Conectado (${ping.latencia_ms}ms) — banco de dados ativo.`);
+          // Inicializar memória dos agentes com Supabase
+          AgentMemory.inicializar(SupabaseService);
+          console.log(`🧠 AgentMemory: Inicializado com Supabase — aprendizado persistente ativo.`);
         } else {
           console.error(`❌ Supabase: Ping falhou (${ping.erro}) — verifique SUPABASE_URL e SUPABASE_SERVICE_KEY.`);
         }

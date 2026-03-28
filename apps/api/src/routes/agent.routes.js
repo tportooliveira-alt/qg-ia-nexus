@@ -43,4 +43,35 @@ router.get("/agentes", autenticarToken, rateLimiter(60), async (req, res) => {
   }
 });
 
+// Status dos agentes (dashboard usa /nexus/agents/status)
+router.get("/nexus/agents/status", autenticarToken, rateLimiter(60), async (req, res) => {
+  try {
+    const agentes = await AgentRegistryService.listarAgentes();
+    res.json({
+      status: "Sucesso",
+      total: agentes.length,
+      online: agentes.length,
+      agentes: agentes.map(a => ({
+        nome: a.nome,
+        dominios: a.dominios || [],
+        taskTypes: a.taskType || [],
+        providers: a.preferredProviders || [],
+        status: "ativo"
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Listar agentes registrados (compatibilidade com /nexus/agents)
+router.get("/nexus/agents", autenticarToken, rateLimiter(60), async (req, res) => {
+  try {
+    const data = await AgentRegistryService.listarAgentes();
+    res.json({ status: "Sucesso", agentes: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

@@ -118,6 +118,7 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
         let melhor = { score: 0, artefatos: null, auditoria: null, design: null };
         let iteracao = 0;
         let aprovado = false;
+        const historicoIteracoes = []; // Engenheiro de Contexto: histórico entre iterações
 
         while (!aprovado && iteracao < MAX_ITERACOES) {
             if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
@@ -154,7 +155,8 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                 sql: artefatos.sql, app: artefatos.codigo_app, ui: artefatos.codigo_ui,
                 planilha: artefatos.planilha, documento: artefatos.documento,
                 testes: artefatos.testes, seguranca: artefatos.seguranca,
-                nivel  // passa o nível para o auditor usar o modelo certo
+                nivel,  // passa o nível para o auditor usar o modelo certo
+                historicoIteracoes  // Engenheiro de Contexto: auditor sabe o que já revisou
             });
 
             emit({ tipo: 'auditoria_resultado', agente: 'Auditor-Claude',
@@ -162,6 +164,15 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                    mensagem: `${auditoria.veredicto} — Score: ${auditoria.score}/100 — ${auditoria.problemas?.length || 0} problema(s)`,
                    dados: { score: auditoria.score, veredicto: auditoria.veredicto,
                             problemas: auditoria.problemas?.slice(0, 3) } });
+
+            // Engenheiro de Contexto: salvar histórico desta iteração
+            historicoIteracoes.push({
+                iteracao,
+                score: auditoria.score,
+                veredicto: auditoria.veredicto,
+                problemas: (auditoria.problemas || []).map(p => ({ gravidade: p.gravidade, local: p.local, descricao: p.descricao })),
+                nivel
+            });
 
             // Guardar melhor resultado
             if (auditoria.score > melhor.score) {

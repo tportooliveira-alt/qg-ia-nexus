@@ -29,7 +29,7 @@ const { listarProvedoresAtivos } = require('./agents/aiService');
 
 // ─── Configuração do Loop ─────────────────────────────────────────────────────
 const MAX_ITERACOES   = 5;   // Máximo de tentativas antes de entregar assim mesmo
-const SCORE_APROVACAO = 75;  // Score mínimo para considerar APROVADO
+const SCORE_APROVACAO = 80;  // Score mínimo para considerar APROVADO (v3: era 75, muito permissivo)
 
 // ─── Utilitário de log ────────────────────────────────────────────────────────
 function addLog(logs, agente, msg, inicioTotal) {

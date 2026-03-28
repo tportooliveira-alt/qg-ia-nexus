@@ -89,6 +89,17 @@ const SupabaseService = {
     } catch (err) {
       return { ok: false, latencia_ms: Date.now() - inicio, erro: err.message };
     }
+  },
+
+  /**
+   * Busca todos os registros com filtros (compatível com AgentMemory.buscarTodos).
+   * @param {string} tabela
+   * @param {Object} filtros - { campo: valor }
+   * @param {number} limit
+   * @param {string} orderBy
+   */
+  async buscarTodos(tabela, filtros = {}, limit = 50, orderBy = "criado_em") {
+    return this.buscar(tabela, { filtros, limit, orderBy, ascending: false });
   }
 };
 

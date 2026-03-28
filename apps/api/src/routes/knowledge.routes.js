@@ -21,6 +21,20 @@ router.get("/knowledge", autenticarToken, rateLimiter(30), async (req, res) => {
   }
 });
 
+// Alias: /knowledge/summary (usado pelo frontend)
+router.get("/knowledge/summary", autenticarToken, rateLimiter(30), async (req, res) => {
+  try {
+    await KnowledgeService.ensureReady();
+    res.json({
+      status: "Sucesso",
+      domains: KnowledgeService.getAvailableDomains(),
+      summary: KnowledgeService.getKnowledgeSummary()
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Resumo falhou: " + err.message });
+  }
+});
+
 // Consulta por domínio
 router.get("/knowledge/:domain", autenticarToken, rateLimiter(30), async (req, res) => {
   try {

@@ -15,11 +15,5 @@ router.use(require("./skills.routes"));
 router.use(require("./config.routes"));
 router.use(require("./mcp.routes"));
 router.use(require("./audit.routes"));
-router.use(require("./providers.routes"));
-router.use("/docs", require("./document.routes"));
-router.use(require("./activity.routes"));
-router.use(require("./capacitacao.routes"));
-router.use(require("./vps.routes"));
-router.use(require("./tools.routes"));
 
 module.exports = router;

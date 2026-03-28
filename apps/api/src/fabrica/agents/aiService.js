@@ -169,7 +169,7 @@ const PROVEDORES = [
         ativo: () => !!process.env.CEREBRAS_API_KEY,
         chamar: async (system, user, maxTokens) => {
             const body = JSON.stringify({
-                model: 'llama3.1-8b',
+                model: 'llama-3.3-70b',
                 messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
                 max_tokens: maxTokens
             });
@@ -280,24 +280,24 @@ const CUSTO = {
 
 // Cada especialidade tem ordem otimizada: GRÁTIS → BARATO → PAGO
 const ROTAS_ESPECIALIDADE = {
-    // Código: DeepSeek ótimo pra código e barato → Groq → Mistral → Together → PAGO só se falhar tudo
-    codigo:     ['DeepSeek', 'Groq', 'Mistral', 'Together', 'Fireworks', 'SambaNova', 'Gemini', 'Cerebras', 'Anthropic', 'OpenAI'],
+    // Código: GRÁTIS primeiro (Groq/Gemini/Cerebras), pagos só como fallback final
+    codigo:     ['Groq', 'Gemini', 'Cerebras', 'Fireworks', 'SambaNova', 'Together', 'Mistral', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
     // Rápido: sempre grátis primeiro
-    rapido:     ['Groq', 'Cerebras', 'Fireworks', 'Gemini', 'Together', 'Mistral', 'SambaNova', 'DeepSeek', 'Anthropic', 'OpenAI'],
-    // Raciocínio: começa com Mistral/Cohere (bons e baratos), Anthropic só no fim
-    raciocinio: ['Mistral', 'Cohere', 'Gemini', 'Together', 'SambaNova', 'DeepSeek', 'Groq', 'Anthropic', 'OpenAI', 'Cerebras'],
+    rapido:     ['Groq', 'Cerebras', 'Gemini', 'Fireworks', 'SambaNova', 'Together', 'Mistral', 'DeepSeek', 'Anthropic', 'OpenAI'],
+    // Raciocínio: Gemini 2.5 é excelente e grátis → depois baratos → pagos no fim
+    raciocinio: ['Gemini', 'Groq', 'Cerebras', 'Fireworks', 'SambaNova', 'Together', 'Mistral', 'Cohere', 'DeepSeek', 'Anthropic', 'OpenAI'],
     // Design: Gemini é o melhor e gratuito → resto
-    design:     ['Gemini', 'Mistral', 'Together', 'Fireworks', 'SambaNova', 'DeepSeek', 'Groq', 'Cerebras', 'Anthropic', 'OpenAI'],
-    // Análise: Cohere (especialista), Gemini, Mistral — PAGO só emergência
-    analise:    ['Cohere', 'Gemini', 'Mistral', 'Together', 'SambaNova', 'DeepSeek', 'Groq', 'Cerebras', 'Anthropic', 'OpenAI'],
-    // Pesquisa: modelos grandes e baratos
-    pesquisa:   ['Together', 'SambaNova', 'Gemini', 'Groq', 'Mistral', 'Fireworks', 'Cohere', 'DeepSeek', 'Anthropic', 'OpenAI'],
-    // Contexto longo: SambaNova e Together têm janelas grandes e são baratos
-    contexto:   ['SambaNova', 'Together', 'Gemini', 'Mistral', 'Fireworks', 'Groq', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
-    // Padrão: sempre grátis/barato primeiro
-    padrao:     ['Groq', 'Gemini', 'Cerebras', 'Mistral', 'Together', 'Fireworks', 'SambaNova', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
-    // Premium: usado pelo Auditor nas iterações finais — melhor qualidade disponível
-    premium:    ['Anthropic', 'Mistral', 'Cohere', 'Gemini', 'Together', 'SambaNova', 'DeepSeek', 'Groq', 'Cerebras', 'OpenAI'],
+    design:     ['Gemini', 'Groq', 'Cerebras', 'Fireworks', 'SambaNova', 'Together', 'Mistral', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
+    // Análise: Gemini + Groq grátis primeiro
+    analise:    ['Gemini', 'Groq', 'Cerebras', 'Fireworks', 'SambaNova', 'Together', 'Cohere', 'Mistral', 'DeepSeek', 'Anthropic', 'OpenAI'],
+    // Pesquisa: modelos grandes grátis
+    pesquisa:   ['Groq', 'Gemini', 'Cerebras', 'SambaNova', 'Fireworks', 'Together', 'Mistral', 'Cohere', 'DeepSeek', 'Anthropic', 'OpenAI'],
+    // Contexto longo: SambaNova e Together têm janelas grandes
+    contexto:   ['SambaNova', 'Groq', 'Gemini', 'Cerebras', 'Fireworks', 'Together', 'Mistral', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
+    // Padrão: sempre grátis primeiro
+    padrao:     ['Groq', 'Gemini', 'Cerebras', 'Fireworks', 'SambaNova', 'Together', 'Mistral', 'DeepSeek', 'Cohere', 'Anthropic', 'OpenAI'],
+    // Premium: TAMBÉM grátis primeiro — não gastar token pago desnecessariamente
+    premium:    ['Gemini', 'Groq', 'Cerebras', 'SambaNova', 'Fireworks', 'Together', 'Mistral', 'Cohere', 'DeepSeek', 'Anthropic', 'OpenAI'],
 };
 
 // ─── Função principal com roteamento inteligente + cascata ─────────────────────
