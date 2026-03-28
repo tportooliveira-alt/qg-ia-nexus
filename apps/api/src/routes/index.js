@@ -18,5 +18,6 @@ router.use(require("./audit.routes"));
 router.use(require("./providers.routes"));
 router.use("/docs", require("./document.routes"));
 router.use(require("./activity.routes"));
+router.use(require("./capacitacao.routes"));
 
 module.exports = router;

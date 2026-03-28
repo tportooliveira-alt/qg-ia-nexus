@@ -15,9 +15,6 @@ async function notificarWhatsApp(msg) {
 }
 
 // ── Fontes científicas de alta qualidade ──────────────────────────────────────
-// arXiv (preprints IA/computação), Semantic Scholar (relevância por IA),
-// Papers with Code (teoria + implementação), SciELO (Brasil/LATAM).
-// A IA usa essas fontes como contexto ao pesquisar temas técnicos.
 const FONTES_CIENTIFICAS = `
 FONTES CIENTÍFICAS DE REFERÊNCIA (use como base de conhecimento):
 - arXiv.org: repositório de preprints de IA, computação e engenharia (cs.AI, cs.LG, cs.SE)
@@ -27,9 +24,49 @@ FONTES CIENTÍFICAS DE REFERÊNCIA (use como base de conhecimento):
 - Hugging Face (huggingface.co/papers): papers diários de IA com datasets e modelos prontos
 - ACM Digital Library: computação e arquitetura de software
 - IEEE Xplore: engenharia elétrica, eletrônica e sistemas embarcados
+- GitHub Trending: repositórios em alta na comunidade de desenvolvimento
+- Product Hunt: novas ferramentas e startups de tecnologia
 
 Ao pesquisar, incorpore conceitos, tendências e insights dessas fontes quando relevantes.
 `;
+
+// ── Banco de Temas Expandido (21 temas com rotação) ──────────────────────────
+const TEMAS_POOL = [
+  // 🤖 IA & Multi-Agente
+  "Skills novas e úteis para agentes de IA (MCP, LangGraph, CrewAI, AutoGen, automações e integrações modernas)",
+  "Tendências em LLMs, RAG e sistemas multi-agente (papers arXiv recentes, benchmarks 2025-2026)",
+  "Novos modelos de IA open-source (Llama 4, Mistral, Qwen, DeepSeek V3, Gemma 3) e como usar via API gratuita",
+  "Prompt engineering avançado: Chain-of-Thought, Self-Consistency, Tree-of-Thought, metacognição em LLMs",
+  "Function calling e tool-use em LLMs: como agentes decidem quais ferramentas usar automaticamente",
+
+  // 🚜 Agronegócio & Pecuária
+  "Gestão de pecuária de corte: tecnologia, IoT, rastreabilidade e sistemas de gestão em 2026",
+  "Ideias de app com potencial real de mercado no agronegócio brasileiro",
+  "Ideias de software B2B/SaaS que resolvam dores claras em fazendas e frigoríficos",
+  "Agritech e precision farming: drones, sensores, IA para decisão agrícola",
+  "Mercado do boi gordo e tendências de preços da arroba no Brasil 2026",
+
+  // 💼 Negócios & Monetização
+  "Negócios e monetização: modelos, pricing e validação de MVPs no Brasil",
+  "Estratégia de produto e vantagem competitiva em software agtech",
+  "SaaS para pequenas empresas brasileiras: dores, soluções e preços ideais",
+
+  // 🛠️ DevOps & Ferramentas
+  "Melhores ferramentas de deploy gratuitas em 2026 (Vercel, Railway, Fly.io, Coolify, Render)",
+  "Bancos de dados modernos para startups (Supabase, Neon, Turso, PlanetScale, Upstash)",
+  "MCP (Model Context Protocol): servidores populares e como integrar em sistemas de agentes",
+
+  // 🔒 Segurança & Qualidade
+  "Segurança em sistemas de IA autônomos: prompt injection, sandboxing, approval gates",
+  "Testes automatizados com Vitest e Playwright para aplicações Node.js",
+
+  // 🌐 Frontend & UX
+  "Tendências de UI/UX 2026: glassmorphism, dark mode, micro-animações, design systems modernos",
+  "React Server Components, Next.js 15 e Vite 6: o que mudou e melhores práticas",
+
+  // 📊 Data & Analytics
+  "Analytics e observabilidade para aplicações IA: PostHog, Sentry, OpenTelemetry"
+];
 
 const ResearchService = {
   async pesquisarTendencia(tema) {
@@ -67,16 +104,27 @@ ${FONTES_CIENTIFICAS}
     }
   },
 
+  /**
+   * Seleciona temas com rotação inteligente baseada no dia e hora.
+   * Garante que todos os temas são cobertos ao longo dos ciclos.
+   */
+  selecionarTemas(quantidade = 7) {
+    const agora = new Date();
+    // Rotação baseada no dia do ano + hora (garante cobertura total)
+    const diaDono = Math.floor((agora - new Date(agora.getFullYear(), 0, 0)) / 86400000);
+    const ciclo = Math.floor(agora.getHours() / 6); // 0,1,2,3
+    const offset = ((diaDono * 4) + ciclo) % TEMAS_POOL.length;
+
+    const selecionados = [];
+    for (let i = 0; i < Math.min(quantidade, TEMAS_POOL.length); i++) {
+      selecionados.push(TEMAS_POOL[(offset + i) % TEMAS_POOL.length]);
+    }
+    return selecionados;
+  },
+
   async cicloDeEstudoIntensivo() {
-    const temas = [
-      "Skills novas e úteis para agentes de IA (MCP, LangGraph, automações e integrações)",
-      "Gestão de pecuária de corte: tecnologia, IoT, rastreabilidade e sistemas de gestão",
-      "Ideias de app com potencial real de mercado no agronegócio brasileiro",
-      "Ideias de software B2B/SaaS que resolvam dores claras em fazendas e frigoríficos",
-      "Tendências em LLMs, RAG e sistemas multi-agente (papers arXiv recentes)",
-      "Negócios e monetização: modelos, pricing e validação de MVPs",
-      "Estratégia de produto e vantagem competitiva em software agtech"
-    ];
+    const temas = this.selecionarTemas(7);
+    console.log(`[ESTUDO] Temas selecionados para este ciclo: ${temas.length}`);
 
     const resumos = [];
     for (const tema of temas) {

@@ -3,6 +3,7 @@ const WhatsAppService = require("./services/whatsappService");
 const SupabaseService = require("./services/supabaseService");
 const ResearchService = require("./services/researchService");
 const ActivityService = require("./services/activityService");
+const AutoCapacitationService = require("./services/autoCapacitationService");
 
 async function bootstrap(app, port) {
   app.listen(port, async () => {
@@ -70,7 +71,21 @@ async function bootstrap(app, port) {
       }
     });
 
-    console.log("[CRON] 🔍 Pesquisa autônoma: a cada 6h | 🧠 Auto-correção: a cada 12h");
+    // ── Cron: auto-capacitação a cada 4 horas ────────────────────────────────
+    cron.schedule("30 */4 * * *", async () => {
+      console.log("[CRON] 🎓 Iniciando ciclo de auto-capacitação...");
+      ActivityService.registrar("capacitacao", { status: "trabalhando", descricao: "Descobrindo e aprendendo novas ferramentas", projeto: "QG IA Nexus" });
+      try {
+        await AutoCapacitationService.cicloDeCapacitacao();
+        console.log("[CRON] ✅ Auto-capacitação concluída.");
+      } catch (e) {
+        console.error("[CRON] ❌ Falha na auto-capacitação:", e.message);
+      } finally {
+        ActivityService.finalizar("capacitacao");
+      }
+    });
+
+    console.log("[CRON] 🔍 Pesquisa: 6h | 🧠 Auto-correção: 12h | 🎓 Capacitação: 4h");
 
     // ── Heartbeat: registra todos os agentes como monitorando ────────────────
     registrarHeartbeats();
@@ -81,21 +96,23 @@ async function bootstrap(app, port) {
 
 function registrarHeartbeats() {
   const PROJ = "QG IA Nexus";
-  ActivityService.monitorar("nexus",    { descricao: "Aguardando comandos — online 24/7", projeto: PROJ });
-  ActivityService.monitorar("gem",      { descricao: "Provider principal — pronto", projeto: PROJ });
-  ActivityService.monitorar("groq",     { descricao: "Backup ultra-rápido — online", projeto: PROJ });
-  ActivityService.monitorar("crbr",     { descricao: "Fallback Cerebras — online", projeto: PROJ });
-  ActivityService.monitorar("sbvn",     { descricao: "Fallback SambaNova — online", projeto: PROJ });
-  ActivityService.monitorar("supa",     { descricao: "Banco de dados ativo — Supabase", projeto: PROJ });
-  ActivityService.monitorar("scout",    { descricao: "Pronto para pesquisar na web", projeto: PROJ });
-  ActivityService.monitorar("research", { descricao: "Ciclo autônomo: próximo em ~6h", projeto: PROJ });
-  ActivityService.monitorar("autocorr", { descricao: "Monitorando logs — ciclo 12h", projeto: PROJ });
-  ActivityService.monitorar("fabrica",  { descricao: "Pipeline pronto — aguardando ideia", projeto: PROJ });
-  ActivityService.monitorar("qgia",     { descricao: "Plataforma central — online", projeto: PROJ });
-  ActivityService.monitorar("agromacro",{ descricao: "PWA 27 módulos — em desenvolvimento", projeto: "AgroMacro" });
-  ActivityService.monitorar("gestcort", { descricao: "Gestão de gado de corte — ativo", projeto: "GestCort" });
-  ActivityService.monitorar("frigogest",{ descricao: "Automação frigorífico — standby", projeto: "FrigoGest" });
-  ActivityService.monitorar("hosting",  { descricao: "Consultor de hospedagem — pronto", projeto: "QG IA Nexus" });
+  ActivityService.monitorar("nexus",       { descricao: "Aguardando comandos — online 24/7", projeto: PROJ });
+  ActivityService.monitorar("gem",         { descricao: "Provider principal — Gemini 2.5 Flash", projeto: PROJ });
+  ActivityService.monitorar("groq",        { descricao: "Backup ultra-rápido — Llama 3.3 70B", projeto: PROJ });
+  ActivityService.monitorar("crbr",        { descricao: "Fallback Cerebras — Llama 3.1 8B", projeto: PROJ });
+  ActivityService.monitorar("sbvn",        { descricao: "Fallback SambaNova — Llama 3.3 70B", projeto: PROJ });
+  ActivityService.monitorar("supa",        { descricao: "Banco de dados ativo — Supabase", projeto: PROJ });
+  ActivityService.monitorar("scout",       { descricao: "Pronto para pesquisar na web", projeto: PROJ });
+  ActivityService.monitorar("research",    { descricao: "Ciclo autônomo: próximo em ~6h", projeto: PROJ });
+  ActivityService.monitorar("autocorr",    { descricao: "Monitorando logs — ciclo 12h", projeto: PROJ });
+  ActivityService.monitorar("capacitacao", { descricao: "Auto-capacitação — ciclo 4h", projeto: PROJ });
+  ActivityService.monitorar("fabrica",     { descricao: "Pipeline pronto — aguardando ideia", projeto: PROJ });
+  ActivityService.monitorar("qgia",        { descricao: "Plataforma central — online", projeto: PROJ });
+  ActivityService.monitorar("mcp",         { descricao: "MCP Client — pronto para ferramentas", projeto: PROJ });
+  ActivityService.monitorar("agromacro",   { descricao: "PWA 27 módulos — em desenvolvimento", projeto: "AgroMacro" });
+  ActivityService.monitorar("gestcort",    { descricao: "Gestão de gado de corte — ativo", projeto: "GestCort" });
+  ActivityService.monitorar("frigogest",   { descricao: "Automação frigorífico — standby", projeto: "FrigoGest" });
+  ActivityService.monitorar("hosting",     { descricao: "Consultor de hospedagem — pronto", projeto: PROJ });
 }
 
 /**
