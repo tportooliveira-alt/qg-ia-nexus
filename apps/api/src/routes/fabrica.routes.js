@@ -274,4 +274,47 @@ router.get("/fabrica/provedores", autenticarToken, (req, res) => {
   res.json({ provedores: listarProvedoresAtivos() });
 });
 
+// ─── EstudiosoAgent — Pesquisa de Mercado Global ──────────────────────────────
+
+const EstudiosoAgent = require("../fabrica/agents/EstudiosoAgent");
+
+// SSE: pesquisa ao vivo com eventos em tempo real
+router.get("/fabrica/estudioso/pesquisar", autenticarToken, verificarFabricaAtiva, rateLimiter(5), (req, res) => {
+  const { segmento } = req.query; // ex: ?segmento=agronegocio
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const emit = (dados) => {
+    res.write(`data: ${JSON.stringify(dados)}\n\n`);
+  };
+
+  const usuario_id = req.usuario?.id || 'anonimo';
+
+  EstudiosoAgent.executar(segmento || null, emit)
+    .then(resultado => {
+      emit({ tipo: 'estudioso_final', dados: resultado, progresso: 100 });
+      res.write('data: [DONE]\n\n');
+      res.end();
+    })
+    .catch(err => {
+      emit({ tipo: 'erro', mensagem: err.message });
+      res.write('data: [DONE]\n\n');
+      res.end();
+    });
+});
+
+// POST: retorna JSON direto (sem SSE) — para integração com Fábrica
+router.post("/fabrica/estudioso/briefing", autenticarToken, verificarFabricaAtiva, rateLimiter(5), async (req, res) => {
+  try {
+    const { segmento } = req.body;
+    const resultado = await EstudiosoAgent.executar(segmento || null, null);
+    res.json({ status: 'Sucesso', ...resultado });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

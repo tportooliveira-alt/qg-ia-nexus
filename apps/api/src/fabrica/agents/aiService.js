@@ -172,18 +172,108 @@ const PROVEDORES = [
             }));
             return resp.choices?.[0]?.message?.content || '';
         }
+    },
+    // ─── Novos provedores ────────────────────────────────────────────────────
+    {
+        nome: 'Mistral',
+        ativo: () => !!process.env.MISTRAL_API_KEY,
+        chamar: async (system, user, maxTokens) => {
+            const body = JSON.stringify({
+                model: 'mistral-large-latest',
+                messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+                max_tokens: maxTokens, temperature: 0.7
+            });
+            const resp = JSON.parse(await httpPost('https://api.mistral.ai/v1/chat/completions', body, {
+                Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`
+            }));
+            return resp.choices?.[0]?.message?.content || '';
+        }
+    },
+    {
+        nome: 'Together',
+        ativo: () => !!process.env.TOGETHER_API_KEY,
+        chamar: async (system, user, maxTokens) => {
+            const body = JSON.stringify({
+                model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+                messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+                max_tokens: maxTokens, temperature: 0.7
+            });
+            const resp = JSON.parse(await httpPost('https://api.together.xyz/v1/chat/completions', body, {
+                Authorization: `Bearer ${process.env.TOGETHER_API_KEY}`
+            }));
+            return resp.choices?.[0]?.message?.content || '';
+        }
+    },
+    {
+        nome: 'Fireworks',
+        ativo: () => !!process.env.FIREWORKS_API_KEY,
+        chamar: async (system, user, maxTokens) => {
+            const body = JSON.stringify({
+                model: 'accounts/fireworks/models/llama-v3p3-70b-instruct',
+                messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+                max_tokens: maxTokens, temperature: 0.7
+            });
+            const resp = JSON.parse(await httpPost('https://api.fireworks.ai/inference/v1/chat/completions', body, {
+                Authorization: `Bearer ${process.env.FIREWORKS_API_KEY}`
+            }));
+            return resp.choices?.[0]?.message?.content || '';
+        }
+    },
+    {
+        nome: 'Cohere',
+        ativo: () => !!process.env.COHERE_API_KEY,
+        chamar: async (system, user, maxTokens) => {
+            // Cohere usa API própria (Command R+) — ótimo para análise e embeddings
+            const body = JSON.stringify({
+                model: 'command-r-plus',
+                message: user,
+                preamble: system,
+                max_tokens: maxTokens, temperature: 0.7
+            });
+            const resp = JSON.parse(await httpPost('https://api.cohere.com/v1/chat', body, {
+                Authorization: `Bearer ${process.env.COHERE_API_KEY}`,
+                'X-Client-Name': 'qgia'
+            }));
+            return resp.text || '';
+        }
+    },
+    {
+        nome: 'SambaNova',
+        ativo: () => !!process.env.SAMBANOVA_API_KEY,
+        chamar: async (system, user, maxTokens) => {
+            const body = JSON.stringify({
+                model: 'Meta-Llama-3.3-70B-Instruct',
+                messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+                max_tokens: maxTokens, temperature: 0.7
+            });
+            const resp = JSON.parse(await httpPost('https://api.sambanova.ai/v1/chat/completions', body, {
+                Authorization: `Bearer ${process.env.SAMBANOVA_API_KEY}`
+            }));
+            return resp.choices?.[0]?.message?.content || '';
+        }
     }
 ];
 
 // ─── Roteamento por especialidade ────────────────────────────────────────────
 // Define qual provedor tentar PRIMEIRO para cada tipo de tarefa
+// Cada especialidade tem uma ordem otimizada de provedores
 const ROTAS_ESPECIALIDADE = {
-    codigo:      ['DeepSeek', 'Groq', 'Anthropic', 'Gemini', 'OpenAI', 'Cerebras'],
-    rapido:      ['Groq', 'Cerebras', 'Gemini', 'DeepSeek', 'Anthropic', 'OpenAI'],
-    raciocinio:  ['Anthropic', 'OpenAI', 'Gemini', 'DeepSeek', 'Groq', 'Cerebras'],
-    design:      ['Gemini', 'Anthropic', 'OpenAI', 'DeepSeek', 'Groq', 'Cerebras'],
-    analise:     ['Anthropic', 'Gemini', 'OpenAI', 'DeepSeek', 'Groq', 'Cerebras'],
-    padrao:      ['Gemini', 'Groq', 'Anthropic', 'OpenAI', 'DeepSeek', 'Cerebras']
+    //  Código: DeepSeek é o melhor → Groq rápido → Mistral → Together → resto
+    codigo:      ['DeepSeek', 'Groq', 'Mistral', 'Together', 'Fireworks', 'Anthropic', 'Gemini', 'OpenAI', 'Cerebras', 'SambaNova'],
+    //  Rápido: Groq (ultra-rápido) → Cerebras → Fireworks → Together
+    rapido:      ['Groq', 'Cerebras', 'Fireworks', 'Together', 'Gemini', 'Mistral', 'DeepSeek', 'Anthropic', 'OpenAI', 'SambaNova'],
+    //  Raciocínio: Anthropic → OpenAI → Mistral → Cohere → Gemini
+    raciocinio:  ['Anthropic', 'OpenAI', 'Mistral', 'Cohere', 'Gemini', 'Together', 'DeepSeek', 'Groq', 'Cerebras', 'SambaNova'],
+    //  Design/Visual: Gemini (multimodal) → Anthropic → OpenAI → resto
+    design:      ['Gemini', 'Anthropic', 'OpenAI', 'Mistral', 'DeepSeek', 'Groq', 'Cerebras', 'Together', 'Fireworks', 'SambaNova'],
+    //  Análise: Cohere (especialista em análise) → Anthropic → Gemini → Mistral
+    analise:     ['Cohere', 'Anthropic', 'Gemini', 'Mistral', 'OpenAI', 'Together', 'DeepSeek', 'Groq', 'Cerebras', 'SambaNova'],
+    //  Pesquisa: Together (Llama 70B) → SambaNova → Gemini → Groq
+    pesquisa:    ['Together', 'SambaNova', 'Gemini', 'Groq', 'Mistral', 'Fireworks', 'Cohere', 'Anthropic', 'OpenAI', 'DeepSeek'],
+    //  Contexto longo: SambaNova → Together → Gemini → Anthropic
+    contexto:    ['SambaNova', 'Together', 'Gemini', 'Anthropic', 'Mistral', 'OpenAI', 'Groq', 'DeepSeek', 'Fireworks', 'Cohere'],
+    //  Padrão: Gemini → Groq → Mistral → Together → resto
+    padrao:      ['Gemini', 'Groq', 'Mistral', 'Together', 'Anthropic', 'OpenAI', 'DeepSeek', 'Cerebras', 'Fireworks', 'SambaNova', 'Cohere']
 };
 
 // ─── Função principal com roteamento inteligente + cascata ─────────────────────
@@ -227,6 +317,8 @@ const chamarIARapido     = (s, u, t) => chamarIA(s, u, t, 'rapido');
 const chamarIARaciocinio = (s, u, t) => chamarIA(s, u, t, 'raciocinio');
 const chamarIADesign     = (s, u, t) => chamarIA(s, u, t, 'design');
 const chamarIAAnalise    = (s, u, t) => chamarIA(s, u, t, 'analise');
+const chamarIAPesquisa   = (s, u, t) => chamarIA(s, u, t, 'pesquisa');
+const chamarIAContexto   = (s, u, t) => chamarIA(s, u, t, 'contexto');
 
 module.exports = {
     chamarIA,
@@ -235,5 +327,7 @@ module.exports = {
     chamarIARaciocinio,
     chamarIADesign,
     chamarIAAnalise,
+    chamarIAPesquisa,
+    chamarIAContexto,
     listarProvedoresAtivos
 };
