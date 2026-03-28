@@ -44,17 +44,6 @@ interface LogResult {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatUptime(ms: number) {
-  if (!ms || ms <= 0) return '0s'
-  const s = Math.floor(ms / 1000)
-  const m = Math.floor(s / 60)
-  const h = Math.floor(m / 60)
-  const d = Math.floor(h / 24)
-  if (d > 0) return `${d}d ${h % 24}h`
-  if (h > 0) return `${h}h ${m % 60}m`
-  return `${m}m`
-}
-
 function getGaugeColor(percent: number): string {
   if (percent < 50) return '#22C55E'
   if (percent < 75) return '#F59E0B'
