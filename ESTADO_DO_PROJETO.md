@@ -10,10 +10,29 @@
 |------|-------|
 | VPS | Hostinger — Ubuntu 24.04 |
 | IP | 187.77.252.91 |
-| Processo | PM2 — app `qgia` — porta 3005 |
-| Domínio | ideiatoapp.me (HTTPS) |
+| Processo | PM2 — app `qgia` — porta **3005** |
+| Domínio | ideiatoapp.me / fabrica-ia.com.br / 187.77.252.91 |
 | Framework | Node.js / Express (monorepo Turborepo) |
 | Frontend | React + Vite (`apps/web/`) → build em `apps/api/public/` |
+| **Nginx** | **Proxy reverso — porta 80 → /api/ vai para porta 3005** |
+| **Static files** | **Nginx serve de `/var/www/qgia/` (NÃO de `apps/api/public/`)** |
+
+### ⚠️ Arquitetura importante: nginx + Express
+```
+Browser (porta 80)
+    │
+    ├── /api/*   → nginx proxy_pass → Express (porta 3005)
+    └── /*       → nginx serve static de /var/www/qgia/
+                       └── try_files → fallback para /index.html (React SPA)
+```
+
+**Ao fazer build do React e querer ver no browser:**
+```bash
+cd /root/qg-ia-nexus
+git pull origin main
+cp -r apps/api/public/* /var/www/qgia/
+pm2 restart qgia
+```
 
 ---
 
