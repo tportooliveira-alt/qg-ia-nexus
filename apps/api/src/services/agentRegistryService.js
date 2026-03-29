@@ -1,5 +1,6 @@
-﻿const fs = require("fs").promises;
+const fs = require("fs").promises;
 const path = require("path");
+const { TOOL_DEFINITIONS } = require("../services/toolExecutor");
 
 const AGENT_DOMAIN_HINTS = {
   DomainDetector: ["integration", "software", "mechanical", "civil", "electrical", "chemical", "product"],
@@ -95,7 +96,11 @@ function enrichAgent(agent) {
     dominios: domains,
     taskType,
     preferredProviders,
-    inputSchema
+    inputSchema,
+    ferramentas_resolvidas: (agent.ferramentas || []).map(toolName => {
+      const def = TOOL_DEFINITIONS.find(t => t.name === toolName);
+      return def || { name: toolName, description: "Ferramenta externa (não resolvida)", params: {} };
+    })
   };
 }
 
