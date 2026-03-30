@@ -5,17 +5,17 @@
  * Tabela: transacoes_financeiras (id, projeto, tipo, valor, descricao, data_registro)
  */
 
-const SupabaseService = require('./supabaseService');
+const MysqlService = require('./mysqlService');
 
 const FinancialService = {
   async registrarTransacao(projeto, tipo, valor, descricao) {
-    if (!SupabaseService.ativo()) {
-      console.warn('[CFO] Supabase não configurado — transação descartada.');
+    if (!MysqlService.ativo()) {
+      console.warn('[CFO] MySQL não configurado — transação descartada.');
       return;
     }
 
     try {
-      await SupabaseService.inserir('transacoes_financeiras', {
+      await MysqlService.inserir('transacoes_financeiras', {
         projeto, tipo, valor, descricao
       });
       console.log(`[CFO] Transação registrada: ${tipo} de R$${valor} em ${projeto}`);
@@ -25,12 +25,12 @@ const FinancialService = {
   },
 
   async gerarResumoDRE(projeto) {
-    if (!SupabaseService.ativo()) {
+    if (!MysqlService.ativo()) {
       return { total_receita: 0, total_despesa: 0, lucro: 0 };
     }
 
     try {
-      const dados = await SupabaseService.buscar('transacoes_financeiras', {
+      const dados = await MysqlService.buscar('transacoes_financeiras', {
         filtros: { projeto }, limit: 1000, orderBy: 'data_registro', ascending: false
       });
 
@@ -48,9 +48,9 @@ const FinancialService = {
     }
   },
 
-  // No-op: tabela criada via SUPABASE_SETUP.sql
+  // No-op: tabela criada via mysqlService.js no boot
   async inicializarTabelaFinanceira() {
-    console.log('[CFO] Tabela gerenciada pelo Supabase — inicialização automática.');
+    console.log('[CFO] Tabela de finanças operando no MySQL.');
   }
 };
 

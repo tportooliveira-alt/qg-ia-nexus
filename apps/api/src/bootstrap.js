@@ -31,6 +31,17 @@ async function bootstrap(app, port) {
         const ok = await MysqlService.inicializar();
         if (ok) {
           console.log("✅ MySQL Hostinger: Conectado e tabelas criadas — backend PRIMÁRIO ativo.");
+          const BD = {
+            async buscarTodos(tabela, filtros = {}, limite = 100, ordem = null) {
+              return MysqlService.buscar(tabela, {
+                filtros, limit: limite, orderBy: ordem || 'created_at', ascending: false
+              });
+            },
+            async inserir(tabela, dados) {
+              return MysqlService.inserir(tabela, dados);
+            }
+          };
+          AgentMemory.inicializar(BD);
         } else {
           console.warn("⚠️ MySQL Hostinger: Conexão OK mas tabelas falharam.");
         }
@@ -47,7 +58,7 @@ async function bootstrap(app, port) {
         const ping = await SupabaseService.ping();
         if (ping.ok) {
           console.log(`✅ Supabase: Conectado (${ping.latencia_ms}ms) — fallback ativo.`);
-          AgentMemory.inicializar(SupabaseService);
+          if (!MysqlService.ativo()) AgentMemory.inicializar(SupabaseService); // apenas se MySQL falhou
         } else {
           console.warn(`⚠️ Supabase: Ping falhou (${ping.erro}) — fallback indisponível.`);
         }

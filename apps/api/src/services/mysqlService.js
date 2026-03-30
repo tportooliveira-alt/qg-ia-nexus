@@ -87,6 +87,49 @@ async function initTables() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
+    await p.execute(`
+      CREATE TABLE IF NOT EXISTS projetos_fabrica (
+        id VARCHAR(100) PRIMARY KEY,
+        usuario_id VARCHAR(100),
+        nome VARCHAR(200),
+        tipo VARCHAR(100),
+        tipo_entregavel VARCHAR(100),
+        ideia_original TEXT,
+        status VARCHAR(50),
+        score_final INT,
+        iteracoes INT,
+        aprovado BOOLEAN,
+        plano JSON,
+        arquitetura JSON,
+        codigo_sql LONGTEXT,
+        codigo_app LONGTEXT,
+        codigo_ui LONGTEXT,
+        planilha LONGTEXT,
+        documento LONGTEXT,
+        testes LONGTEXT,
+        seguranca LONGTEXT,
+        documentacao LONGTEXT,
+        deploy_config LONGTEXT,
+        design_system JSON,
+        auditoria JSON,
+        tempo_total_ms INT,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await p.execute(`
+      CREATE TABLE IF NOT EXISTS transacoes_financeiras (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        projeto VARCHAR(200),
+        tipo VARCHAR(50),
+        valor DECIMAL(10, 2),
+        descricao TEXT,
+        data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
     console.log("[MYSQL] Tabelas verificadas/criadas com sucesso.");
     return true;
   } catch (err) {
@@ -127,7 +170,7 @@ const MysqlService = {
     if (!p) return null;
     try {
       const keys = Object.keys(dados);
-      const values = Object.values(dados);
+      const values = Object.values(dados).map(v => (v !== null && typeof v === 'object') ? JSON.stringify(v) : v);
       const placeholders = keys.map(() => "?").join(", ");
       const sql = `INSERT INTO ${tabela} (${keys.join(", ")}) VALUES (${placeholders})`;
       const [result] = await p.execute(sql, values);

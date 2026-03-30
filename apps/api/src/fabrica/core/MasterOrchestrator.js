@@ -29,7 +29,7 @@ const AgentMemory = require('./AgentMemory');
 const PipelineManager = require('./PipelineManager');
 const ContextRouter = require('./ContextRouter');
 const { listarProvedoresAtivos } = require('../agents/aiService');
-const SupabaseService = require('../../services/supabaseService');
+const MysqlService = require('../../services/mysqlService');
 
 const MAX_ITERACOES   = 6;   // 6 chances de chegar ao score ideal
 const SCORE_APROVACAO = 85;  // 85+ para aprovar
@@ -253,10 +253,10 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
             criado_em: new Date().toISOString()
         };
 
-        // ── SALVAR NO SUPABASE ────────────────────────────────────────────
-        if (SupabaseService.ativo()) {
+        // ── SALVAR NO MYSQL PORTADO DA FÁBRICA ────────────────────────────
+        if (MysqlService.ativo()) {
             try {
-                await SupabaseService.inserir('projetos_fabrica', {
+                await MysqlService.inserir('projetos_fabrica', {
                     id: resultado.id,
                     usuario_id: resultado.usuario_id,
                     nome: resultado.nome,
@@ -265,8 +265,8 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                     ideia_original: resultado.ideia_original,
                     status: resultado.status,
                     score_final: resultado.score_final,
-                    iteracoes: resultado.iteracoes,
-                    aprovado: resultado.aprovado,
+                    iteracoes: resultado.iteracoes_realizadas,
+                    aprovado: resultado.entregue_aprovado,
                     plano: resultado.plano,
                     arquitetura: resultado.arquitetura,
                     codigo_sql: resultado.codigo_sql,
@@ -281,10 +281,11 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                     design_system: resultado.design_system,
                     auditoria: resultado.auditoria,
                     tempo_total_ms: resultado.tempo_total_ms,
+                    criado_em: resultado.criado_em
                 });
-                console.log(`[MasterOrchestrator] Projeto "${resultado.nome}" salvo no Supabase (score: ${resultado.score_final})`);
+                console.log(`[MasterOrchestrator] Projeto "${resultado.nome}" salvo no MySQL (score: ${resultado.score_final})`);
             } catch (saveErr) {
-                console.error('[MasterOrchestrator] Falha ao salvar no Supabase:', saveErr.message);
+                console.error('[MasterOrchestrator] Falha ao salvar no MySQL:', saveErr.message);
             }
         }
 

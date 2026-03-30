@@ -26,6 +26,7 @@ const auditor   = require('./agents/auditor');
 const analyst   = require('./agents/analyst');
 const fixer     = require('./agents/fixer');
 const { listarProvedoresAtivos } = require('./agents/aiService');
+const MysqlService = require('../../services/mysqlService');
 
 // ─── Configuração do Loop ─────────────────────────────────────────────────────
 const MAX_ITERACOES   = 5;   // Máximo de tentativas antes de entregar assim mesmo
@@ -222,9 +223,21 @@ async function executarPipeline(ideia, db, usuario_id = 'anonimo') {
 // ─── Salvar no banco ──────────────────────────────────────────────────────────
 
 function salvarNoBanco(db, r) {
-    // Detecta se é Supabase (objeto com .from) ou SQLite (objeto com .run)
-    if (db && typeof db.from === 'function') {
-        // Supabase
+    if (db === 'mysql' && MysqlService.ativo()) {
+        return MysqlService.inserir('projetos_fabrica', {
+            id: r.id || Date.now().toString(),
+            usuario_id:       r.usuario_id,
+            nome:             r.nome,
+            ideia_original:   r.ideia_original,
+            arquitetura:      r.arquitetura,
+            codigo_sql:       r.codigo_sql,
+            codigo_app:       r.codigo_app,
+            codigo_ui:        r.codigo_ui,
+            status:           r.status,
+            criado_em:        r.criado_em || new Date().toISOString()
+        });
+    } else if (db && typeof db.from === 'function') {
+        // Supabase (Legado)
         return db.from('projetos_fabrica').insert({
             usuario_id:       r.usuario_id,
             nome:             r.nome,

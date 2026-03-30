@@ -2,6 +2,7 @@ const { Router } = require("express");
 const { autenticarToken, rateLimiter } = require("../services/authMiddleware");
 const MemoryService = require("../services/memoryService");
 const SupabaseService = require("../services/supabaseService");
+const MysqlService = require("../services/mysqlService");
 const safeAudit = require("../utils/safeAudit");
 
 // Fábrica de IA — módulos locais (portados do fabrica-ia-api)
@@ -14,21 +15,6 @@ const { listarProvedoresAtivos } = require("../fabrica/agents/aiService");
 const router = Router();
 
 let fabricaAtiva = process.env.FABRICA_ENABLED !== "false";
-
-// Inicializar AgentMemory com BD universal via Supabase
-if (SupabaseService.ativo()) {
-  const BD = {
-    async buscarTodos(tabela, filtros = {}, limite = 100, ordem = null) {
-      return SupabaseService.buscar(tabela, {
-        filtros, limit: limite, orderBy: ordem || 'created_at', ascending: false
-      });
-    },
-    async inserir(tabela, dados) {
-      return SupabaseService.inserir(tabela, dados);
-    }
-  };
-  AgentMemory.inicializar(BD);
-}
 
 // ─── Controle Global dos Agentes ──────────────────────────────────────────────
 
@@ -68,7 +54,7 @@ router.get("/fabrica/status", autenticarToken, rateLimiter(30), (req, res) => {
   res.json({
     status: "Online",
     message: "Fábrica de IA integrada ao QG-IA-Nexus",
-    banco: SupabaseService.ativo() ? "Supabase" : "Desconectado",
+    banco: MysqlService.ativo() ? "MySQL" : "Desconectado",
     versao: "4.0.0",
     fabricaAtiva,
     modo_teste: sistemaControle.modoTeste,
@@ -123,8 +109,8 @@ router.post("/fabrica/orquestrar", autenticarToken, verificarFabricaAtiva, rateL
 
   try {
     sistemaControle.pipelinesEmExecucao++;
-    const supabaseClient = SupabaseService.ativo() ? SupabaseService.getClient() : null;
-    const resultado = await fabricaOrchestrator.executarPipeline(ideia.trim(), supabaseClient, usuario_id);
+    const dbClient = MysqlService.ativo() ? "mysql" : null;
+    const resultado = await fabricaOrchestrator.executarPipeline(ideia.trim(), dbClient, usuario_id);
     sistemaControle.pipelinesEmExecucao--;
 
     try {
@@ -247,7 +233,7 @@ router.get("/fabrica/projetos", autenticarToken, verificarFabricaAtiva, rateLimi
     const filtros = {};
     if (usuario_id) filtros.usuario_id = usuario_id;
     if (status) filtros.status = status;
-    const dados = await SupabaseService.buscar('projetos_fabrica', {
+    const dados = await MysqlService.buscar('projetos_fabrica', {
       filtros, limit: parseInt(limit), orderBy: 'criado_em', ascending: false
     });
     res.json({ status: "Sucesso", projetos: dados });
@@ -258,7 +244,7 @@ router.get("/fabrica/projetos", autenticarToken, verificarFabricaAtiva, rateLimi
 
 router.get("/fabrica/projetos/:id", autenticarToken, verificarFabricaAtiva, rateLimiter(30), async (req, res) => {
   try {
-    const dados = await SupabaseService.buscar('projetos_fabrica', {
+    const dados = await MysqlService.buscar('projetos_fabrica', {
       filtros: { id: req.params.id }, limit: 1
     });
     if (!dados.length) return res.status(404).json({ error: 'Projeto não encontrado' });

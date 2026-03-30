@@ -1,30 +1,28 @@
 /**
  * auditService.js — Log de auditoria do sistema
  *
- * Armazenamento: Supabase (único backend)
- * Tabela: audit_logs (id, agente, acao, status, detalhe, origem, alvo, created_at)
+ * Armazenamento: MySQL (Hostinger)
+ * Tabela: agent_audit_log (id, agente, acao, detalhes, resultado, created_at)
  */
 
-const SupabaseService = require('./supabaseService');
+const MysqlService = require('./mysqlService');
 
 const AuditService = {
   async registrar({ agente, acao, status, detalhe, origem, alvo }) {
     const dados = {
       agente: agente || 'sistema',
       acao: acao || '',
-      status: status || 'ok',
-      detalhe: typeof detalhe === 'string' ? detalhe : JSON.stringify(detalhe || {}),
-      origem: origem || 'api',
-      alvo: alvo || null,
+      resultado: status || 'ok',
+      detalhes: typeof detalhe === 'string' ? detalhe : JSON.stringify(detalhe || {}),
     };
 
-    if (!SupabaseService.ativo()) {
-      console.warn('[AUDIT] Supabase não configurado — log descartado:', dados.acao);
+    if (!MysqlService.ativo()) {
+      console.warn('[AUDIT] MySQL não configurado — log descartado:', dados.acao);
       return false;
     }
 
     try {
-      await SupabaseService.inserir('audit_logs', dados);
+      await MysqlService.inserir('agent_audit_log', dados);
       return true;
     } catch (err) {
       console.error('[AUDIT] Erro ao registrar:', err.message);
@@ -33,8 +31,8 @@ const AuditService = {
   },
 
   async listar({ limit = 50, agente, acao, status } = {}) {
-    if (!SupabaseService.ativo()) {
-      console.warn('[AUDIT] Supabase não configurado — retornando vazio.');
+    if (!MysqlService.ativo()) {
+      console.warn('[AUDIT] MySQL não configurado — retornando vazio.');
       return [];
     }
 
@@ -42,9 +40,9 @@ const AuditService = {
       const filtros = {};
       if (agente) filtros.agente = agente;
       if (acao)   filtros.acao   = acao;
-      if (status) filtros.status = status;
+      if (status) filtros.resultado = status;
 
-      const dados = await SupabaseService.buscar('audit_logs', {
+      const dados = await MysqlService.buscar('agent_audit_log', {
         filtros, limit, orderBy: 'created_at', ascending: false
       });
       return dados.map(r => ({ ...r, created_at: r.created_at || r.criado_em }));
