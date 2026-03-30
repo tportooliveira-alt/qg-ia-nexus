@@ -47,6 +47,10 @@ app.get("/fabrica", (req, res) => {
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  console.log(`[DEBUG ROUTER] Entrada: ${req.method} ${req.url}`);
+  next();
+});
 app.use("/api", routes);
 
 // ─── SPA Fallback (React Router) ─────────────────────────────────────────────
