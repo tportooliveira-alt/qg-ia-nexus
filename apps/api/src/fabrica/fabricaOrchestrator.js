@@ -26,7 +26,7 @@ const auditor   = require('./agents/auditor');
 const analyst   = require('./agents/analyst');
 const fixer     = require('./agents/fixer');
 const { listarProvedoresAtivos } = require('./agents/aiService');
-const MysqlService = require('../../services/mysqlService');
+const MysqlService = require('../services/mysqlService');
 
 // ─── Configuração do Loop ─────────────────────────────────────────────────────
 const MAX_ITERACOES   = 5;   // Máximo de tentativas antes de entregar assim mesmo
