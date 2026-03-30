@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const WhatsAppService = require("./services/whatsappService");
 const SupabaseService = require("./services/supabaseService");
+const MysqlService = require("./services/mysqlService");
 const ResearchService = require("./services/researchService");
 const ActivityService = require("./services/activityService");
 const AutoCapacitationService = require("./services/autoCapacitationService");
@@ -24,24 +25,37 @@ async function bootstrap(app, port) {
       console.log("⭕ WhatsApp SERVICE: Desativado (ENABLE_WHATSAPP != true).");
     }
 
-    // ── Supabase (único backend) ──────────────────────────────────────────────
+    // ── MySQL Hostinger (backend PRIMÁRIO) ────────────────────────────────────
+    if (MysqlService.ativo()) {
+      try {
+        const ok = await MysqlService.inicializar();
+        if (ok) {
+          console.log("✅ MySQL Hostinger: Conectado e tabelas criadas — backend PRIMÁRIO ativo.");
+        } else {
+          console.warn("⚠️ MySQL Hostinger: Conexão OK mas tabelas falharam.");
+        }
+      } catch (e) {
+        console.error("❌ MySQL Hostinger: Erro ao inicializar:", e.message);
+      }
+    } else {
+      console.warn("⚠️ MySQL Hostinger: DESATIVADO — DB_HOST/DB_USER/DB_NAME ausentes.");
+    }
+
+    // ── Supabase (fallback) ──────────────────────────────────────────────────
     if (SupabaseService.ativo()) {
       try {
         const ping = await SupabaseService.ping();
         if (ping.ok) {
-          console.log(`✅ Supabase: Conectado (${ping.latencia_ms}ms) — banco de dados ativo.`);
-          // Inicializar memória dos agentes com Supabase
+          console.log(`✅ Supabase: Conectado (${ping.latencia_ms}ms) — fallback ativo.`);
           AgentMemory.inicializar(SupabaseService);
-          console.log(`🧠 AgentMemory: Inicializado com Supabase — aprendizado persistente ativo.`);
         } else {
-          console.error(`❌ Supabase: Ping falhou (${ping.erro}) — verifique SUPABASE_URL e SUPABASE_SERVICE_KEY.`);
+          console.warn(`⚠️ Supabase: Ping falhou (${ping.erro}) — fallback indisponível.`);
         }
       } catch (e) {
-        console.error("❌ Supabase: Erro ao verificar conexão:", e.message);
+        console.warn("⚠️ Supabase: Erro ao verificar:", e.message);
       }
     } else {
-      console.error("❌ Supabase: DESATIVADO — SUPABASE_URL ou SUPABASE_SERVICE_KEY ausentes no .env!");
-      console.error("   → O sistema NÃO funcionará sem Supabase. Configure as variáveis e reinicie.");
+      console.log("⭕ Supabase: Não configurado (usando MySQL como primário).");
     }
 
     // ── MCP Servers (auto-registro) ──────────────────────────────────────────
@@ -60,8 +74,6 @@ async function bootstrap(app, port) {
       try {
         await ResearchService.cicloDeEstudoIntensivo();
         console.log("[CRON] ✅ Ciclo de pesquisa concluído.");
-        ActivityService.registrar("evolution", { status: "trabalhando", descricao: "Salvando aprendizado no Supabase", projeto: "QG IA Nexus" });
-        ActivityService.registrar("supabase",  { status: "trabalhando", descricao: "Gravando memórias do ciclo de pesquisa", projeto: "QG IA Nexus" });
       } catch (e) {
         console.error("[CRON] ❌ Falha no ciclo de pesquisa:", e.message);
       } finally {
@@ -102,7 +114,6 @@ async function bootstrap(app, port) {
 
     // ── Heartbeat: registra todos os agentes como monitorando ────────────────
     registrarHeartbeats();
-    // Renova heartbeats a cada 20 minutos
     setInterval(registrarHeartbeats, 20 * 60 * 1000);
   });
 }
@@ -114,7 +125,7 @@ function registrarHeartbeats() {
   ActivityService.monitorar("groq",        { descricao: "Backup ultra-rápido — Llama 3.3 70B", projeto: PROJ });
   ActivityService.monitorar("crbr",        { descricao: "Fallback Cerebras — Llama 3.1 8B", projeto: PROJ });
   ActivityService.monitorar("sbvn",        { descricao: "Fallback SambaNova — Llama 3.3 70B", projeto: PROJ });
-  ActivityService.monitorar("supa",        { descricao: "Banco de dados ativo — Supabase", projeto: PROJ });
+  ActivityService.monitorar("mysql",       { descricao: "MySQL Hostinger — backend primário", projeto: PROJ });
   ActivityService.monitorar("scout",       { descricao: "Pronto para pesquisar na web", projeto: PROJ });
   ActivityService.monitorar("research",    { descricao: "Ciclo autônomo: próximo em ~6h", projeto: PROJ });
   ActivityService.monitorar("autocorr",    { descricao: "Monitorando logs — ciclo 12h", projeto: PROJ });
@@ -122,18 +133,8 @@ function registrarHeartbeats() {
   ActivityService.monitorar("fabrica",     { descricao: "Pipeline pronto — aguardando ideia", projeto: PROJ });
   ActivityService.monitorar("qgia",        { descricao: "Plataforma central — online", projeto: PROJ });
   ActivityService.monitorar("mcp",         { descricao: "MCP Client — pronto para ferramentas", projeto: PROJ });
-  ActivityService.monitorar("agromacro",   { descricao: "PWA 27 módulos — em desenvolvimento", projeto: "AgroMacro" });
-  ActivityService.monitorar("gestcort",    { descricao: "Gestão de gado de corte — ativo", projeto: "GestCort" });
-  ActivityService.monitorar("frigogest",   { descricao: "Automação frigorífico — standby", projeto: "FrigoGest" });
-  ActivityService.monitorar("hosting",     { descricao: "Consultor de hospedagem — pronto", projeto: PROJ });
 }
 
-/**
- * Ciclo de auto-correção:
- * 1. Lê os últimos erros do audit_log
- * 2. Pede para a IA analisar e sugerir melhorias
- * 3. Salva o aprendizado na memória dos agentes
- */
 async function executarAutocorrecao() {
   const AuditService = require("./services/auditService");
   const MemoryService = require("./services/memoryService");

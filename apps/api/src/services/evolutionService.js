@@ -1,6 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 const MemoryService = require("./memoryService");
+const MysqlService = require("./mysqlService");
 
 const EVOLUTION_FILE = path.join(__dirname, "../logs/learned_facts.json");
 
@@ -55,7 +56,7 @@ const EvolutionService = {
       await fs.writeFile(EVOLUTION_FILE, JSON.stringify(facts, null, 2), "utf-8");
       console.log(`[EVOLUÇÃO] ✅ Novo conhecimento: ${categoria} (total: ${facts.length})`);
 
-      // Espelha no Supabase (memória persistente)
+      // Espelha no MySQL (memória persistente)
       try {
         await MemoryService.registrar({
           agente: "NexusClaw",
@@ -63,8 +64,17 @@ const EvolutionService = {
           conteudo: fato,
           projeto: "QG-IA"
         });
+        // Também salva na tabela de aprendizados (com hash para dedup)
+        if (MysqlService.ativo()) {
+          await MysqlService.inserir("agent_learnings", {
+            categoria,
+            conteudo: fato,
+            fonte: fonte || "sistema",
+            hash_conteudo: hash,
+          });
+        }
       } catch (e) {
-        console.warn("[EVOLUÇÃO] Supabase memória falhou:", e.message);
+        console.warn("[EVOLUCAO] Persistencia MySQL falhou:", e.message);
       }
       return true;
     } catch (err) {
