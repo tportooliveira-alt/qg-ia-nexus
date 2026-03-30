@@ -56,12 +56,14 @@ async function initTables() {
         categoria VARCHAR(100) NOT NULL DEFAULT 'geral',
         conteudo TEXT NOT NULL,
         projeto VARCHAR(200) DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_agente (agente),
-        INDEX idx_categoria (categoria),
-        INDEX idx_created (created_at DESC)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    // Garantir que created_at existe em tabelas pre-existentes
+    try { await p.execute("ALTER TABLE agent_memories ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"); } catch(e) { /* ja existe */ }
+    try { await p.execute("ALTER TABLE agent_memories ADD INDEX idx_agente (agente)"); } catch(e) { /* ja existe */ }
+    try { await p.execute("ALTER TABLE agent_memories ADD INDEX idx_categoria (categoria)"); } catch(e) { /* ja existe */ }
 
     await p.execute(`
       CREATE TABLE IF NOT EXISTS agent_learnings (
@@ -70,10 +72,7 @@ async function initTables() {
         conteudo TEXT NOT NULL,
         fonte VARCHAR(200) DEFAULT 'sistema',
         hash_conteudo VARCHAR(64) DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_cat (categoria),
-        INDEX idx_hash (hash_conteudo),
-        INDEX idx_created (created_at DESC)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
@@ -84,9 +83,7 @@ async function initTables() {
         acao VARCHAR(100) NOT NULL,
         detalhes TEXT DEFAULT NULL,
         resultado VARCHAR(50) DEFAULT 'ok',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_agente_acao (agente, acao),
-        INDEX idx_created (created_at DESC)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
@@ -97,6 +94,7 @@ async function initTables() {
     return false;
   }
 }
+
 
 const MysqlService = {
   ativo() {
@@ -152,10 +150,16 @@ const MysqlService = {
       }
       const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
       const order = ascending ? "ASC" : "DESC";
-      const sql = `SELECT * FROM ${tabela} ${where} ORDER BY ${orderBy} ${order} LIMIT ?`;
-      values.push(limit);
-      const [rows] = await p.execute(sql, values);
-      return rows;
+      // Tentar com orderBy pedido, fallback para id se coluna nao existir
+      try {
+        const sql = `SELECT * FROM ${tabela} ${where} ORDER BY ${orderBy} ${order} LIMIT ?`;
+        const [rows] = await p.execute(sql, [...values, limit]);
+        return rows;
+      } catch (orderErr) {
+        const sql = `SELECT * FROM ${tabela} ${where} ORDER BY id ${order} LIMIT ?`;
+        const [rows] = await p.execute(sql, [...values, limit]);
+        return rows;
+      }
     } catch (err) {
       console.error(`[MYSQL] Erro SELECT ${tabela}:`, err.message);
       return [];
