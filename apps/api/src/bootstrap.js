@@ -5,6 +5,7 @@ const ResearchService = require("./services/researchService");
 const ActivityService = require("./services/activityService");
 const AutoCapacitationService = require("./services/autoCapacitationService");
 const AgentMemory = require("./fabrica/core/AgentMemory");
+const { bootstrapMcp } = require("./services/mcpBootstrap");
 
 async function bootstrap(app, port) {
   app.listen(port, async () => {
@@ -41,6 +42,14 @@ async function bootstrap(app, port) {
     } else {
       console.error("❌ Supabase: DESATIVADO — SUPABASE_URL ou SUPABASE_SERVICE_KEY ausentes no .env!");
       console.error("   → O sistema NÃO funcionará sem Supabase. Configure as variáveis e reinicie.");
+    }
+
+    // ── MCP Servers (auto-registro) ──────────────────────────────────────────
+    try {
+      const mcpServers = await bootstrapMcp();
+      console.log(`🔌 MCP: ${mcpServers.length} servidor(es) ativo(s).`);
+    } catch (e) {
+      console.warn(`⚠️ MCP Bootstrap falhou (não-bloqueante): ${e.message}`);
     }
 
     // ── Cron: pesquisa autônoma a cada 6 horas ────────────────────────────────

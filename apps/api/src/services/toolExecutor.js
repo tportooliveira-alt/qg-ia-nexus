@@ -169,6 +169,35 @@ const TOOLS = {
       node: process.version,
     };
   },
+
+  /**
+   * Lista servidores MCP ativos e suas ferramentas
+   */
+  async mcp_list() {
+    try {
+      const McpService = require("./mcpService");
+      const servers = McpService.listServers();
+      return { success: true, servers };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Invoca uma ferramenta de um servidor MCP
+   */
+  async mcp_invoke({ server, tool, args }) {
+    try {
+      const McpService = require("./mcpService");
+      if (!McpService.isRunning(server)) {
+        return { success: false, error: `Servidor MCP "${server}" não está ativo` };
+      }
+      const result = await McpService.invokeTool(server, tool, args || {});
+      return { success: true, result };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
 };
 
 // ── Definição de ferramentas (para incluir no prompt dos agentes) ────────────
@@ -208,6 +237,16 @@ const TOOL_DEFINITIONS = [
     name: "system_status",
     description: "Retorna status do sistema (CPU, RAM, Node version)",
     params: {},
+  },
+  {
+    name: "mcp_list",
+    description: "Lista servidores MCP ativos e suas ferramentas disponíveis",
+    params: {},
+  },
+  {
+    name: "mcp_invoke",
+    description: "Invoca uma ferramenta de um servidor MCP ativo",
+    params: { server: "string (nome do servidor)", tool: "string (nome da ferramenta)", args: "object (argumentos)" },
   },
 ];
 
