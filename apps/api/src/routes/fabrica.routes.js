@@ -3,6 +3,7 @@ const { autenticarToken, rateLimiter } = require("../services/authMiddleware");
 const MemoryService = require("../services/memoryService");
 const SupabaseService = require("../services/supabaseService");
 const MysqlService = require("../services/mysqlService");
+const FabricaActivityService = require("../services/fabricaActivityService");
 const safeAudit = require("../utils/safeAudit");
 
 // Fábrica de IA — módulos locais (portados do fabrica-ia-api)
@@ -152,6 +153,7 @@ router.post("/fabrica/pipeline/iniciar", autenticarToken, verificarFabricaAtiva,
 
   try {
     PipelineManager.criar(pipelineId, usuario_id);
+    FabricaActivityService.ensurePipeline(pipelineId, ideia.trim());
   } catch (e) {
     return res.status(503).json({ error: e.message });
   }
@@ -190,7 +192,10 @@ router.get("/fabrica/pipeline/:id/stream", (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.flushHeaders();
 
-  const emitFn = (data) => { res.write(`data: ${data}\n\n`); };
+  const emitFn = (data) => {
+    FabricaActivityService.ingestChunk(id, `data: ${data}\n`);
+    res.write(`data: ${data}\n\n`);
+  };
   const registrado = PipelineManager.registrarEmitter(id, emitFn);
 
   if (!registrado) {
@@ -210,10 +215,33 @@ router.get("/fabrica/pipeline/:id/stream", (req, res) => {
   });
 });
 
+// Timeline detalhada para mapa real, histórico e artefatos
+router.get("/fabrica/pipeline/:id/timeline", autenticarToken, verificarFabricaAtiva, rateLimiter(60), (req, res) => {
+  try {
+    const { limit } = req.query;
+    const data = FabricaActivityService.timeline(req.params.id, parseInt(limit || "300", 10));
+    if (!data) return res.status(404).json({ error: "Pipeline sem dados de timeline no momento." });
+    res.json({ status: "Sucesso", timeline: data });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao carregar timeline: " + err.message });
+  }
+});
+
+router.get("/fabrica/pipelines/recentes", autenticarToken, verificarFabricaAtiva, rateLimiter(30), (req, res) => {
+  try {
+    const { limit } = req.query;
+    const data = FabricaActivityService.recentes(parseInt(limit || "10", 10));
+    res.json({ status: "Sucesso", pipelines: data });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao carregar pipelines recentes: " + err.message });
+  }
+});
+
 // Cancelar pipeline
 router.post("/fabrica/pipeline/:id/cancelar", autenticarToken, verificarFabricaAtiva, rateLimiter(10), (req, res) => {
   const cancelado = PipelineManager.cancelar(req.params.id);
   if (cancelado) {
+    FabricaActivityService.finalizar(req.params.id, "cancelado", "Pipeline cancelado pelo usuario");
     res.json({ success: true, msg: 'Pipeline cancelado' });
   } else {
     res.status(404).json({ error: 'Pipeline não encontrado' });

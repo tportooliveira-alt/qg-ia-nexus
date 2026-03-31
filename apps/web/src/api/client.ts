@@ -23,20 +23,33 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   return res.json() as Promise<T>
 }
 
+interface StreamOptions {
+  method?: 'GET' | 'POST'
+  onEvent?: (event: Record<string, unknown>) => void
+}
+
 export function apiStream(
   path: string,
-  body: Record<string, unknown>,
+  body: Record<string, unknown> | null,
   onChunk: (chunk: string) => void,
   onDone: () => void,
-  onError: (err: string) => void
+  onError: (err: string) => void,
+  options?: StreamOptions
 ): () => void {
   const controller = new AbortController()
+  const method = options?.method || (body ? 'POST' : 'GET')
+
+  const requestInit: RequestInit = {
+    method,
+    headers: headers(),
+    signal: controller.signal,
+  }
+  if (method !== 'GET' && body) {
+    requestInit.body = JSON.stringify(body)
+  }
 
   fetch(`${BASE}${path}`, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify(body),
-    signal: controller.signal,
+    ...requestInit,
   }).then(async (res) => {
     if (!res.ok || !res.body) {
       onError(`HTTP ${res.status}`)
@@ -56,9 +69,12 @@ export function apiStream(
         if (!line.startsWith('data: ')) continue
         try {
           const data = JSON.parse(line.slice(6))
-          if (data.chunk) onChunk(data.chunk)
+          if (data.chunk) onChunk(String(data.chunk))
           else if (data.done) onDone()
-          else if (data.error) onError(data.error)
+          else if (data.error) onError(String(data.error))
+          else if (typeof data === 'object' && data) {
+            options?.onEvent?.(data as Record<string, unknown>)
+          }
         } catch { /* ignore malformed */ }
       }
     }
