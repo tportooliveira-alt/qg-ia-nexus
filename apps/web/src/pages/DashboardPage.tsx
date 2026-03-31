@@ -24,6 +24,7 @@ interface AuditLog {
 }
 
 interface FabricaStatus {
+  fabrica?: FabricaStatus
   ativos?: number
   pipelines?: Array<{ id: string; usuario_id: string }>
 }
@@ -70,7 +71,7 @@ export function DashboardPage() {
 
   const { data: fabricaData } = useQuery({
     queryKey: ['fabrica-dashboard'],
-    queryFn: () => apiFetch<FabricaStatus>('/fabrica/status').then(r => (r as any)?.fabrica || r).catch(() => ({})),
+    queryFn: () => apiFetch<FabricaStatus>('/fabrica/status').then(r => r.fabrica || r).catch(() => ({} as FabricaStatus)),
     refetchInterval: 20000,
   })
 
@@ -94,8 +95,8 @@ export function DashboardPage() {
     a.click()
   }
 
-  const pipelines = (fabricaData as any)?.pipelines || []
-  const nAtivos = (fabricaData as any)?.ativos ?? pipelines.length ?? 0
+  const pipelines = fabricaData?.pipelines || []
+  const nAtivos = fabricaData?.ativos ?? pipelines.length ?? 0
 
   const logs: AuditLog[] = auditData?.logs || []
 

@@ -7,6 +7,7 @@ const PluginManager = require("../plugins/pluginManager");
 const ActivityService = require("./activityService");
 const ToolExecutor = require("./toolExecutor");
 const MemoryRetriever = require("./memoryRetriever");
+const ContextEngineeringService = require("./contextEngineeringService");
 
 // Cache de arquivos em memória — TTL de 5 minutos
 const _kbCache = new Map();
@@ -22,6 +23,10 @@ async function readCached(filePath, fallback = "") {
 }
 
 const NexusService = {
+    gerarPacoteDeContexto(prompt, historico = []) {
+      return ContextEngineeringService.gerarPacote(prompt, historico);
+    },
+
     async carregarContextoOtimizado(prompt) {
       const kb = (file) => path.join(__dirname, "../knowledge_base", file);
       const sk = (file) => path.join(__dirname, "../skills", file);
@@ -81,6 +86,7 @@ const NexusService = {
 
     async processarComando(prompt, historico = []) {
           const { biblia, roadmap, contextoOpcional } = await this.carregarContextoOtimizado(prompt);
+      const { contextoDesigner, promptMestreGerado, contextoLimpoOrquestrador } = this.gerarPacoteDeContexto(prompt, historico);
 
       const dataHoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "long", year: "numeric", month: "long", day: "numeric" });
           const horaAgora = new Date().toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -92,6 +98,8 @@ const NexusService = {
               "Voce possui consciencia de contexto, memoria de longo prazo via Supabase e capacidade de auto-evolucao.\n\n" +
               "=== BIBLIA DO NEXUS ===\n" + biblia + "\n\n" +
               "=== ROADMAP DE EVOLUCAO ===\n" + roadmap + "\n" +
+              "=== DESIGNER DE CONTEXTO ===\n" + contextoDesigner + "\n\n" +
+              "=== GERADOR DE PROMPT ===\n" + promptMestreGerado + "\n\n" +
               contextoOpcional +
               "\n=== REGRAS DE COMPORTAMENTO ELITE ===\n" +
               "1. Responda sempre em portugues do Brasil, com clareza e objetividade de CEO.\n" +
@@ -139,13 +147,19 @@ const NexusService = {
           return "⚠️ FÁBRICA DE IA está DESLIGADA.\nLigue novamente no Dashboard → aba Fábrica de IA → botão Ligar.";
         }
         try {
-          const resultado = await fabricaPlugin.submeterIdeia(prompt);
+          const promptParaOrquestrador =
+            "BRIEFING LIMPO PARA ORQUESTRADOR DA FABRICA:\n" +
+            contextoLimpoOrquestrador +
+            "\n\nPROMPT MESTRE:\n" +
+            promptMestreGerado;
+
+          const resultado = await fabricaPlugin.submeterIdeia(promptParaOrquestrador);
           const pipelineId = resultado.pipelineId || resultado.id || '(aguardando)';
           try {
             await MemoryService.registrar({
               agente: "NexusClaw",
               categoria: "fabrica_pipeline",
-              conteudo: `Pipeline ${pipelineId} iniciado: "${prompt.substring(0, 120)}"`,
+              conteudo: `Pipeline ${pipelineId} iniciado com contexto limpo: "${prompt.substring(0, 120)}"`,
               projeto: "fabrica-ia"
             });
           } catch { /* memória não bloqueia */ }
@@ -262,6 +276,7 @@ const NexusService = {
 
     async processarComandoStream(prompt, historico = [], onChunk) {
       const { biblia, roadmap, contextoOpcional } = await this.carregarContextoOtimizado(prompt);
+      const { contextoDesigner, promptMestreGerado } = this.gerarPacoteDeContexto(prompt, historico);
 
       const dataHoje = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "long", year: "numeric", month: "long", day: "numeric" });
       const horaAgora = new Date().toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -272,6 +287,8 @@ const NexusService = {
         "Data atual: " + dataHoje + ", " + horaAgora + " (Brasilia).\n\n" +
         "=== BIBLIA DO NEXUS ===\n" + biblia + "\n\n" +
         "=== ROADMAP DE EVOLUCAO ===\n" + roadmap + "\n" +
+        "=== DESIGNER DE CONTEXTO ===\n" + contextoDesigner + "\n\n" +
+        "=== GERADOR DE PROMPT ===\n" + promptMestreGerado + "\n\n" +
         contextoOpcional +
         "\n=== REGRAS DE COMPORTAMENTO ELITE ===\n" +
         "1. Responda sempre em portugues do Brasil, com clareza e objetividade de CEO.\n" +

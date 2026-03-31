@@ -4,6 +4,7 @@ const RoutingService = require("../src/services/routingService");
 const KnowledgeService = require("../src/services/knowledgeService");
 const DomainBenchmarkService = require("../src/services/domainBenchmarkService");
 const RequestValidationService = require("../src/services/requestValidationService");
+const ContextEngineeringService = require("../src/services/contextEngineeringService");
 
 async function runAllChecks() {
   const r1 = DomainDetectorService.detectDomain("Criar uma API backend com autenticacao JWT");
@@ -52,6 +53,19 @@ async function runAllChecks() {
   assert.equal(vagueRouting.needsClarification, true);
   assert.ok(Array.isArray(vagueRouting.clarificationQuestions));
   assert.ok(vagueRouting.clarificationQuestions.length >= 1);
+
+  const contexto = ContextEngineeringService.gerarPacote(
+    "Quero criar um app de gestao para fazenda com baixo custo",
+    [
+      { role: "user", content: "Tenho pressa para colocar no ar" },
+      { role: "assistant", content: "Vamos definir escopo MVP" }
+    ]
+  );
+  assert.equal(typeof contexto.analysis.intent, "string");
+  assert.equal(typeof contexto.contextoDesigner, "string");
+  assert.equal(typeof contexto.contextoLimpoOrquestrador, "string");
+  assert.equal(typeof contexto.promptMestreGerado, "string");
+  assert.ok(contexto.contextoLimpoOrquestrador.includes("objetivo="));
 }
 
 async function run() {

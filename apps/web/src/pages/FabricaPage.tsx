@@ -30,6 +30,18 @@ interface ConfigApiKeys {
   token_volume: string
 }
 
+interface PacoteContexto {
+  analysis: {
+    intent: string
+    objective: string
+    constraints: string[]
+    missingInfo: string[]
+  }
+  contextoDesigner: string
+  contextoLimpoOrquestrador: string
+  promptMestreGerado: string
+}
+
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
 const ETAPAS = [
@@ -390,10 +402,14 @@ export function FabricaPage() {
   const [mensagens, setMensagens] = useState<MensagemLog[]>([])
   const [running, setRunning] = useState(false)
   const [pipelineId, setPipelineId] = useState<string | null>(null)
-  const [_etapaAtual, setEtapaAtual] = useState(-1)
+  const [etapaAtual, setEtapaAtual] = useState(-1)
   const [concluido, setConcluido] = useState(false)
   const [agentes, setAgentes] = useState<Record<string, EstadoAgente>>(estadoInicial())
   const [resultadoProjeto, setResultadoProjeto] = useState<Record<string, unknown> | null>(null)
+  const [usarContextoLimpo, setUsarContextoLimpo] = useState(true)
+  const [contextoLoading, setContextoLoading] = useState(false)
+  const [contextoErro, setContextoErro] = useState('')
+  const [contextoPack, setContextoPack] = useState<PacoteContexto | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
   const concluidoRef = useRef(false)
 
@@ -424,6 +440,39 @@ export function FabricaPage() {
     })
   }
 
+  const gerarContexto = useCallback(async () => {
+    if (!ideia.trim() || ideia.trim().length < 5) return
+    setContextoLoading(true)
+    setContextoErro('')
+    try {
+      const data = await apiFetch<PacoteContexto>('/nexus/contexto/gerar', {
+        method: 'POST',
+        body: JSON.stringify({ prompt: ideia }),
+      })
+      setContextoPack(data)
+      adicionarMsg('sistema', '🧠 Contexto limpo gerado para o orquestrador', -1)
+    } catch (err) {
+      setContextoErro((err as Error).message)
+    } finally {
+      setContextoLoading(false)
+    }
+  }, [ideia])
+
+  const montarBriefingParaPipeline = useCallback(async (): Promise<string> => {
+    if (!usarContextoLimpo) return ideia.trim()
+    const pack = contextoPack || await apiFetch<PacoteContexto>('/nexus/contexto/gerar', {
+      method: 'POST',
+      body: JSON.stringify({ prompt: ideia }),
+    })
+    if (!contextoPack) setContextoPack(pack)
+    return (
+      'BRIEFING LIMPO PARA ORQUESTRADOR DA FABRICA:\n' +
+      pack.contextoLimpoOrquestrador +
+      '\n\nPROMPT MESTRE:\n' +
+      pack.promptMestreGerado
+    )
+  }, [usarContextoLimpo, ideia, contextoPack])
+
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     if (!ideia.trim() || running) return
@@ -435,13 +484,17 @@ export function FabricaPage() {
     setAgentes(estadoInicial())
 
     try {
+      const ideiaParaPipeline = await montarBriefingParaPipeline()
       const data = await apiFetch<{ pipelineId: string; stream_url?: string }>('/fabrica/pipeline/iniciar', {
         method: 'POST',
-        body: JSON.stringify({ ideia }),
+        body: JSON.stringify({ ideia: ideiaParaPipeline }),
       })
       const pid = data.pipelineId
       setPipelineId(pid)
       adicionarMsg('sistema', `Pipeline ${pid} iniciado`, -1)
+      if (usarContextoLimpo) {
+        adicionarMsg('sistema', '✨ Pipeline iniciado com contexto limpo + prompt mestre', -1)
+      }
 
       const token = localStorage.getItem('qg_auth_token') || ''
       const evtSource = new EventSource(`/api/fabrica/pipeline/${pid}/stream?token=${token}`)
@@ -531,7 +584,7 @@ export function FabricaPage() {
       adicionarMsg('erro', `❌ ${(err as Error).message}`, -1)
     }
     setIdeia('')
-  }, [ideia, running])
+  }, [ideia, running, usarContextoLimpo, montarBriefingParaPipeline])
 
   // Download de arquivos gerados
   const baixarArquivo = useCallback((conteudo: string, nome: string, tipo: string) => {
@@ -630,7 +683,7 @@ export function FabricaPage() {
               </button>
               {running && (
                 <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                  Agentes trabalhando... veja os cards abaixo
+                  Agentes trabalhando... etapa atual: {etapaAtual >= 0 ? ETAPAS[etapaAtual]?.label : 'iniciando'}
                 </span>
               )}
               {concluido && (
@@ -644,6 +697,64 @@ export function FabricaPage() {
                 </span>
               )}
             </div>
+            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' }}>
+                <input
+                  type="checkbox"
+                  checked={usarContextoLimpo}
+                  onChange={(e) => setUsarContextoLimpo(e.target.checked)}
+                />
+                Usar gerador de contexto limpo no orquestrador
+              </label>
+              <button
+                type="button"
+                onClick={gerarContexto}
+                disabled={contextoLoading || ideia.trim().length < 5}
+                style={{
+                  padding: '7px 14px',
+                  background: contextoLoading || ideia.trim().length < 5 ? 'var(--color-border)' : 'var(--color-bg-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 8,
+                  color: 'var(--color-text-primary)',
+                  fontSize: 12,
+                  cursor: contextoLoading || ideia.trim().length < 5 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {contextoLoading ? 'Analisando...' : '🧠 Analisar contexto'}
+              </button>
+              {contextoErro && <span style={{ color: 'var(--color-error)', fontSize: 12 }}>❌ {contextoErro}</span>}
+            </div>
+            {contextoPack && (
+              <div style={{
+                marginTop: 10,
+                padding: 12,
+                borderRadius: 8,
+                border: '1px solid var(--color-border)',
+                background: 'var(--color-bg-surface)',
+                fontSize: 12,
+              }}>
+                <div style={{ marginBottom: 8, color: 'var(--color-text-muted)' }}>
+                  Intenção: <strong>{contextoPack.analysis.intent}</strong> · Objetivo: <strong>{contextoPack.analysis.objective}</strong>
+                </div>
+                <textarea
+                  readOnly
+                  value={contextoPack.contextoLimpoOrquestrador}
+                  rows={5}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    background: 'var(--color-bg-elevated)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 8,
+                    color: 'var(--color-text-primary)',
+                    fontSize: 12,
+                    resize: 'vertical',
+                    fontFamily: 'var(--font-mono)',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
           </form>
 
           {/* Cards dos Agentes — grid 3x2 */}

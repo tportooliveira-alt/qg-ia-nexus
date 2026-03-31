@@ -44,6 +44,39 @@ interface Conn {
 interface AtividadeAPI {
   agenteId: string; status: 'trabalhando' | 'monitorando' | string; projeto: string | null
   descricao: string; iaUsada: string | null; desde: number
+  detalhes?: unknown
+  aprendizado?: unknown
+  artefatos?: unknown
+  atualizadoEm?: number
+}
+
+interface ActivityEvent {
+  id: string
+  ts: number
+  tipo: string
+  agenteId: string
+  status: string
+  projeto?: string | null
+  descricao?: string
+  iaUsada?: string | null
+  detalhes?: unknown
+  aprendizado?: unknown
+  artefatos?: unknown
+}
+
+interface MemoriaItem {
+  id?: string | number
+  agente?: string
+  categoria?: string
+  conteudo?: string
+  created_at?: string
+}
+
+interface DeepAgentData {
+  agenteId: string
+  atividadeAtual: AtividadeAPI | null
+  eventos: ActivityEvent[]
+  aprendizados: MemoriaItem[]
 }
 
 // ── Constantes de tamanho ──────────────────────────────────────────────────
@@ -252,6 +285,11 @@ export function AgentNetwork() {
   const [ativosReais, setAtivosReais] = useState<Set<string>>(new Set())
   const [trabalhandoReais, setTrabalhandoReais] = useState<Set<string>>(new Set())
   const [ultimaAt, setUltimaAt] = useState<Date | null>(null)
+  const [clockMs, setClockMs] = useState(0)
+  const [eventosRecentes, setEventosRecentes] = useState<ActivityEvent[]>([])
+  const [deepData, setDeepData] = useState<DeepAgentData | null>(null)
+  const [deepLoading, setDeepLoading] = useState(false)
+  const [fullView, setFullView] = useState<{ titulo: string; conteudo: string } | null>(null)
 
   useEffect(() => {
     const token = localStorage.getItem('qg_auth_token') || ''
@@ -264,10 +302,20 @@ export function AgentNetwork() {
         setAtivosReais(new Set(data.ativos || []))
         setTrabalhandoReais(new Set(data.trabalhando || []))
         setUltimaAt(new Date())
+        const h = await fetch('/api/agents/activity/history?limit=300', { headers: { 'X-QG-Token': token } })
+        if (h.ok) {
+          const hd = await h.json()
+          setEventosRecentes(hd.eventos || [])
+        }
       } catch { /* ignora */ }
     }
     poll()
     const t = setInterval(poll, 3000)
+    return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    const t = setInterval(() => setClockMs(Date.now()), 1000)
     return () => clearInterval(t)
   }, [])
 
@@ -291,6 +339,41 @@ export function AgentNetwork() {
   }, [simulando])
 
   const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]))
+
+  const toText = (value: unknown): string => {
+    if (value === null || value === undefined) return ''
+    if (typeof value === 'string') return value
+    try { return JSON.stringify(value, null, 2) } catch { return String(value) }
+  }
+
+  useEffect(() => {
+    if (!sel) {
+      setDeepData(null)
+      return
+    }
+    const token = localStorage.getItem('qg_auth_token') || ''
+    let abort = false
+    async function loadDeep() {
+      setDeepLoading(true)
+      try {
+        const res = await fetch(`/api/agents/activity/deep/${sel.id}?limitEventos=300&limitMemorias=300`, {
+          headers: { 'X-QG-Token': token }
+        })
+        if (!res.ok) {
+          if (!abort) setDeepData(null)
+          return
+        }
+        const data = await res.json()
+        if (!abort) setDeepData(data)
+      } catch {
+        if (!abort) setDeepData(null)
+      } finally {
+        if (!abort) setDeepLoading(false)
+      }
+    }
+    loadDeep()
+    return () => { abort = true }
+  }, [sel])
 
   return (
     <div style={{ userSelect:'none' }}>
@@ -428,7 +511,8 @@ export function AgentNetwork() {
               return (
                 <div key={atv.agenteId} style={{
                   display:'flex', alignItems:'center', gap:10,
-                  background:cor+'0D', border:`1px solid ${cor}33`, borderRadius:7, padding:'6px 10px' }}>
+                  background:cor+'0D', border:`1px solid ${cor}33`, borderRadius:7, padding:'6px 10px', cursor:'pointer' }}
+                  onClick={() => setSel((nodeMap[atv.agenteId] as AnyNode) || null)}>
                   <span style={{ fontSize:18 }}>{no?.icone || '●'}</span>
                   <div style={{ flex:1 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:6 }}>
@@ -438,7 +522,7 @@ export function AgentNetwork() {
                     </div>
                     <div style={{ fontSize:10, color:'#64748b', marginTop:2 }}>{atv.descricao}</div>
                   </div>
-                  <span style={{ fontSize:9, color:'#374151' }}>{Math.round((Date.now()-atv.desde)/1000)}s</span>
+                  <span style={{ fontSize:9, color:'#374151' }}>{Math.max(0, Math.round(((clockMs || atv.desde)-atv.desde)/1000))}s</span>
                   <span style={{ width:6, height:6, borderRadius:'50%', background:atv.status==='trabalhando'?'#F59E0B':'#3B82F6', flexShrink:0 }}/>
                 </div>
               )
@@ -448,16 +532,124 @@ export function AgentNetwork() {
       </div>
 
       {/* ── Detalhes do nó clicado ─────────────────────── */}
+      <div style={{ marginTop:10, background:'#0a0f18', border:'1px solid #1e2433', borderRadius:10, padding:'10px 14px' }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'#475569', letterSpacing:1, marginBottom:8 }}>HISTORICO GLOBAL (REAL)</div>
+        <div style={{ maxHeight:180, overflowY:'auto', display:'grid', gap:6 }}>
+          {eventosRecentes.length === 0 && <div style={{ fontSize:12, color:'#64748b' }}>Sem eventos registrados.</div>}
+          {eventosRecentes.slice(0, 120).map((ev) => (
+            <div key={ev.id} style={{ border:'1px solid #1f2937', borderRadius:6, padding:'7px 8px', background:'#0b1220' }}>
+              <div style={{ fontSize:11, color:'#94a3b8' }}>{new Date(ev.ts).toLocaleString('pt-BR')} - {ev.agenteId} - {ev.tipo}</div>
+              <div style={{ fontSize:12, color:'#e5e7eb', marginTop:3 }}>{ev.descricao || '(sem descricao)'}</div>
+              {(toText(ev.detalhes) || toText(ev.artefatos) || toText(ev.aprendizado)) && (
+                <button
+                  onClick={() => setFullView({ titulo: `${ev.agenteId} - evento completo`, conteudo: [
+                    `tipo=${ev.tipo}`,
+                    `status=${ev.status}`,
+                    `descricao=${ev.descricao || ''}`,
+                    '',
+                    'detalhes:',
+                    toText(ev.detalhes),
+                    '',
+                    'artefatos:',
+                    toText(ev.artefatos),
+                    '',
+                    'aprendizado:',
+                    toText(ev.aprendizado),
+                  ].join('\n') })}
+                  style={{ marginTop:6, fontSize:11, padding:'4px 8px', border:'1px solid #334155', borderRadius:6, background:'#111827', color:'#cbd5e1', cursor:'pointer' }}
+                >
+                  Abrir completo
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {sel && (
-        <div style={{ marginTop:10, background:sel.cor+'0D', border:`1px solid ${sel.cor}44`,
-          borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'flex-start', gap:14 }}>
-          <span style={{ fontSize:36 }}>{sel.icone}</span>
-          <div style={{ flex:1 }}>
-            <div style={{ fontWeight:800, color:sel.cor, fontSize:15 }}>{sel.label}</div>
-            {'subtitle' in sel && sel.subtitle && <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>{sel.subtitle}</div>}
-            <div style={{ fontSize:12, color:'#9ca3af', marginTop:6, lineHeight:1.5 }}>{sel.descricao}</div>
+        <div style={{ marginTop:10, background:sel.cor+'0D', border:`1px solid ${sel.cor}44`, borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'flex-start', gap:14, flexDirection:'column' }}>
+          <div style={{ width:'100%', display:'flex', alignItems:'flex-start', gap:14 }}>
+            <span style={{ fontSize:36 }}>{sel.icone}</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontWeight:800, color:sel.cor, fontSize:15 }}>{sel.label}</div>
+              {'subtitle' in sel && sel.subtitle && <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>{sel.subtitle}</div>}
+              <div style={{ fontSize:12, color:'#9ca3af', marginTop:6, lineHeight:1.5 }}>{sel.descricao}</div>
+            </div>
+            <button onClick={()=>setSel(null)} style={{ background:'none',border:'none',color:'#374151',cursor:'pointer',fontSize:18,padding:0 }}>X</button>
           </div>
-          <button onClick={()=>setSel(null)} style={{ background:'none',border:'none',color:'#374151',cursor:'pointer',fontSize:18,padding:0 }}>✕</button>
+
+          <div style={{ width:'100%', borderTop:'1px solid #1f2937', paddingTop:10 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'#94a3b8', marginBottom:8 }}>TRABALHO REAL DESTE AGENTE</div>
+            {deepLoading && <div style={{ fontSize:12, color:'#64748b' }}>Carregando...</div>}
+            {!deepLoading && deepData && (
+              <div style={{ display:'grid', gap:10 }}>
+                <div style={{ background:'#080d14', border:'1px solid #1f2937', borderRadius:8, padding:10 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#e5e7eb', marginBottom:6 }}>Atividade atual</div>
+                  {deepData.atividadeAtual ? (
+                    <>
+                      <div style={{ fontSize:12, color:'#9ca3af' }}>{deepData.atividadeAtual.descricao || '(sem descricao)'}</div>
+                      {!!toText(deepData.atividadeAtual.detalhes) && (
+                        <button onClick={() => setFullView({ titulo: `${sel.label} - atividade atual`, conteudo: toText(deepData.atividadeAtual?.detalhes) })}
+                          style={{ marginTop:8, fontSize:11, padding:'4px 8px', border:'1px solid #334155', borderRadius:6, background:'#111827', color:'#cbd5e1', cursor:'pointer' }}>
+                          Abrir detalhes completos
+                        </button>
+                      )}
+                    </>
+                  ) : <div style={{ fontSize:12, color:'#64748b' }}>Sem atividade no momento.</div>}
+                </div>
+
+                <div style={{ background:'#080d14', border:'1px solid #1f2937', borderRadius:8, padding:10 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#e5e7eb', marginBottom:6 }}>Historico do agente</div>
+                  <div style={{ maxHeight:220, overflowY:'auto', display:'grid', gap:6 }}>
+                    {(deepData.eventos || []).length === 0 && <div style={{ fontSize:12, color:'#64748b' }}>Sem eventos.</div>}
+                    {(deepData.eventos || []).map((ev) => (
+                      <div key={ev.id} style={{ border:'1px solid #1f2937', borderRadius:6, padding:'7px 8px', background:'#0b1220' }}>
+                        <div style={{ fontSize:11, color:'#94a3b8' }}>{new Date(ev.ts).toLocaleString('pt-BR')} - {ev.tipo} - {ev.status}</div>
+                        <div style={{ fontSize:12, color:'#e5e7eb', marginTop:3 }}>{ev.descricao || '(sem descricao)'}</div>
+                        <div style={{ marginTop:6, display:'flex', gap:8, flexWrap:'wrap' }}>
+                          {!!toText(ev.detalhes) && <button onClick={() => setFullView({ titulo: `${sel.label} - detalhes`, conteudo: toText(ev.detalhes) })} style={{ fontSize:11, padding:'4px 8px', border:'1px solid #334155', borderRadius:6, background:'#111827', color:'#cbd5e1', cursor:'pointer' }}>Ver detalhes</button>}
+                          {!!toText(ev.artefatos) && <button onClick={() => setFullView({ titulo: `${sel.label} - codigos/artefatos`, conteudo: toText(ev.artefatos) })} style={{ fontSize:11, padding:'4px 8px', border:'1px solid #334155', borderRadius:6, background:'#111827', color:'#cbd5e1', cursor:'pointer' }}>Ver codigo</button>}
+                          {!!toText(ev.aprendizado) && <button onClick={() => setFullView({ titulo: `${sel.label} - aprendizado`, conteudo: toText(ev.aprendizado) })} style={{ fontSize:11, padding:'4px 8px', border:'1px solid #334155', borderRadius:6, background:'#111827', color:'#cbd5e1', cursor:'pointer' }}>Ver aprendizado</button>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ background:'#080d14', border:'1px solid #1f2937', borderRadius:8, padding:10 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#e5e7eb', marginBottom:6 }}>Aprendizados salvos na memoria</div>
+                  <div style={{ maxHeight:220, overflowY:'auto', display:'grid', gap:6 }}>
+                    {(deepData.aprendizados || []).length === 0 && <div style={{ fontSize:12, color:'#64748b' }}>Sem memorias encontradas.</div>}
+                    {(deepData.aprendizados || []).map((m, idx) => (
+                      <div key={String(m.id || idx)} style={{ border:'1px solid #1f2937', borderRadius:6, padding:'7px 8px', background:'#0b1220' }}>
+                        <div style={{ fontSize:11, color:'#94a3b8' }}>{m.agente || sel.id} - {m.categoria || 'geral'} - {m.created_at ? new Date(m.created_at).toLocaleString('pt-BR') : 'sem data'}</div>
+                        <button onClick={() => setFullView({ titulo: `${sel.label} - memoria completa`, conteudo: toText(m.conteudo) })}
+                          style={{ marginTop:6, fontSize:11, padding:'4px 8px', border:'1px solid #334155', borderRadius:6, background:'#111827', color:'#cbd5e1', cursor:'pointer' }}>
+                          Abrir leitura completa
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {fullView && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(2,6,23,0.82)', zIndex:1200, display:'flex', alignItems:'center', justifyContent:'center', padding:18 }}
+          onClick={() => setFullView(null)}>
+          <div style={{ width:'min(1100px, 95vw)', maxHeight:'90vh', background:'#020617', border:'1px solid #1f2937', borderRadius:10, padding:14, display:'flex', flexDirection:'column' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#e2e8f0' }}>{fullView.titulo}</div>
+              <button onClick={() => setFullView(null)} style={{ background:'none', border:'none', color:'#94a3b8', cursor:'pointer', fontSize:16 }}>X</button>
+            </div>
+            <pre style={{ margin:0, padding:12, border:'1px solid #1f2937', borderRadius:8, background:'#0b1220', color:'#cbd5e1', fontSize:12, lineHeight:1.5, overflow:'auto', whiteSpace:'pre-wrap' }}>
+              {fullView.conteudo || '(vazio)'}
+            </pre>
+          </div>
         </div>
       )}
     </div>

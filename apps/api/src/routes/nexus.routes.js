@@ -60,6 +60,26 @@ router.post("/nexus/stream", autenticarToken, rateLimiter(20), async (req, res) 
   res.end();
 });
 
+// Gerador de contexto + prompt mestre (para co-criacao e Fabrica)
+router.post("/nexus/contexto/gerar", autenticarToken, rateLimiter(30), async (req, res) => {
+  const { prompt, historico = [] } = req.body;
+  if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+    return res.status(400).json({ error: "Campo 'prompt' obrigatorio e nao pode ser vazio." });
+  }
+  try {
+    const pacote = NexusService.gerarPacoteDeContexto(prompt.trim(), historico);
+    res.json({
+      status: "Sucesso",
+      analysis: pacote.analysis,
+      contextoDesigner: pacote.contextoDesigner,
+      contextoLimpoOrquestrador: pacote.contextoLimpoOrquestrador,
+      promptMestreGerado: pacote.promptMestreGerado
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Falha ao gerar contexto: " + err.message });
+  }
+});
+
 // Agente autônomo (resposta completa)
 router.post("/nexus/agente", autenticarToken, rateLimiter(5), async (req, res) => {
   const { tarefa, ferramentas } = req.body;

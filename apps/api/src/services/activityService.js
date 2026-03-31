@@ -7,24 +7,53 @@
 
 const EXPIRA_TRABALHO  = 90_000;         // 90 segundos para tarefas
 const EXPIRA_MONITOR   = 24 * 3600_000;  // 24 horas para heartbeat
+const MAX_HISTORICO    = 2000;
 
 /** @type {Map<string, object>} */
 const atividades = new Map();
+const historico = [];
 
 /** Configs de heartbeat salvas — auto-restaura após finalizar() */
 const heartbeats = new Map();
 
 const ActivityService = {
+  _registrarHistorico(evento) {
+    historico.push({
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      ts: Date.now(),
+      ...evento,
+    });
+    if (historico.length > MAX_HISTORICO) {
+      historico.splice(0, historico.length - MAX_HISTORICO);
+    }
+  },
+
   /**
    * Registra atividade pontual (tarefa em andamento)
    * Expira em 90s automaticamente
    */
-  registrar(agenteId, { status = 'trabalhando', projeto = null, descricao = '', iaUsada = null } = {}) {
-    atividades.set(agenteId, {
+  registrar(agenteId, { status = 'trabalhando', projeto = null, descricao = '', iaUsada = null, detalhes = null, aprendizado = null, artefatos = null } = {}) {
+    const payload = {
       agenteId, status, projeto, descricao, iaUsada,
+      detalhes,
+      aprendizado,
+      artefatos,
       desde: Date.now(),
       expira: Date.now() + EXPIRA_TRABALHO,
       monitorando: false,
+      atualizadoEm: Date.now(),
+    };
+    atividades.set(agenteId, payload);
+    this._registrarHistorico({
+      tipo: "atividade",
+      agenteId,
+      status,
+      projeto,
+      descricao,
+      iaUsada,
+      detalhes,
+      aprendizado,
+      artefatos,
     });
   },
 
@@ -38,15 +67,27 @@ const ActivityService = {
     // Só substitui se não há tarefa ativa (não sobrescreve 'trabalhando')
     const atual = atividades.get(agenteId);
     if (atual && !atual.monitorando) return; // deixa tarefa ativa continuar
-    atividades.set(agenteId, {
+    const payload = {
       agenteId,
       status: 'monitorando',
       projeto,
       descricao,
       iaUsada: null,
+      detalhes: null,
+      aprendizado: null,
+      artefatos: null,
       desde: Date.now(),
       expira: Date.now() + EXPIRA_MONITOR,
       monitorando: true,
+      atualizadoEm: Date.now(),
+    };
+    atividades.set(agenteId, payload);
+    this._registrarHistorico({
+      tipo: "monitoramento",
+      agenteId,
+      status: "monitorando",
+      projeto,
+      descricao,
     });
   },
 
@@ -56,6 +97,17 @@ const ActivityService = {
    * @param {object} [monitorConfig] - config explícita (opcional, usa heartbeat salvo se omitida)
    */
   finalizar(agenteId, monitorConfig = null) {
+    const atual = atividades.get(agenteId);
+    this._registrarHistorico({
+      tipo: "finalizado",
+      agenteId,
+      status: atual?.status || "desconhecido",
+      projeto: atual?.projeto || null,
+      descricao: atual?.descricao || "Finalizado",
+      detalhes: atual?.detalhes || null,
+      aprendizado: atual?.aprendizado || null,
+      artefatos: atual?.artefatos || null,
+    });
     atividades.delete(agenteId);
     const config = monitorConfig || heartbeats.get(agenteId);
     if (config) {
@@ -81,6 +133,14 @@ const ActivityService = {
       total:       lista.length,
       atualizado_em: new Date().toISOString(),
     };
+  },
+
+  historico({ agenteId = null, limit = 200 } = {}) {
+    const lim = Math.max(1, Math.min(parseInt(limit, 10) || 200, MAX_HISTORICO));
+    const base = agenteId
+      ? historico.filter((h) => h.agenteId === agenteId)
+      : historico;
+    return base.slice(-lim).reverse();
   },
 };
 
