@@ -351,12 +351,13 @@ export function AgentNetwork() {
       setDeepData(null)
       return
     }
+    const selectedId = sel.id
     const token = localStorage.getItem('qg_auth_token') || ''
     let abort = false
     async function loadDeep() {
       setDeepLoading(true)
       try {
-        const res = await fetch(`/api/agents/activity/deep/${sel.id}?limitEventos=300&limitMemorias=300`, {
+        const res = await fetch(`/api/agents/activity/deep/${selectedId}?limitEventos=300&limitMemorias=300`, {
           headers: { 'X-QG-Token': token }
         })
         if (!res.ok) {
