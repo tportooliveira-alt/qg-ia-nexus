@@ -195,12 +195,22 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                 emit({ tipo: 'agente_ativo', agente: 'Corretor', progresso: progBase + 11,
                        mensagem: `ðŸ”§ Corrigindo ${problemasGraves.length} problema(s) graves...` });
 
-                const corrigidos = await fixer.corrigirTudo(
-                    { arquitetura, sql: artefatos.sql, app: artefatos.codigo_app, ui: artefatos.codigo_ui },
-                    auditoria
-                );
-                // Aplicar correÃ§Ãµes para prÃ³xima iteraÃ§Ã£o
-                Object.assign(arquitetura, corrigidos.arquitetura || {});
+                try {
+                    const corrigidos = await fixer.corrigirTudo(
+                        { arquitetura, sql: artefatos.sql, app: artefatos.codigo_app, ui: artefatos.codigo_ui },
+                        auditoria
+                    );
+                    // Aplicar correções para próxima iteração
+                    Object.assign(arquitetura, corrigidos.arquitetura || {});
+                } catch (fixErr) {
+                    emit({
+                        tipo: 'agente_erro',
+                        agente: 'Corretor',
+                        progresso: progBase + 11,
+                        mensagem: `Corretor falhou, seguindo sem correção nesta iteração: ${fixErr.message}`
+                    });
+                    console.warn('[MasterOrchestrator] Corretor falhou:', fixErr.message);
+                }
             }
         }
 
@@ -307,3 +317,4 @@ function emitCancelado(emit) {
 }
 
 module.exports = { executar };
+
