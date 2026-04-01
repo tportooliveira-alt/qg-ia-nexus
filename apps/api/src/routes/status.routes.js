@@ -4,12 +4,24 @@ const { autenticarToken } = require("../services/authMiddleware");
 const router = Router();
 
 function isLocalRequest(req) {
-  const remote = req.socket?.remoteAddress || "";
-  return (
-    remote === "127.0.0.1" ||
-    remote === "::1" ||
-    remote === "::ffff:127.0.0.1"
-  );
+  const isLoopback = (value) =>
+    value === "127.0.0.1" ||
+    value === "::1" ||
+    value === "::ffff:127.0.0.1";
+
+  const socketRemote = req.socket?.remoteAddress || "";
+  if (!isLoopback(socketRemote)) return false;
+
+  const realIp = String(req.headers["x-real-ip"] || "").trim();
+  if (realIp && !isLoopback(realIp)) return false;
+
+  const forwarded = String(req.headers["x-forwarded-for"] || "").trim();
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first && !isLoopback(first)) return false;
+  }
+
+  return true;
 }
 
 router.get("/auth/verify", autenticarToken, (req, res) => {
