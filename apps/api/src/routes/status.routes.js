@@ -3,6 +3,15 @@ const { autenticarToken } = require("../services/authMiddleware");
 
 const router = Router();
 
+function isLocalRequest(req) {
+  const remote = req.socket?.remoteAddress || "";
+  return (
+    remote === "127.0.0.1" ||
+    remote === "::1" ||
+    remote === "::ffff:127.0.0.1"
+  );
+}
+
 router.get("/auth/verify", autenticarToken, (req, res) => {
   res.json({ status: "ok", autenticado: true });
 });
@@ -24,6 +33,33 @@ router.get("/status", (req, res) => {
       autoHealing: "Ativado",
       multiIA: "Ativado",
       cron_pesquisa: "A cada 6h"
+    }
+  });
+});
+
+// Endpoint sem token para manutencao via terminal no proprio servidor (localhost apenas)
+router.get("/internal/diagnostic", (req, res) => {
+  if (!isLocalRequest(req)) {
+    return res.status(403).json({
+      error: "Acesso negado. Endpoint permitido apenas via localhost."
+    });
+  }
+
+  const mem = process.memoryUsage();
+  res.json({
+    status: "ok",
+    host: "localhost-only",
+    now: new Date().toISOString(),
+    pid: process.pid,
+    uptime: process.uptime(),
+    node: process.version,
+    memoria: {
+      rssMb: Number((mem.rss / 1024 / 1024).toFixed(2)),
+      heapUsedMb: Number((mem.heapUsed / 1024 / 1024).toFixed(2))
+    },
+    flags: {
+      tokenVolume: process.env.TOKEN_VOLUME || "normal",
+      whatsapp: process.env.ENABLE_WHATSAPP === "true"
     }
   });
 });
