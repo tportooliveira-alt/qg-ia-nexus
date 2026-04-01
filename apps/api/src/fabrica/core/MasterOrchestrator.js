@@ -31,8 +31,8 @@ const ContextRouter = require('./ContextRouter');
 const { listarProvedoresAtivos } = require('../agents/aiService');
 const MysqlService = require('../../services/mysqlService');
 
-const MAX_ITERACOES   = 6;   // 6 chances de chegar ao score ideal
-const SCORE_APROVACAO = 85;  // 85+ para aprovar
+const MAX_ITERACOES   = 3;   // evita timeout longo quando provedores estao instaveis
+const SCORE_APROVACAO = 75;  // limiar pratico para liberar entrega
 
 // ─── Estratégia de custo por iteração ─────────────────────────────────────────
 // Iterações 1-2: só grátis (Groq, Gemini, Cerebras) — rápido e sem custo
@@ -44,10 +44,32 @@ function nivelPorIteracao(iteracao) {
     return 'premium';
 }
 
+function normalizarPlanoSeguro(plano, ideiaBase) {
+    const p = plano && typeof plano === 'object' ? plano : {};
+    const stack = p.stack && typeof p.stack === 'object' ? p.stack : {};
+
+    return {
+        tipo_projeto: p.tipo_projeto || 'app',
+        nome_sugerido: p.nome_sugerido || 'ProjetoFabrica',
+        complexidade: p.complexidade || 'media',
+        descricao_executiva: p.descricao_executiva || (ideiaBase || '').slice(0, 180) || 'Plano padrao',
+        stack: {
+            entregavel: stack.entregavel || 'webapp',
+            frontend: stack.frontend || 'HTML/CSS/JS',
+            backend: stack.backend || 'Node.js/Express',
+            banco: stack.banco || 'PostgreSQL',
+            extras: Array.isArray(stack.extras) ? stack.extras : []
+        },
+        etapas: Array.isArray(p.etapas) ? p.etapas : [],
+        funcionalidades_principais: Array.isArray(p.funcionalidades_principais) ? p.funcionalidades_principais : []
+    };
+}
+
 // ─── Executar pipeline completo ───────────────────────────────────────────────
 
 async function executar(ideia, pipelineId, usuario_id, emit) {
     const inicio = Date.now();
+    const deadlineMs = 4 * 60 * 1000;
 
     emit({ tipo: 'pipeline_iniciado', progresso: 0, fase: 0,
            mensagem: `Fábrica de IA iniciada | Provedores: ${listarProvedoresAtivos().join(', ')}` });
@@ -84,7 +106,8 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
         emit({ tipo: 'agente_ativo', agente: 'Comandante', fase: 1, progresso: 12,
                mensagem: '🎖️ Montando plano estratégico...' });
 
-        const plano = await commander.analisar(ideiaOtimizada, roteamento.contextos.comandante);
+        let plano = await commander.analisar(ideiaOtimizada, roteamento.contextos.comandante);
+        plano = normalizarPlanoSeguro(plano, ideiaOtimizada);
 
         emit({ tipo: 'agente_concluido', agente: 'Comandante', fase: 1, progresso: 22,
                mensagem: `Plano: "${plano.nome_sugerido}" | ${plano.tipo_projeto} | ${plano.complexidade}`,
@@ -118,10 +141,15 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
         let melhor = { score: 0, artefatos: null, auditoria: null, design: null };
         let iteracao = 0;
         let aprovado = false;
+        let semMelhora = 0;
         const historicoIteracoes = []; // Engenheiro de Contexto: histórico entre iterações
 
         while (!aprovado && iteracao < MAX_ITERACOES) {
             if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
+            if ((Date.now() - inicio) > deadlineMs) {
+                emit({ tipo: 'pipeline_parcial', progresso: 86, mensagem: 'Prazo de execucao atingido, entregando melhor resultado atual.' });
+                break;
+            }
             iteracao++;
             const progBase = 40 + (iteracao - 1) * 12;
 
@@ -177,6 +205,9 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
             // Guardar melhor resultado
             if (auditoria.score > melhor.score) {
                 melhor = { score: auditoria.score, artefatos, auditoria, design: designFinal };
+                semMelhora = 0;
+            } else {
+                semMelhora += 1;
             }
 
             // Aprovado?
@@ -184,6 +215,15 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                 aprovado = true;
                 emit({ tipo: 'pipeline_aprovado', progresso: 88,
                        mensagem: `✅ Aprovado na iteração ${iteracao} com score ${auditoria.score}/100` });
+                break;
+            }
+
+            if (semMelhora >= 2) {
+                emit({
+                    tipo: 'pipeline_parcial',
+                    progresso: 87,
+                    mensagem: 'Sem melhora de score em iteracoes seguidas; encerrando para evitar custo/timeout.'
+                });
                 break;
             }
 
@@ -200,14 +240,14 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                         { arquitetura, sql: artefatos.sql, app: artefatos.codigo_app, ui: artefatos.codigo_ui },
                         auditoria
                     );
-                    // Aplicar corre��es para pr�xima itera��o
+                    // Aplicar corre��es para pr�xima itera��o
                     Object.assign(arquitetura, corrigidos.arquitetura || {});
                 } catch (fixErr) {
                     emit({
                         tipo: 'agente_erro',
                         agente: 'Corretor',
                         progresso: progBase + 11,
-                        mensagem: `Corretor falhou, seguindo sem corre��o nesta itera��o: ${fixErr.message}`
+                        mensagem: `Corretor falhou, seguindo sem corre��o nesta itera��o: ${fixErr.message}`
                     });
                     console.warn('[MasterOrchestrator] Corretor falhou:', fixErr.message);
                 }
@@ -275,8 +315,8 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                     ideia_original: resultado.ideia_original,
                     status: resultado.status,
                     score_final: resultado.score_final,
-                    iteracoes: resultado.iteracoes_realizadas,
-                    aprovado: resultado.entregue_aprovado,
+                    iteracoes: resultado.iteracoes,
+                    aprovado: resultado.aprovado,
                     plano: resultado.plano,
                     arquitetura: resultado.arquitetura,
                     codigo_sql: resultado.codigo_sql,
