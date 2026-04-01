@@ -69,6 +69,12 @@ check_health() {
   curl -fsS -o /dev/null -w "FABRICA_STATUS %{http_code}\n" "${base}/api/fabrica/status?token=$(auth_token)" | tee -a "$REPORT_FILE"
 }
 
+diag_local() {
+  log "Diagnostico local (sem token)"
+  curl -fsS "http://127.0.0.1:3005/api/internal/diagnostic" | tee -a "$REPORT_FILE"
+  printf '\n' | tee -a "$REPORT_FILE"
+}
+
 agentes_test() {
   local base token start_json pipeline_id stream_url
   local agentes_preview timeline_preview
@@ -111,6 +117,7 @@ rotina() {
   (cd "$ROOT_DIR" && npm run lint --workspace=apps/web) | tee -a "$REPORT_FILE"
   check_health
   agentes_test
+  diag_local
   log "Rotina finalizada"
 }
 
@@ -127,6 +134,7 @@ usage() {
   cat <<'EOF'
 Uso:
   scripts/assist.sh health
+  scripts/assist.sh diag-local
   scripts/assist.sh agentes-test
   scripts/assist.sh rotina
   scripts/assist.sh deploy
@@ -136,6 +144,7 @@ EOF
 cmd="${1:-}"
 case "$cmd" in
   health) check_health ;;
+  diag-local) diag_local ;;
   agentes-test) agentes_test ;;
   rotina) rotina ;;
   deploy) deploy ;;

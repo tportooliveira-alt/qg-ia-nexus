@@ -12,6 +12,7 @@
     "build": "turbo run build",
     "token:audit": "node scripts/token-audit.js",
     "assist:health": "bash scripts/assist.sh health",
+    "assist:diag": "bash scripts/assist.sh diag-local",
     "assist:agentes": "bash scripts/assist.sh agentes-test",
     "assist:rotina": "bash scripts/assist.sh rotina",
     "assist:deploy": "bash scripts/assist.sh deploy"
