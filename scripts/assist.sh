@@ -71,11 +71,13 @@ check_health() {
 
 agentes_test() {
   local base token start_json pipeline_id stream_url
+  local agentes_preview timeline_preview
   base="$(base_url)"
   token="$(auth_token)"
 
   log "Teste de agentes: listagem e pipeline"
-  api_get "/agentes" | head -c 220 | tee -a "$REPORT_FILE"
+  agentes_preview="$(api_get "/agentes" || true)"
+  printf '%s\n' "$agentes_preview" | cut -c 1-220 | tee -a "$REPORT_FILE"
   printf '\n' | tee -a "$REPORT_FILE"
 
   start_json="$(curl -fsS -X POST \
@@ -98,7 +100,8 @@ agentes_test() {
   log "Stream linhas capturadas: ${stream_lines}"
   head -n 8 /tmp/assist_stream.out | tee -a "$REPORT_FILE"
 
-  api_get "/fabrica/pipeline/${pipeline_id}/timeline?limit=20" | head -c 280 | tee -a "$REPORT_FILE"
+  timeline_preview="$(api_get "/fabrica/pipeline/${pipeline_id}/timeline?limit=20" || true)"
+  printf '%s\n' "$timeline_preview" | cut -c 1-280 | tee -a "$REPORT_FILE"
   printf '\n' | tee -a "$REPORT_FILE"
 }
 
