@@ -26,6 +26,7 @@ const auditor    = require('../agents/auditor');
 const fixer      = require('../agents/fixer');
 const juiz       = require('../agents/juiz'); // Novo Agente Judicial
 const CoderChief = require('../agents/CoderChief');
+const agentSmith = require('../agents/agentSmith');
 const AgentMemory = require('./AgentMemory');
 const PipelineManager = require('./PipelineManager');
 const ContextRouter = require('./ContextRouter');
@@ -86,6 +87,13 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
         emit({ tipo: 'dominio_detectado', progresso: 2,
                mensagem: `Domínio: ${roteamento.dominio} (confiança: ${roteamento.confianca}) | Modelo: ${roteamento.modelo_gemini.modelo}`,
                dados: { dominio: roteamento.dominio, confianca: roteamento.confianca } });
+
+        // ── FASE 0: TEAM BUILDING (Agent Smith) ──────────
+        emit({ tipo: 'thought', agente: 'smith', mensagem: '⚙️ Agente Smith analisando complexidade e convocando equipe de elite...' });
+        const equipe = await agentSmith.montarTime(ideia, roteamento.dominio);
+        if (equipe.especialistas?.length > 0) {
+            emit({ tipo: 'thought', agente: 'smith', mensagem: `👥 Equipe convocada: ${equipe.especialistas.join(', ')}` });
+        }
 
         // ── PRÉ: Inteligência Estratégica (Memória + Web Search) ──────────
         emit({ tipo: 'thought', agente: 'contexto', mensagem: '🧠 Consultando arquivos de memória e realizando pesquisa de mercado em tempo real...' });
