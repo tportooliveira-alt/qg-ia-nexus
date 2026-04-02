@@ -7,11 +7,20 @@ const ActivityService = require("./services/activityService");
 const AutoCapacitationService = require("./services/autoCapacitationService");
 const AgentMemory = require("./fabrica/core/AgentMemory");
 const { bootstrapMcp } = require("./services/mcpBootstrap");
+const TaskWorkerService = require("./services/taskWorkerService");
 
 async function bootstrap(app, port) {
   app.listen(port, async () => {
     console.log(`🚀 QG IA SERVER rodando na porta ${port}`);
     console.log(`📱 Dashboard: http://localhost:${port}/dashboard`);
+
+    // ── Task Worker (O Motor de Jato) ────────────────────────────────────────
+    try {
+      TaskWorkerService.start();
+      console.log("🚀 TASK-WORKER: Motor de autonomia iniciado em background.");
+    } catch (e) {
+      console.error("❌ TASK-WORKER: Falha ao iniciar motor.", e.message);
+    }
 
     // ── WhatsApp ──────────────────────────────────────────────────────────────
     if (process.env.ENABLE_WHATSAPP === "true") {

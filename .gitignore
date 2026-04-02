@@ -38,3 +38,13 @@ Thumbs.db
 .env-servidor
 ACESSO-QG-IA.md
 tmp_*.js
+
+# Ativos Pesados (Nexus Mining) - Serão movidos para Supabase Storage
+*.tar
+*.zip
+*.rar
+*.7z
+deploy_claw.tar
+war_test.js
+db_monitor.js
+SOFTWARE_ENGINEERS_STUDIES/
