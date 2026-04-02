@@ -193,6 +193,11 @@ function parsePM2(raw) {
 
 const VPSService = {
   /**
+   * Executa comando SSH arbitrário
+   */
+  execSSH,
+
+  /**
    * Verifica se SSH está configurado
    */
   isConfigured() {
