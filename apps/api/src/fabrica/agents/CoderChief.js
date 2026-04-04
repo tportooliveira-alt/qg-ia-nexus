@@ -18,6 +18,7 @@
 
 const SubAgentSpawner = require('../core/SubAgentSpawner');
 const AgentMemory     = require('../core/AgentMemory');
+const ArtifactService = require('../../services/artifactService');
 
 const SqlAgent        = require('./sub/SqlAgent');
 const BackendAgent    = require('./sub/BackendAgent');
@@ -58,7 +59,7 @@ const PLANO_AGENTES = {
     deploy:       ['DeployAgent', 'DocAgent'],
 };
 
-async function executar(arquitetura, tipoEntregavel, usuario_id, emit) {
+async function executar(arquitetura, tipoEntregavel, usuario_id, emit, nivel, pipelineId) {
     // Determinar sub-agentes necessários
     const subAgentesNecessarios = PLANO_AGENTES[tipoEntregavel] || PLANO_AGENTES.webapp;
 
@@ -69,19 +70,11 @@ async function executar(arquitetura, tipoEntregavel, usuario_id, emit) {
         sub_agentes: subAgentesNecessarios
     });
 
-    // Carregar memórias relevantes para enriquecer o contexto
-    const [memorias_sql, memorias_backend, memorias_frontend] = await Promise.all([
-        AgentMemory.buscarErrosComuns('sql_agent', usuario_id),
-        AgentMemory.buscarErrosComuns('backend_agent', usuario_id),
-        AgentMemory.buscarErrosComuns('frontend_agent', usuario_id)
-    ]);
-
     const contextoEnriquecido = {
         arquitetura,
         usuario_id,
-        memorias_sql,
-        memorias_backend,
-        memorias_frontend
+        pipelineId,
+        nivel
     };
 
     // Montar tarefas para execução paralela
@@ -104,7 +97,8 @@ async function executar(arquitetura, tipoEntregavel, usuario_id, emit) {
         testes:         null,
         seguranca:      null,
         documentacao:   null,
-        deploy_config:  null
+        deploy_config:  null,
+        arquivos:       []
     };
 
     resultados.forEach(r => {
@@ -120,23 +114,33 @@ async function executar(arquitetura, tipoEntregavel, usuario_id, emit) {
                 case 'DocAgent':      artefatos.documentacao  = r.resultado; break;
                 case 'DeployAgent':   artefatos.deploy_config = r.resultado; break;
             }
-        } else {
-            console.warn(`[CoderChief] Sub-agente ${r.nome} falhou: ${r.erro}`);
-            // Salvar na memória para evitar repetir o erro
-            AgentMemory.salvar(r.nome.toLowerCase(), usuario_id, {
-                tipo: 'erro_comum',
-                conteudo: `Falhou com erro: ${r.erro}`,
-                metadata: { tipo_projeto: tipoEntregavel }
-            }).catch(() => {});
         }
     });
+
+    // ── GERAÇÃO DE ARQUIVOS REAIS ───────────────────────────────────
+    if (artefatos.planilha && pipelineId) {
+        try {
+            const excel = await ArtifactService.gerarExcel(pipelineId, artefatos.planilha);
+            artefatos.arquivos.push(excel);
+            emit?.({ tipo: 'thought', agente: 'coder', mensagem: `📂 Planilha Excel real gerada com sucesso: ${excel.filename}` });
+        } catch (e) { console.error("Falha ao gerar Excel real:", e.message); }
+    }
+
+    if (artefatos.documento && pipelineId) {
+        try {
+            const word = await ArtifactService.gerarWord(pipelineId, artefatos.documento);
+            artefatos.arquivos.push(word);
+            emit?.({ tipo: 'thought', agente: 'coder', mensagem: `📂 Documento Word (.docx) real gerado com sucesso: ${word.filename}` });
+        } catch (e) { console.error("Falha ao gerar Word real:", e.message); }
+    }
 
     const ok = resultados.filter(r => r.status === 'ok').length;
     emit?.({
         tipo: 'coder_chief_concluido',
         agente: 'CoderChief',
         mensagem: `${ok}/${subAgentesNecessarios.length} sub-agentes concluídos`,
-        artefatos_gerados: Object.keys(artefatos).filter(k => artefatos[k] !== null)
+        artefatos_gerados: Object.keys(artefatos).filter(k => artefatos[k] !== null && k !== 'arquivos'),
+        arquivos_para_download: artefatos.arquivos
     });
 
     return artefatos;

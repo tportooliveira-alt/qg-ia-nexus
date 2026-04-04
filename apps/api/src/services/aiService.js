@@ -341,6 +341,15 @@ const AIService = {
   },
 
   async chamarIAComCascata(prompt, prioridadeDeIAs = null, modoSintese = false, maxTokens = null, taskType = null, taskDescription = null) {
+    const TRUTH_GUARD = `
+[DIRETRIZ DE INTEGRIDADE NEXUS]
+1. PRIORIDADE ZERO: Honestidade absoluta. Nunca invente fatos, dados ou capacidades.
+2. ADMISSÃO DE ERRO: Se não tiver certeza ou acesso, diga claramente.
+3. ANTI-ALUCINAÇÃO: Baseie-se apenas em dados reais e verificados.
+4. É melhor falhar com a verdade do que 'agradar' com uma mentira.
+[/DIRETRIZ DE INTEGRIDADE NEXUS]
+`;
+    prompt = TRUTH_GUARD + "\n" + prompt;
     const startTime = Date.now();
 
     let routing = null;

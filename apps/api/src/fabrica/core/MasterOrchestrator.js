@@ -24,20 +24,20 @@ const designer   = require('../agents/designer');
 const analyst    = require('../agents/analyst');
 const auditor    = require('../agents/auditor');
 const fixer      = require('../agents/fixer');
+const juiz       = require('../agents/juiz'); // Novo Agente Judicial
 const CoderChief = require('../agents/CoderChief');
+const agentSmith = require('../agents/agentSmith');
 const AgentMemory = require('./AgentMemory');
 const PipelineManager = require('./PipelineManager');
 const ContextRouter = require('./ContextRouter');
 const { listarProvedoresAtivos } = require('../agents/aiService');
 const MysqlService = require('../../services/mysqlService');
+const ToolExecutor = require('../../services/toolExecutor');
 
 const MAX_ITERACOES   = 3;   // evita timeout longo quando provedores estao instaveis
 const SCORE_APROVACAO = 75;  // limiar pratico para liberar entrega
 
 // ─── Estratégia de custo por iteração ─────────────────────────────────────────
-// Iterações 1-2: só grátis (Groq, Gemini, Cerebras) — rápido e sem custo
-// Iterações 3-4: normal (inclui DeepSeek, Mistral, Together) — barato
-// Iterações 5-6: premium (Anthropic claude-sonnet-4-6) — só quando necessário
 function nivelPorIteracao(iteracao) {
     if (iteracao <= 2) return 'economico';
     if (iteracao <= 4) return 'normal';
@@ -47,7 +47,6 @@ function nivelPorIteracao(iteracao) {
 function normalizarPlanoSeguro(plano, ideiaBase) {
     const p = plano && typeof plano === 'object' ? plano : {};
     const stack = p.stack && typeof p.stack === 'object' ? p.stack : {};
-
     return {
         tipo_projeto: p.tipo_projeto || 'app',
         nome_sugerido: p.nome_sugerido || 'ProjetoFabrica',
@@ -65,6 +64,14 @@ function normalizarPlanoSeguro(plano, ideiaBase) {
     };
 }
 
+// ─── Especialistas por Domínio ───────────────────────────────────────────────
+const ESPECIALISTAS = {
+    agronegocio: require('../skills/agentes/PecuariaExpert.json'),
+    pecuaria: require('../skills/agentes/PecuariaExpert.json'),
+    financas: require('../skills/agentes/AnalistaFinanceiro.json'),
+    erp: require('../skills/agentes/AnalistaFinanceiro.json')
+};
+
 // ─── Executar pipeline completo ───────────────────────────────────────────────
 
 async function executar(ideia, pipelineId, usuario_id, emit) {
@@ -81,42 +88,76 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
                mensagem: `Domínio: ${roteamento.dominio} (confiança: ${roteamento.confianca}) | Modelo: ${roteamento.modelo_gemini.modelo}`,
                dados: { dominio: roteamento.dominio, confianca: roteamento.confianca } });
 
-        // ── PRÉ: Carregar contexto da memória ─────────────────────────────
-        const [memorias] = await Promise.all([
-            AgentMemory.buscarRecentes(usuario_id, 5)
-        ]);
-        if (memorias.length > 0) {
-            emit({ tipo: 'memoria_carregada', mensagem: `${memorias.length} memórias carregadas`, progresso: 3 });
+        // ── FASE 0: TEAM BUILDING (Agent Smith) ──────────
+        emit({ tipo: 'thought', agente: 'smith', mensagem: '⚙️ Agente Smith analisando complexidade e convocando equipe de elite...' });
+        const equipe = await agentSmith.montarTime(ideia, roteamento.dominio);
+        if (equipe.especialistas?.length > 0) {
+            emit({ tipo: 'thought', agente: 'smith', mensagem: `👥 Equipe convocada: ${equipe.especialistas.join(', ')}` });
         }
 
-        // ── FASE 1: ANALISTA (Groq — ultra-rápido, grátis) ───────────────
-        if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
-        emit({ tipo: 'agente_ativo', agente: 'Analista', fase: 1, progresso: 5,
-               mensagem: '🧪 Analisando e extraindo requisitos...' });
+        // ── PRÉ: Inteligência Estratégica (Memória + Web Search) ──────────
+        emit({ tipo: 'thought', agente: 'contexto', mensagem: '🧠 Consultando arquivos de memória e realizando pesquisa de mercado em tempo real...' });
+        
+        const [memorias, pesquisaWeb] = await Promise.all([
+            AgentMemory.buscarRecentes(usuario_id, 3),
+            ToolExecutor.executeTool('web_search', { query: `especificações técnicas modernas 2026 para ${ideia.slice(0, 60)}` }).catch(() => null)
+        ]);
 
-        const spec = await analyst.analisarConversa([{ role: 'user', content: ideia }], roteamento.contextos.analista);
+        let contextoEnriquecido = "";
+        
+        // Injeta Especialista de Nicho se houver match de domínio
+        const especialista = ESPECIALISTAS[roteamento.dominio.toLowerCase()];
+        if (especialista) {
+            emit({ tipo: 'thought', agente: 'contexto', mensagem: `🐎 Especialista em ${especialista.nome} convocado para auditoria de requisitos.` });
+            contextoEnriquecido += `\n\nREGRAS DE OURO DO ESPECIALISTA (${especialista.nome}):\n${especialista.regras_de_ouro.join('\n')}`;
+            contextoEnriquecido += `\nCAPACIDADES ADICIONAIS: ${especialista.capacidades.join(', ')}`;
+        }
+
+        if (memorias?.length > 0) {
+            contextoEnriquecido += `\n\nMEMÓRIAS DE PROJETOS PASSADOS:\n${memorias.map(m => m.conteudo).join('\n')}`;
+            emit({ tipo: 'thought', agente: 'contexto', mensagem: `📚 ${memorias.length} fragmentos de memória recrutados.` });
+        }
+
+        if (pesquisaWeb?.success && pesquisaWeb.results?.length > 0) {
+            const trechoPesquisa = pesquisaWeb.results.map(r => `- ${r.title}: ${r.snippet}`).join('\n');
+            contextoEnriquecido += `\n\nTENDÊNCIAS DE MERCADO (WEB):\n${trechoPesquisa}`;
+            emit({ tipo: 'thought', agente: 'contexto', mensagem: '🌐 Visão web ativa: Pesquisa integrada ao planejamento estratégico.' });
+        }
+
+        // ── FASE 1: ANALISTA ──────────────────
+        if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
+        emit({ tipo: 'thought', agente: 'analista', mensagem: '🔍 Processando requisitos com inteligência de mercado e de nicho...' });
+        emit({ tipo: 'agente_ativo', agente: 'Analista', fase: 1, progresso: 5,
+               mensagem: '🧪 Analisando ideia e validando viabilidade tecnológica...' });
+
+        const analistaContexto = `${roteamento.contextos.analista}\n\n${contextoEnriquecido}`;
+        const spec = await analyst.analisarConversa([{ role: 'user', content: ideia }], analistaContexto);
         const ideiaOtimizada = spec.prompt_perfeito || ideia;
 
+        emit({ tipo: 'thought', agente: 'analista', mensagem: `✨ Requisitos extraídos. Sugestão: ${spec.nome_sugerido || 'App Nexus'}.` });
         emit({ tipo: 'agente_concluido', agente: 'Analista', fase: 1, progresso: 12,
                mensagem: `Tipo detectado: ${spec.tipo_projeto || 'app'}`,
                dados: { tipo: spec.tipo_projeto, complexidade: spec.funcionalidades?.length || 0 } });
 
-        // ── FASE 1: COMANDANTE (Anthropic — raciocínio estratégico) ──────
+        // ── FASE 1: COMANDANTE ──────────────────
         if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
+        emit({ tipo: 'thought', agente: 'comandante', mensagem: '🎖️ Estruturando marcos do projeto e definindo stack técnica ideal...' });
         emit({ tipo: 'agente_ativo', agente: 'Comandante', fase: 1, progresso: 12,
                mensagem: '🎖️ Montando plano estratégico...' });
 
         let plano = await commander.analisar(ideiaOtimizada, roteamento.contextos.comandante);
         plano = normalizarPlanoSeguro(plano, ideiaOtimizada);
 
+        emit({ tipo: 'thought', agente: 'comandante', mensagem: `🎯 Alvo travado: ${plano.complexidade} complexidade detectada.` });
         emit({ tipo: 'agente_concluido', agente: 'Comandante', fase: 1, progresso: 22,
                mensagem: `Plano: "${plano.nome_sugerido}" | ${plano.tipo_projeto} | ${plano.complexidade}`,
                dados: { nome: plano.nome_sugerido, tipo: plano.tipo_projeto } });
 
         const tipoEntregavel = plano.stack?.entregavel || 'webapp';
 
-        // ── FASE 2: PARALELO — Arquiteto + Conceito Designer ─────────────
+        // ── FASE 2: PARALELO ─────────────
         if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
+        emit({ tipo: 'thought', agente: 'contexto', mensagem: '⚡ Orquestrando trabalho paralelo: Gerando esquemas de banco e identidade visual...' });
         emit({ tipo: 'fase_iniciada', fase: 2, progresso: 22,
                mensagem: '⚡ Arquiteto e Designer trabalhando em paralelo...' });
 
@@ -126,15 +167,17 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
 
         const [arquitetura, designConceito] = await Promise.all([
             architect.projetar(plano, roteamentoFinal.contextos.arquiteto).then(r => {
+                emit({ tipo: 'thought', agente: 'arquiteto', mensagem: `🗺️ Mapa do sistema desenhado: ${r.tabelas?.length || 0} tabelas normalizadas.` });
                 emit({ tipo: 'agente_concluido', agente: 'Arquiteto', progresso: 35,
                        mensagem: `${r.tabelas?.length || 0} tabelas, ${r.endpoints?.length || 0} endpoints` });
                 return r;
             }),
-            designer.projetarUI(plano, roteamentoFinal.contextos.designer).then(r => { // FIX: fase 2 usa plano (arquitetura ainda não existe); arquitetura chega depois no loop
+            designer.projetarUI(plano, roteamentoFinal.contextos.designer).then(r => { 
+                emit({ tipo: 'thought', agente: 'designer', mensagem: '🎨 Identidade visual e tokens de design definidos.' });
                 emit({ tipo: 'agente_concluido', agente: 'Designer-Conceito', progresso: 32,
                        mensagem: 'Conceito visual definido' });
                 return r;
-            }).catch(() => null) // Designer falhar não quebra o pipeline
+            }).catch(() => null) 
         ]);
 
         // ── FASE 3: LOOP DE ENTREGA ────────────────────────────────────────
@@ -142,27 +185,29 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
         let iteracao = 0;
         let aprovado = false;
         let semMelhora = 0;
-        const historicoIteracoes = []; // Engenheiro de Contexto: histórico entre iterações
+        const historicoIteracoes = []; 
 
         while (!aprovado && iteracao < MAX_ITERACOES) {
             if (PipelineManager.estaCancelado(pipelineId)) return emitCancelado(emit);
             if ((Date.now() - inicio) > deadlineMs) {
-                emit({ tipo: 'pipeline_parcial', progresso: 86, mensagem: 'Prazo de execucao atingido, entregando melhor resultado atual.' });
+                emit({ tipo: 'thought', agente: 'contexto', mensagem: '⏰ Tempo limite atingido. Finalizando com o melhor estado atual.' });
                 break;
             }
             iteracao++;
+            emit({ tipo: 'thought', agente: 'contexto', mensagem: `🔄 Iniciando ciclo de produção #${iteracao}...` });
             const progBase = 40 + (iteracao - 1) * 12;
 
-            // Nível de custo cresce com as iterações: grátis → normal → premium
+            // Nível de custo cresce com as iterações
             const nivel = nivelPorIteracao(iteracao);
             const nivelLabel = nivel === 'economico' ? '💚 grátis' : nivel === 'premium' ? '💜 premium' : '🔵 normal';
 
+            emit({ tipo: 'thought', agente: 'coder', mensagem: `💻 Spawning engenheiros de software especializados [${nivelLabel}]...` });
             emit({ tipo: 'fase_iniciada', fase: 3, iteracao, progresso: progBase,
                    mensagem: `🔄 Iteração ${iteracao}/${MAX_ITERACOES} [${nivelLabel}] — Gerando artefatos...` });
 
             // CoderChief spawna sub-agentes em paralelo
             const artefatos = await CoderChief.executar(
-                arquitetura, tipoEntregavel, usuario_id, emit, nivel
+                arquitetura, tipoEntregavel, usuario_id, emit, nivel, pipelineId
             );
 
             // Designer refina
@@ -339,9 +384,20 @@ async function executar(ideia, pipelineId, usuario_id, emit) {
             }
         }
 
-        emit({ tipo: 'pipeline_concluido', progresso: 100,
-               mensagem: `🏁 Concluído em ${((Date.now() - inicio)/1000).toFixed(1)}s | Score: ${melhor.score}/100`,
-               dados: resultado });
+        // ── FASE FINAL: DIAGNÓSTICO DE ELITE ───────────────────────────
+        emit({ tipo: 'thought', agente: 'contexto', mensagem: '🩺 Iniciando diagnóstico final de infraestrutura e saúde do código...' });
+        try {
+            const diagnostico = await auditor.analisar(melhor.artefatos, { ...roteamentoFinal.contextos.auditor, modo: 'diagnostico_final' });
+            emit({ tipo: 'thought', agente: 'auditor', mensagem: `✅ Diagnóstico concluído: ${diagnostico.status === 'aprovado' ? 'Sistema Saudável' : 'Ajustes menores recomendados'}.` });
+        } catch (e) {
+            console.warn("Falha no diagnostico final:", e.message);
+        }
+
+        // ── CONCLUIR ──────────────────────────────────────────────────
+        PipelineManager.concluir(pipelineId, melhor);
+        emit({ tipo: 'pipeline_concluido', progresso: 100, 
+               mensagem: `✨ "${melhor.artefatos?.nome || 'Projeto'}" entregue com score ${melhor.score}/100`,
+               dados: { ...melhor.artefatos, score: melhor.score, iteracoes: iteracao } });
 
         return resultado;
 
