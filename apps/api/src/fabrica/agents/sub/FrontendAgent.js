@@ -176,3 +176,19 @@ async function gerar(contextoEnriquecido) {
 }
 
 module.exports = { gerar };
+
+// Patch v4.2: Remove markdown fences do HTML gerado
+const _gerOriginal = module.exports.gerar;
+module.exports.gerar = async function(ctx) {
+  let html = await _gerOriginal(ctx);
+  if (typeof html === 'string') {
+    // Remove blocos de código markdown
+    html = html.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/g, '').trim();
+    // Garante que começa com DOCTYPE
+    if (!html.startsWith('<!DOCTYPE') && !html.startsWith('<html')) {
+      const idx = html.indexOf('<!DOCTYPE');
+      if (idx > 0) html = html.slice(idx);
+    }
+  }
+  return html;
+};

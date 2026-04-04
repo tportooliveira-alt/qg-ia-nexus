@@ -68,3 +68,13 @@ async function gerar(contextoEnriquecido) {
 }
 
 module.exports = { gerar };
+
+// Patch v4.2: Remove markdown fences do SQL
+const _gerSqlOriginal = module.exports.gerar;
+module.exports.gerar = async function(ctx) {
+  let sql = await _gerSqlOriginal(ctx);
+  if (typeof sql === 'string') {
+    sql = sql.replace(/^```sql\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/g, '').trim();
+  }
+  return sql;
+};

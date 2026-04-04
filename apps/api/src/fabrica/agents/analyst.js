@@ -20,7 +20,7 @@ function fallbackSpec(textoConversa) {
     tom_design: 'moderno',
     dados_necessarios: ['itens', 'descricao', 'datas'],
     integracoes: [],
-    prompt_perfeito: String(textoConversa || '').slice(0, 2000)
+    prompt_perfeito: String(textoConversa || '').slice(0, 8000)
   };
 }
 

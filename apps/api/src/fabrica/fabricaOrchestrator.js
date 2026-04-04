@@ -18,6 +18,7 @@
  * entrega a melhor versão produzida com relatório de pendências.
  */
 
+const contextEngineer = require('./agents/contextEngineer');
 const commander = require('./agents/commander');
 const architect = require('./agents/architect');
 const coder     = require('./agents/coder');
@@ -57,9 +58,14 @@ async function executarPipeline(ideia, db, usuario_id = 'anonimo') {
     console.log(`🤖 Provedores: ${listarProvedoresAtivos().join(', ')}`);
     console.log(`${'='.repeat(60)}\n`);
 
+    // ── ETAPA 0: ENGENHEIRO DE CONTEXTO ───────────────────────────────────────
+    addLog(logs, 'Engenheiro de Contexto', '🧠 Refinando contexto bruto e transformando em Requisitos Estruturados...', inicioTotal);
+    const ideiaRefinada = await contextEngineer.refinarContexto(ideia);
+    addLog(logs, 'Engenheiro de Contexto', `✅ Contexto lapidado: ${ideiaRefinada.substring(0, 50).replace(/\n/g, ' ')}...`, inicioTotal);
+
     // ── ETAPA 1: COMANDANTE ───────────────────────────────────────────────────
     addLog(logs, 'Comandante', '🎖️ Analisando ideia e montando plano estratégico...', inicioTotal);
-    const plano = await commander.analisar(ideia);
+    const plano = await commander.analisar(ideiaRefinada);
     addLog(logs, 'Comandante', `✅ Plano: "${plano.nome_sugerido}" | tipo: ${plano.tipo_projeto} | complexidade: ${plano.complexidade}`, inicioTotal);
 
     // ── ETAPA 2: ARQUITETO ────────────────────────────────────────────────────

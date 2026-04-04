@@ -39,7 +39,7 @@ function httpPost(url, body, headers) {
             });
         });
 
-        req.setTimeout(45000, () => {
+        req.setTimeout(120000, () => {
             req.destroy();
             reject(new Error('Timeout após 45s'));
         });

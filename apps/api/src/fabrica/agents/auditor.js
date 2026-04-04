@@ -145,9 +145,9 @@ async function auditar(artefatos) {
 
     const contexto = {
         plano: plano ? JSON.stringify(plano).substring(0, 1000) : null,
-        arquitetura: arquitetura ? JSON.stringify(arquitetura).substring(0, 2000) : null,
-        sql: sql ? String(sql).substring(0, 2000) : null,
-        app: app ? String(app).substring(0, 2000) : null,
+        arquitetura: arquitetura ? JSON.stringify(arquitetura).substring(0, 8000) : null,
+        sql: sql ? String(sql).substring(0, 8000) : null,
+        app: app ? String(app).substring(0, 8000) : null,
         ui: ui ? String(ui).substring(0, 1000) : null,
         planilha: planilha ? JSON.stringify(planilha).substring(0, 1000) : null,
         documento: documento ? JSON.stringify(documento).substring(0, 1000) : null
@@ -176,7 +176,7 @@ async function auditar(artefatos) {
 
     let resultado;
     try {
-        const resposta = await chamarIA(SYSTEM_PROMPT, prompt, 2500);
+        const resposta = await chamarIA(SYSTEM_PROMPT, prompt, 8000);
         const jsonMatch = resposta.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             resultado = JSON.parse(jsonMatch[0]);

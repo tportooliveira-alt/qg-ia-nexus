@@ -56,3 +56,13 @@ async function gerar(contextoEnriquecido) {
 }
 
 module.exports = { gerar };
+
+// Patch v4.2: Remove markdown fences do código backend
+const _gerBkOriginal = module.exports.gerar;
+module.exports.gerar = async function(ctx) {
+  let code = await _gerBkOriginal(ctx);
+  if (typeof code === 'string') {
+    code = code.replace(/^```javascript\s*/i, '').replace(/^```js\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/g, '').trim();
+  }
+  return code;
+};

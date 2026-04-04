@@ -80,7 +80,7 @@ async function corrigirSQL(sql, problemas) {
     if (!problemasStr.trim()) return sql; // Sem problemas no SQL, retorna igual
 
     const prompt = `Problemas a corrigir:\n${problemasStr}\n\nSQL atual:\n${sql}`;
-    return await chamarIACodigo(SYSTEM_CORRIGIR_SQL, prompt, 3000);
+    return await chamarIACodigo(SYSTEM_CORRIGIR_SQL, prompt, 8000);
 }
 
 async function corrigirApp(app, problemas, arquitetura) {
@@ -92,7 +92,7 @@ async function corrigirApp(app, problemas, arquitetura) {
     if (!problemasStr.trim()) return app;
 
     const prompt = `Problemas a corrigir:\n${problemasStr}\n\nArquitetura de referência:\n${JSON.stringify(arquitetura).substring(0, 1000)}\n\nApp atual:\n${app}`;
-    return await chamarIACodigo(SYSTEM_CORRIGIR_APP, prompt, 4000);
+    return await chamarIACodigo(SYSTEM_CORRIGIR_APP, prompt, 8000);
 }
 
 async function corrigirUI(ui, problemas) {
@@ -104,7 +104,7 @@ async function corrigirUI(ui, problemas) {
     if (!problemasStr.trim()) return ui;
 
     const prompt = `Problemas a corrigir:\n${problemasStr}\n\nUI atual:\n${ui}`;
-    return await chamarIACodigo(SYSTEM_CORRIGIR_UI, prompt, 4000);
+    return await chamarIACodigo(SYSTEM_CORRIGIR_UI, prompt, 8000);
 }
 
 async function corrigirArquitetura(arquitetura, problemas) {
@@ -115,8 +115,8 @@ async function corrigirArquitetura(arquitetura, problemas) {
 
     if (!problemasStr.trim()) return arquitetura;
 
-    const prompt = `Problemas a corrigir:\n${problemasStr}\n\nArquitetura atual:\n${JSON.stringify(arquitetura, null, 2).substring(0, 3000)}`;
-    const resposta = await chamarIARaciocinio(SYSTEM_CORRIGIR_ARQUITETURA, prompt, 3000);
+    const prompt = `Problemas a corrigir:\n${problemasStr}\n\nArquitetura atual:\n${JSON.stringify(arquitetura, null, 2).substring(0, 8000)}`;
+    const resposta = await chamarIARaciocinio(SYSTEM_CORRIGIR_ARQUITETURA, prompt, 8000);
 
     const jsonMatch = resposta.match(/\{[\s\S]*\}/);
     return jsonMatch ? JSON.parse(jsonMatch[0]) : arquitetura;
